@@ -190,11 +190,41 @@ export default function WageLogPage() {
               ))}
             </div>
           )}
-          {summary && summary.total_unpaid > 0 && (
-            <Button variant="secondary" size="sm" className="w-full mt-3" onClick={fileUnpaidGrievance}>
-              <FileWarning className="h-4 w-4" aria-hidden="true" />
-              {t("wages.fileGrievance")}
-            </Button>
+          {summary && (
+            <div className="flex gap-2 mt-3">
+              {summary.total_unpaid > 0 && (
+                <Button variant="secondary" size="sm" className="flex-1" onClick={fileUnpaidGrievance}>
+                  <FileWarning className="h-4 w-4" aria-hidden="true" />
+                  {t("wages.fileGrievance")}
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                className={summary.total_unpaid > 0 ? "flex-1" : "w-full"}
+                onClick={() => {
+                  const headers = ["work_date", "employer_name", "agreed_amount", "paid_amount", "payment_status", "balance"];
+                  const rows = (entries ?? []).map((e) => [
+                    day(e.work_date),
+                    e.employer_name || "",
+                    String(e.agreed_amount),
+                    String(e.paid_amount),
+                    e.payment_status,
+                    String(Math.max(0, e.agreed_amount - e.paid_amount)),
+                  ]);
+                  const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `wage-log-${month}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                {t("wages.exportCSV", "Export CSV")}
+              </Button>
+            </div>
           )}
         </Card>
 

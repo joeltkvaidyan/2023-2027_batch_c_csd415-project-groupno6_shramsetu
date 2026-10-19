@@ -23,6 +23,10 @@ import WageLogPage from "./pages/WageLogPage";
 import GovernmentLoginPage from "./pages/GovernmentLoginPage";
 import NotificationInboxPage from "./pages/NotificationInboxPage";
 import GovernmentDashboardPage from "./pages/GovernmentDashboardPage";
+import ServiceDirectoryPage from "./pages/ServiceDirectoryPage";
+import ScamCheckerPage from "./pages/ScamCheckerPage";
+import JobsPage from "./pages/JobsPage";
+import EmployersPage from "./pages/EmployersPage";
 
 function GovernmentRoute({ children }: { children: React.ReactNode }) {
   const token = getGovToken();
@@ -78,6 +82,22 @@ export default function App() {
       <Route
         path="/worker/settings"
         element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
+      />
+      <Route
+        path="/worker/services"
+        element={<ProtectedRoute><ServiceDirectoryPage /></ProtectedRoute>}
+      />
+      <Route
+        path="/worker/scam-checker"
+        element={<ProtectedRoute><ScamCheckerPage /></ProtectedRoute>}
+      />
+      <Route
+        path="/worker/jobs"
+        element={<ProtectedRoute><JobsPage /></ProtectedRoute>}
+      />
+      <Route
+        path="/worker/employers"
+        element={<ProtectedRoute><EmployersPage /></ProtectedRoute>}
       />
 
       {/* Government routes — completely separate */}

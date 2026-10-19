@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, Search, Users, UserCheck, Megaphone, Flag } from "lucide-react";
 import { getGovToken, clearGovToken } from "../api/client";
 import NotificationsPanel from "../components/government/NotificationsPanel";
+import JobsPanel from "../components/government/JobsPanel";
 import {
   govGetStats,
   govGetWorkers,
@@ -19,7 +20,7 @@ import {
   type AuditLog,
 } from "../api/governmentClient";
 
-type Tab = "overview" | "grievances" | "workers" | "notifications" | "officials" | "audit";
+type Tab = "overview" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ export default function GovernmentDashboardPage() {
     { key: "overview", icon: "📊", label: "Overview" },
     { key: "grievances", icon: "📢", label: "Grievances" },
     { key: "workers", icon: "👷", label: "Workers" },
+    { key: "jobs", icon: "🧰", label: "Job Listings" },
     { key: "notifications", icon: "🔔", label: "Notifications" },
     // Officials monitoring is superadmin-only — hidden here and 403-guarded
     // server-side, so ordinary state/district officials never see the tab.
@@ -517,6 +519,8 @@ export default function GovernmentDashboardPage() {
             )}
           </div>
         )}
+        {/* ── Job Listings Tab ───────────────────────────────── */}
+        {!loading && activeTab === "jobs" && <JobsPanel token={token} />}
       </main>
     </div>
   );

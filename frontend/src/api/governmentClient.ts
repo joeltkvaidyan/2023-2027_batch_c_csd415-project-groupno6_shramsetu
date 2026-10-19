@@ -341,3 +341,145 @@ export async function govGetAuditLogs(
   return data;
 }
 
+// ── Job listings posted by this office ─────────────────────────────
+//
+// Listings are created by an official inside their own jurisdiction. The
+// server rejects out-of-scope postings (403) and never marks a listing as
+// verified — ShramSetu cannot verify a third-party employer.
+
+export interface GovJobPosting {
+  id: string;
+  title: string;
+  description: string;
+  employer_name: string;
+  occupation: string;
+  state: string;
+  district: string | null;
+  work_location: string | null;
+  wage_min: number | null;
+  wage_max: number | null;
+  wage_period: "day" | "week" | "month";
+  work_type: "daily" | "part_time" | "full_time" | "seasonal";
+  openings: number;
+  contact_phone: string | null;
+  status: "open" | "closed";
+  posted_by_department: string | null;
+  verification: "unverified";
+  created_at: string;
+  applications_count: number;
+  shortlisted_count: number;
+}
+
+/** Why an applicant's stored profile lines up with this listing. */
+export type ApplicantReviewReason =
+  | "occupation_match"
+  | "open_to_any_trade"
+  | "different_trade"
+  | "same_district"
+  | "same_state"
+  | "detail_not_recorded";
+
+export interface GovJobApplicant {
+  id: string;
+  job_id: string;
+  status: "submitted" | "shortlisted" | "withdrawn";
+  note: string | null;
+  worker: {
+    worker_code: string | null;
+    full_name: string | null;
+    occupation: string | null;
+    district: string | null;
+    state: string | null;
+    /** null unless the worker ticked "share my number" when applying. */
+    contact_phone: string | null;
+  };
+  review: {
+    score: number;
+    level: "strong" | "good" | "possible";
+    reasons: ApplicantReviewReason[];
+  };
+  shortlisted: boolean;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export async function govGetPostedJobs(
+  token: string
+): Promise<{ jobs: GovJobPosting[] }> {
+  const { data } = await axios.get(`${API_BASE}/jobs/posted`, {
+    headers: authHeaders(token),
+  });
+  return data;
+}
+
+export async function govCreateJob(
+  token: string,
+  payload: {
+    title: string;
+    description: string;
+    employer_name: string;
+    occupation: string;
+    district?: string | null;
+    work_location?: string | null;
+    wage_min?: number | null;
+    wage_max?: number | null;
+    wage_period?: string;
+    work_type?: string;
+    openings?: number;
+    contact_phone?: string | null;
+  }
+): Promise<GovJobPosting> {
+  const { data } = await axios.post(`${API_BASE}/jobs`, payload, {
+    headers: authHeaders(token),
+  });
+  return data;
+}
+
+export async function govSetJobStatus(
+  token: string,
+  jobId: string,
+  status: "open" | "closed"
+): Promise<GovJobPosting> {
+  const { data } = await axios.patch(
+    `${API_BASE}/jobs/${jobId}/status`,
+    { status },
+    { headers: authHeaders(token) }
+  );
+  return data;
+}
+
+export interface JobApplicantsResponse {
+  applications: GovJobApplicant[];
+  counts: { total: number; shortlisted: number };
+  matching_note: string;
+}
+
+export async function govGetJobApplicants(
+  token: string,
+  jobId: string
+): Promise<JobApplicantsResponse> {
+  const { data } = await axios.get(`${API_BASE}/jobs/${jobId}/applications`, {
+    headers: authHeaders(token),
+  });
+  return data;
+}
+
+/**
+ * Triage mark only: "shortlisted" means this office read the application and
+ * wants to follow up. It is never an offer of work, and the worker sees it as
+ * exactly that.
+ */
+export async function govReviewJobApplicant(
+  token: string,
+  jobId: string,
+  applicationId: string,
+  status: "submitted" | "shortlisted"
+): Promise<GovJobApplicant> {
+  const { data } = await axios.patch(
+    `${API_BASE}/jobs/${jobId}/applications/${applicationId}`,
+    { status },
+    { headers: authHeaders(token) }
+  );
+  return data;
+}
+
