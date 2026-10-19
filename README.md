@@ -102,7 +102,7 @@ npm run dev
 
 # 2) AI service → http://127.0.0.1:8100   (first /ask or /speak downloads models)
 cd ai-service
-./venv/Scripts/python.exe -m uvicorn main:app --host 127.0.0.1 --port 8100   # Windows
+  # Windows
 #   venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8100          # macOS/Linux
 
 # 3) Frontend → http://localhost:5173
@@ -115,7 +115,7 @@ npm run dev
 ```
 
 `server/.env` and `ai-service/.env` hold dev values (see the matching
-`.env.example` files). Both services need `AI_INTERNAL_KEY` (same random
+`.env.example` files). Both services need `AI_INTERNAL_KEY` (same rando./venv/Scripts/python.exe -m uvicorn main:app --host 127.0.0.1 --port 8100 m
 value in both files) — the AI service rejects unauthenticated requests.
 On boot the server auto-creates the bootstrap admin **create-only** (never
 resets its password) and, when `SEED_DEMO_DATA=true` (dev default), seeds
