@@ -210,6 +210,23 @@ export async function getCachedGrievances(userId: number): Promise<any[]> {
   return db.getAllFromIndex("grievances", "by-user", userId);
 }
 
+// === Grievance Drafts ===
+export async function cacheGrievanceDraft(draft: any): Promise<void> {
+  const db = await getDB();
+  await db.put("settings", { key: "grievanceDraft", ...draft, updatedAt: Date.now() });
+}
+
+export async function getCachedGrievanceDraft(): Promise<any | null> {
+  const db = await getDB();
+  const res = await db.get("settings", "grievanceDraft");
+  return res || null;
+}
+
+export async function deleteCachedGrievanceDraft(): Promise<void> {
+  const db = await getDB();
+  await db.delete("settings", "grievanceDraft");
+}
+
 // === Pending Sync Queue ===
 
 export async function addToSyncQueue(

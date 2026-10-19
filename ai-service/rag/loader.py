@@ -14,6 +14,7 @@ picked up automatically on next index rebuild.
 from __future__ import annotations
 
 import os
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
@@ -75,28 +76,74 @@ def parse_document_file(path: Path) -> SourceDocument:
     )
 
 
-def load_all_documents(source_dir: str) -> List[SourceDocument]:
-    """Load every ACTIVE document. Files with STATUS: superseded are skipped
-    (kept on disk for reference) so an outdated circular can be replaced by
-    dropping in the new version and marking the old one superseded — the
-    next index rebuild then uses only current information."""
+def _load_verified_registry() -> dict:
+    """Load verified-sources.json registry."""
+    # Look in common locations
+    for candidate in [
+        Path(__file__).resolve().parents[2] / "docs" / "verified-sources.json",
+        Path(__file__).resolve().parents[1] / "docs" / "verified-sources.json",
+        Path("/workspace/chats/609c2fe3d62d4f4b212de23e/docs/verified-sources.json"),
+    ]:
+        if candidate.exists():
+            try:
+                return json.loads(candidate.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+    return {"entries": []}
+
+
+def load_all_documents(source_dir: str, require_verified: bool = True) -> List[SourceDocument]:
+    """Load documents. Files with STATUS: superseded are skipped.
+    If require_verified is True, also enforce verification gating against
+    docs/verified-sources.json (skip unverified/outdated docs with needs review).
+    """
     docs: List[SourceDocument] = []
     src = Path(source_dir)
     if not src.exists():
         return docs
     skipped: List[str] = []
+    verified_urls = set()
+    verified_titles = set()
+    try:
+        registry = _load_verified_registry()
+        for e in registry.get("entries", []):
+            if e.get("status") == "verified":
+                if e.get("url"):
+                    verified_urls.add(str(e.get("url")).strip().lower())
+                if e.get("title"):
+                    verified_titles.add(str(e.get("title")).strip().lower())
+    except Exception:
+        verified_urls = set()
+        verified_titles = set()
+
     for path in sorted(src.glob("*.txt")):
         parsed = parse_document_file(path)
         if parsed.status == "superseded":
-            skipped.append(path.name)
+            skipped.append(f"{path.name} (superseded)")
             continue
+        if require_verified:
+            # Check for "needs review" markers
+            if (parsed.source_url and "needs review" in str(parsed.source_url).lower()) or \
+               (parsed.last_verified and "needs review" in str(parsed.last_verified).lower()) or \
+               (parsed.authority and "needs review" in str(parsed.authority).lower()):
+                skipped.append(f"{path.name} (needs_review_metadata)")
+                continue
+            # Must have a source URL if we have registry entries? Or be in verified set
+            if verified_urls:
+                if not parsed.source_url or str(parsed.source_url).strip().lower() not in verified_urls:
+                    # Also allow if title matches
+                    if parsed.title.strip().lower() not in verified_titles:
+                        skipped.append(f"{path.name} (not_in_verified_registry)")
+                        continue
         docs.append(parsed)
     if skipped:
         import logging
 
         logging.getLogger("shramsetu.rag").info(
-            "Skipping superseded documents: %s", ", ".join(skipped)
+            "Skipping documents: %s", ", ".join(skipped)
         )
+    if require_verified and not docs:
+        raise RuntimeError("No verified documents loaded after gating")
     return docs
 
 

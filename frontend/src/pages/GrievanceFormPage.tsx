@@ -1,9 +1,10 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { VoiceRecorder } from "../components/VoiceRecorder";
 import { api } from "../api/client";
+import { cacheGrievanceDraft, getCachedGrievanceDraft, deleteCachedGrievanceDraft } from "../services/offlineStorage";
 import type { GrievanceCategory } from "../types";
 
 const CATEGORIES: GrievanceCategory[] = [
@@ -48,6 +49,41 @@ export default function GrievanceFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ subject?: string; description?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  useEffect(() => {
+    // Load draft if no prefill state
+    if (!state) {
+      getCachedGrievanceDraft().then((draft) => {
+        if (draft) {
+          setCategory(draft.category as GrievanceCategory);
+          setSubject(draft.subject);
+          setDescription(draft.description);
+          setEmployerName(draft.employer_name || "");
+          setIncidentLocation(draft.incident_location || "");
+          setIncidentDate(draft.incident_date || "");
+        }
+      });
+    }
+  }, [state]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (subject.trim() || description.trim()) {
+        await cacheGrievanceDraft({
+          subject,
+          description,
+          category,
+          employer_name: employerName,
+          incident_location: incidentLocation,
+          incident_date: incidentDate,
+        } as any);
+        setDraftSaved(true);
+        setTimeout(() => setDraftSaved(false), 2000);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [category, subject, description, employerName, incidentLocation, incidentDate]);
 
   const validate = () => {
     const errs: { subject?: string; description?: string } = {};
@@ -73,6 +109,7 @@ export default function GrievanceFormPage() {
           ? new Date(incidentDate).toISOString()
           : undefined,
       });
+      await deleteCachedGrievanceDraft();
       navigate(`/worker/grievances/${res.data.id}`, { replace: true });
     } catch (err: any) {
       // Surface FastAPI/Pydantic 422 field errors inline near the actual

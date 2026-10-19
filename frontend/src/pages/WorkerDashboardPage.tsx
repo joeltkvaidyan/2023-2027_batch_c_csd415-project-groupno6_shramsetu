@@ -11,13 +11,15 @@ import {
   Check,
   Clock,
   IndianRupee,
+  Briefcase,
+  Building2,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../store/AuthContext";
 import { BottomNav } from "../components/BottomNav";
 import { Card, Badge, Avatar, SkeletonList } from "../components/ui";
 import { api } from "../api/client";
-import type { Grievance } from "../types";
+import type { Employer, Grievance, JobMatch } from "../types";
 
 export default function WorkerDashboardPage() {
   const { t } = useTranslation();
@@ -25,6 +27,12 @@ export default function WorkerDashboardPage() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [recent, setRecent] = useState<Grievance[] | null>(null);
+  // Phase 2 snapshot: job matches, saved recurring employers, unpaid wages.
+  const [snapshot, setSnapshot] = useState<{
+    jobs: number;
+    employers: number;
+    unpaid: number;
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -32,6 +40,22 @@ export default function WorkerDashboardPage() {
       .get<Grievance[]>("/grievances", { params: { limit: 3 } })
       .then((res) => active && setRecent(res.data))
       .catch(() => active && setRecent([]));
+
+    Promise.all([
+      api.get<{ jobs: JobMatch[] }>("/jobs"),
+      api.get<{ employers: Employer[] }>("/employers"),
+      api.get<{ total_unpaid: number }>("/wages/summary"),
+    ])
+      .then(([jobs, employers, wages]) => {
+        if (!active) return;
+        setSnapshot({
+          jobs: jobs.data.jobs.length,
+          employers: employers.data.employers.length,
+          unpaid: wages.data.total_unpaid,
+        });
+      })
+      .catch(() => active && setSnapshot(null));
+
     return () => {
       active = false;
     };
@@ -104,6 +128,32 @@ export default function WorkerDashboardPage() {
           </div>
         </Card>
 
+        {/* Work snapshot — job matches, recurring employers, unpaid wages */}
+        {snapshot && (
+          <Card className="mt-5 animate-rise">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <button onClick={() => navigate("/worker/jobs")} className="active:scale-95 transition">
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.jobs}</p>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+                  {t("dashboard.jobMatches", "Job matches")}
+                </p>
+              </button>
+              <button onClick={() => navigate("/worker/employers")} className="active:scale-95 transition">
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.employers}</p>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+                  {t("dashboard.employers", "Employers")}
+                </p>
+              </button>
+              <button onClick={() => navigate("/worker/wages")} className="active:scale-95 transition">
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">₹{snapshot.unpaid}</p>
+                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+                  {t("dashboard.unpaid", "Unpaid")}
+                </p>
+              </button>
+            </div>
+          </Card>
+        )}
+
         {/* Primary actions */}
         <div className="grid grid-cols-2 gap-3.5 mt-5">
           <ActionTile
@@ -130,6 +180,18 @@ export default function WorkerDashboardPage() {
             label={t("wages.title", "Wage Diary")}
             onClick={() => navigate("/worker/wages")}
             delay={240}
+          />
+          <ActionTile
+            Icon={Briefcase}
+            label={t("jobs.title", "Job matches")}
+            onClick={() => navigate("/worker/jobs")}
+            delay={280}
+          />
+          <ActionTile
+            Icon={Building2}
+            label={t("employers.title", "Recurring employers")}
+            onClick={() => navigate("/worker/employers")}
+            delay={320}
           />
           <ActionTile
             Icon={Settings}

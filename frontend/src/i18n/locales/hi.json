@@ -113,7 +113,10 @@
     "greetingAfternoon": "Good afternoon,",
     "greetingEvening": "Good evening,",
     "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints"
+    "recentGrievances": "Recent complaints",
+    "jobMatches": "नौकरी मिलान",
+    "employers": "नियोक्ता",
+    "unpaid": "बकाया"
   },
   "documents": {
     "title": "दस्तावेज़ वॉलेट",
@@ -318,5 +321,73 @@
     "network": "आप ऑफ़लाइन प्रतीत होते हैं। अपना कनेक्शन जांचें और फिर से प्रयास करें।",
     "rateLimited": "बहुत अधिक प्रयास। कृपया एक मिनट प्रतीक्षा करें और फिर से प्रयास करें।",
     "aiUnavailable": "AI सहायक अभी उपलब्ध नहीं है। आपका प्रश्न का उत्तर नहीं दिया जा सका — कृपया बाद में पुनः प्रयास करें।"
+  },
+  "scamChecker": {
+    "title": "Scam Risk Checker"
+  },
+  "services": {
+    "title": "Verified Services Directory"
+  },
+  "jobs": {
+    "title": "नौकरी मिलान",
+    "disclaimer": "ये सूचियाँ श्रम विभाग के कार्यालयों ने श्रमसेतु पर प्रकाशित की हैं। श्रमसेतु नियोक्ता या मजदूरी की पुष्टि नहीं करता। नौकरी के लिए कभी पैसा न दें।",
+    "searchPlaceholder": "काम या जगह से खोजें",
+    "allTrades": "सभी काम",
+    "myApplications": "मेरे आवेदन",
+    "listingUnavailable": "सूची अब उपलब्ध नहीं है",
+    "appliedOn": "आवेदन किया",
+    "empty": "अभी कोई नौकरी मिलान नहीं है। आपके जिले की नई सूचियाँ यहाँ दिखेंगी।",
+    "level": {
+      "strong": "अच्छा मिलान",
+      "good": "उपयुक्त मिलान",
+      "possible": "संभावित मिलान"
+    },
+    "wageRange": "बताई गई मजदूरी",
+    "period": {
+      "day": "प्रति दिन",
+      "week": "प्रति सप्ताह",
+      "month": "प्रति माह"
+    },
+    "openings": "रिक्तियाँ",
+    "reasons": {
+      "occupation_match": "आपके काम से मेल",
+      "open_to_any_trade": "हर काम के लिए खुला",
+      "same_district": "आपके जिले में",
+      "same_state": "आपके राज्य में",
+      "recent_posting": "हाल ही में प्रकाशित",
+      "multiple_openings": "एक से ज्यादा रिक्तियाँ",
+      "wage_listed": "मजदूरी बताई गई"
+    },
+    "unverifiedNote": "श्रमसेतु ने इस नियोक्ता या मजदूरी की पुष्टि नहीं की है। काम शुरू करने से पहले शर्तें लिखित में लें।",
+    "applied": "आवेदन किया",
+    "withdraw": "वापस लें",
+    "apply": "मुझे रुचि है",
+    "applyShareContact": "रुचि है + मेरा नंबर साझा करें"
+  },
+  "employers": {
+    "title": "नियमित नियोक्ता",
+    "intro": "जिन नियोक्ताओं के पास आप बार-बार काम करते हैं, उनकी निजी सूची रखें। इसे केवल आप देख सकते हैं, और कुल आपकी मजदूरी डायरी से आते हैं।",
+    "totalOutstanding": "सभी नियोक्ताओं का बकाया",
+    "add": "नियोक्ता जोड़ें",
+    "edit": "नियोक्ता बदलें",
+    "name": "नियोक्ता का नाम",
+    "namePlaceholder": "जैसे रवि कंस्ट्रक्शंस",
+    "nameRequired": "कृपया नियोक्ता का नाम लिखें।",
+    "duplicate": "यह नियोक्ता पहले से आपकी सूची में है।",
+    "occupation": "काम का प्रकार",
+    "occupationNone": "नहीं बताया",
+    "phoneOptional": "फोन (वैकल्पिक)",
+    "locationOptional": "कार्य स्थल (वैकल्पिक)",
+    "districtOptional": "जिला",
+    "stateOptional": "राज्य",
+    "dailyWageOptional": "सामान्य दैनिक मजदूरी ₹ (वैकल्पिक)",
+    "notesOptional": "टिप्पणी (वैकल्पिक)",
+    "empty": "अभी कोई नियोक्ता सहेजा नहीं गया। काम और बकाया मजदूरी दर्ज करने के लिए एक जोड़ें।",
+    "days": "दिन",
+    "paid": "मिला",
+    "outstanding": "बकाया",
+    "usualWage": "सामान्य दैनिक मजदूरी",
+    "selfReported": "यह जानकारी आपने खुद दर्ज की है — श्रमसेतु ने नियोक्ता से इसकी पुष्टि नहीं की।",
+    "fileUnpaid": "बकाया मजदूरी की शिकायत करें"
   }
 }

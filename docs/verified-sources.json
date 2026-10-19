@@ -1,0 +1,508 @@
+{
+  "$comment": "Verified source registry for ShramSetu knowledge-base ingestion. Every entry was fetched and read during research on 2026-10-15 unless status says otherwise. Ingest only entries with status 'verified'. Entries with status 'unverified' or 'superseded' MUST NOT be served as trusted production answers.",
+  "schema_version": "1.0.0",
+  "generated_at": "2026-10-15",
+  "generated_by": "ShramSetu research phase",
+  "status_values": {
+    "verified": "Fetched and read; content confirmed on the date given.",
+    "unverified": "Claimed or referenced but the source content could not be read. Do not use as a citation.",
+    "superseded": "Legally or factually replaced. Safe only as historical context, never as current law or current scheme status.",
+    "uncertain": "Source readable but does not establish current status of the thing it describes."
+  },
+  "entries": [
+    {
+      "id": "kcw-s45",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Code on Wages, 2019 — section 45 (claims) and 3-year limitation",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Primary wage-claim route after the 21 Nov 2025 commencement. Replaces Payment of Wages Act 1936 route for post-commencement wage periods.",
+      "url": "https://www.lawspedia.in/section-45-of-code-on-wages"
+    },
+    {
+      "id": "kcw-s17",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Code on Wages, 2019 — section 17 (payment deadlines)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Timing only: end of shift (daily), before weekly holiday (weekly), 2nd day after fortnight (fortnightly), before 7th of following month (monthly); within 2 working days after removal/dismissal/retrenchment/resignation. NOT the wage-slip provision.",
+      "url": "https://www.lawspedia.in/section-17-of-code-on-wages"
+    },
+    {
+      "id": "kcw-s50",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Code on Wages, 2019 — section 50 (register of wages and wage slips)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "s.50(1) register; s.50(3) wage slips. Exemption for employers of <=5 persons for agricultural or domestic purposes, who must produce reasonable proof of payment on demand.",
+      "url": "https://www.lawspedia.in/section-50-of-code-on-wages"
+    },
+    {
+      "id": "kcw-s59",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Code on Wages, 2019 — section 59 (burden of proof on employer)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "For a claim alleging non-payment, underpayment or unauthorised deduction, the employer bears the burden of proving the dues were paid. High-value point for worker-facing guidance.",
+      "url": "https://www.lawspedia.in/section-59-of-code-on-wages"
+    },
+    {
+      "id": "kcw-rules-51",
+      "category": "law",
+      "jurisdiction": "IN-central-sector",
+      "title": "Code on Wages (Central) Rules, 2026 — Rule 51 (registers, electronic or physical, 5-year retention)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Central-sector establishments only. State-sector (e.g. Kerala) rules must be confirmed separately.",
+      "url": "https://www.lawspedia.in/rule-51-of-the-code-on-wages-central-rules-2026"
+    },
+    {
+      "id": "kcw-rules-52",
+      "category": "law",
+      "jurisdiction": "IN-central-sector",
+      "title": "Code on Wages (Central) Rules, 2026 — Rule 52 (wage slips in Form V, on or before payment)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Central-sector establishments only.",
+      "url": "https://www.lawspedia.in/rule-52-of-the-code-on-wages-central-rules-2026"
+    },
+    {
+      "id": "prs-cow-rules-2026",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "PRS — Code on Wages (Central) Rules, 2026; commencement 21 November 2025",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Central Rules finalized 8 May 2026; apply to central-sector establishments.",
+      "url": "https://prsindia.org/billtrack/code-on-wages-central-rules-2026"
+    },
+    {
+      "id": "faolex-osh-code",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "FAOLEX/UNEP — Occupational Safety, Health and Working Conditions Code, 2020 (No. 37); entry into force 21 November 2025",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Direct successor to the Inter-State Migrant Workmen Act 1979. Repeal-and-savings at OSH Code s.143. Threshold: 10 or more inter-state migrant workers at an establishment on a day in the preceding 12 months. Definition now reaches some directly recruited and self-migrated workers.",
+      "url": "https://leap.unep.org/en/countries/in/national-legislation/occupational-safety-health-and-working-conditions-code-2020-no-37"
+    },
+    {
+      "id": "ismw-act-1979",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Inter-State Migrant Workmen (RE&CS) Act, 1979",
+      "status": "superseded",
+      "verified_at": "2026-10-15",
+      "notes": "REPEALED with effect from 21 November 2025. Historical context only. Its displacement allowance (50% of monthly wages or INR 75, whichever higher) has NO verified successor. Do not present as current law.",
+      "url": "https://www.hrylabour.gov.in/staticdocs/laborActpdfdocs/Inter_State_Migrant_Act.pdf"
+    },
+    {
+      "id": "kerala-ismw-rules-1983",
+      "category": "law",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala Inter-State Migrant Workmen Rules, 1983 and the 2025 amendment",
+      "status": "unverified",
+      "verified_at": "2026-10-15",
+      "notes": "Listed on the Kerala Labour Commissionerate government-orders page, including a 2025 amendment, but the amendment PDF could not be read. Exact current fee table is NOT verified. Do not quote fees.",
+      "url": "https://lc.kerala.gov.in/en/government-orders"
+    },
+    {
+      "id": "kerala-draft-rules",
+      "category": "law",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala Labour Commissionerate — 'What's new' (rules under the four Codes listed as Draft Rules)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Commencement of a Code is not the same as finalization of state rules. Kerala forms, fees and procedures may still change. Advise workers to confirm the current authority and form.",
+      "url": "https://lc.kerala.gov.in/en/whats-new"
+    },
+    {
+      "id": "kerala-min-wages",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala Labour Commissionerate — Minimum Wage Notifications",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "There is NO single Kerala minimum wage. Rate depends on scheduled employment x classification/skill x area/zone x variable DA or later revision. Never hardcode a figure. Requires occupation, classification and location; direct to the latest FINAL notification plus subsequent revisions.",
+      "url": "https://lc.kerala.gov.in/en/minimum-wage-notifications"
+    },
+    {
+      "id": "bodhi-employer-duties",
+      "category": "analysis",
+      "jurisdiction": "IN",
+      "title": "Employer/project duties under BOCW and the Codes (cess, registration, worker eligibility)",
+      "status": "unverified",
+      "verified_at": "2026-10-15",
+      "notes": "Kerala Board states 1% of actual construction cost is levied from the employer as cess. Cess is an EMPLOYER/project liability and must never be presented as a worker deduction or fee. The familiar worker test (age 18-60, 90 days' construction work in preceding 12 months) is the OLD BOCW regime; Kerala's post-Code criteria were not verified.",
+      "url": "https://kbocwwboard.kerala.gov.in/kboc/public/view/Profile"
+    },
+    {
+      "id": "eshram-faq",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "e-Shram FAQ (registration, eligibility, Aadhaar-linked mobile requirement)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Unorganised-sector home-based, self-employed or wage worker aged 16+, not an ESIC/EPFO member. Requires Aadhaar and an Aadhaar-linked mobile; without a linked mobile, a Common Service Centre or State Seva Kendra biometric route applies. Registration free; card does not expire. A UAN is NOT cash, insurance, a job or proof of scheme enrolment.",
+      "url": "https://eshram.gov.in/faqs"
+    },
+    {
+      "id": "athidhi",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "ATHIDHI (Kerala) registration portal and app",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Registration and administration system for migrant workers, employers and contractors. NOT a welfare scheme. A card is not proof of insurance, enrolment or benefit approval. No public third-party API found. Do NOT claim ATHIDHI registration activates AAWAZ cover. App listing verified; portal itself timed out on fetch.",
+      "url": "https://play.google.com/store/apps/details?id=com.nic.athidhi_kerala"
+    },
+    {
+      "id": "athidhi-registrations-2025",
+      "category": "statistic",
+      "jurisdiction": "IN-KL",
+      "title": "ATHIDHI registrations ~4.2 lakh as of 15 September 2025",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Registration count, NOT a population headcount. Categories overlap. Never derive population shares from it.",
+      "url": "https://www.thehindu.com/news/national/kerala/keralas-online-registration-service-gets-popular-among-migrant-workers/article69482488.ece"
+    },
+    {
+      "id": "aawaz-status",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "AAWAZ / Aawaaz health scheme — legacy benefits vs current status",
+      "status": "uncertain",
+      "verified_at": "2026-10-15",
+      "notes": "Legacy page described INR 15,000/yr treatment and INR 2 lakh accidental-death cover, cashless via biometric card, ages 18-60. Reporting indicates enrolment CLOSED IN 2022 and researchers describe it as largely non-functional since 2019; only 347 of 5.16 lakh registrants had benefited as of 2023. Do NOT present cover as currently active. Confirm with the Labour Department before presenting any benefit as available.",
+      "url": "http://61.0.248.124/"
+    },
+    {
+      "id": "aawaz-mgu-2025",
+      "category": "statistic",
+      "jurisdiction": "IN-KL",
+      "title": "Mahatma Gandhi University study (Sep 2025) — very low health coverage among Kerala migrant workers",
+      "status": "unverified",
+      "verified_at": "2026-10-15",
+      "notes": "Only the article headline and URL slug were obtained; the page content was not read. The slug suggests '9.8%' but the exact figure is NOT verified. Cite the study's existence as reported, not a precise percentage.",
+      "url": "https://www.newindianexpress.com/states/kerala/2025/Sep/26/only-98-of-migrant-workers-in-kerala-have-health-coverage-finds-mahatma-gandhi-university-study"
+    },
+    {
+      "id": "ismwws",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "Inter-State Migrant Workers Welfare Scheme (ISMWWS, 2010, Kerala)",
+      "status": "unverified",
+      "verified_at": "2026-10-15",
+      "notes": "2019-published terms: ages 18-60, enrol after one month in Kerala, renewable annual fee INR 30, benefits include death compensation, accident relief, treatment assistance, repatriation, education and maternity assistance (per a 2020 study). Registered terms are NOT confirmation that any benefit or amount is currently processed unchanged. 1.65 lakh registrations reported 2025. No public API found.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7659401/"
+    },
+    {
+      "id": "onorc",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "One Nation One Ration Card (ONORC)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Portability of an EXISTING NFSA ration-card entitlement at a Fair Price Shop away from the card's home location, via ePoS biometric/Aadhaar authentication. Does NOT issue a ration card, does NOT create an entitlement, does NOT provide cash, does NOT guarantee stock. No public transaction API found.",
+      "url": "https://play.google.com/store/apps/details?id=com.nic.onenationonecard"
+    },
+    {
+      "id": "ncs",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "National Career Service (NCS) — helpline 1514",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Job search, employer vacancy posting, job fairs, career centres, counsellors, training providers. Does NOT guarantee a job, placement, employer conduct, wages, visa or recruitment outcome. NCS warns about impersonators and states its services are free. No public job-search API found; scraped listings must never be presented as an official live feed.",
+      "url": "https://ncs.gov.in/faq"
+    },
+    {
+      "id": "umang",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "UMANG — onboarding is department-facing, not a public private-app API",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "UMANG presents services owned by their departments. Onboarding is via backend API integration by the government department/service provider. That is NOT evidence of a public API for private apps. Service pages returned only their JavaScript shell on fetch.",
+      "url": "https://web.umang.gov.in/landing/partner-departments"
+    },
+    {
+      "id": "cpgrams",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "CPGRAMS public grievance portal",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Lodge a grievance, track the registration ID, give feedback and appeal when rated 'Poor'. Excludes RTI, sub judice, religious and most government-employee service matters. Not a court or guarantee of outcome. Official disclaimer permits direct deep links; a link is NOT an API grant. No public filing/retrieval API found. A generated draft is NOT a filed complaint.",
+      "url": "https://pgportal.gov.in/"
+    },
+    {
+      "id": "kbocwwb",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala Building and Other Construction Workers Welfare Board (KBOCWWB)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Statutory board for REGISTERED building and other construction workers. Benefits include pension/family and invalid pension, death and accident assistance, medical and maternity benefits, education assistance, marriage and funeral assistance, some loans. NOT a general migrant-worker registry. ATHIDHI card != board membership != AAWAZ != ONORC. No public third-party API found.",
+      "url": "https://kbocwwboard.kerala.gov.in/kboc/public/view/WelfareSchemes"
+    },
+    {
+      "id": "emigrate",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "eMigrate (MEA) — OVERSEAS employment only",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "For overseas employment/emigration: registered recruiting agents, emigrant registration, emigration clearance, complaints about agents. NOT for movement between Indian states. Do not use for interstate migration. Is not a guarantee a foreign offer is genuine.",
+      "url": "https://www.mea.gov.in/issues-of-intending-emigrants"
+    },
+    {
+      "id": "kerala-labour-complaint",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala Labour Commissionerate — Register complaint; Labour Call Centre 1800 42555 214; Citizen Call Centre 155300",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "No public API found. '155214' is associated with the KARNATAKA labour helpline in search results and must NOT be listed as a Kerala number.",
+      "url": "https://lc.kerala.gov.in/en"
+    },
+    {
+      "id": "kerala-cmo",
+      "category": "service",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala CMO (Santhwanam) grievance channel — 1076",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "General state public-grievance channel, not migrant-specific. Track by docket number and registered mobile. ~15-day target for examination; complex cases take longer. No promised outcome.",
+      "url": "https://cmo.kerala.gov.in/help-en.php"
+    },
+    {
+      "id": "samadhan",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Samadhan — national labour grievance portal",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Handles specified wage and employment complaints. World Bank notes it would need to include the interstate migrant-worker law to address migrant-specific vulnerabilities under the OLD framework.",
+      "url": "https://samadhan.labour.gov.in/"
+    },
+    {
+      "id": "india-labourline",
+      "category": "ngo",
+      "jurisdiction": "IN",
+      "title": "India Labourline — free legal aid and mediation for workers; 1-800-833-9020",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "NGO-run, not a government database. Its complaint statistics are the principal available wage-theft evidence for Kerala but are NOT an official state-wide count.",
+      "url": "https://workingpeoplescharter.in/india_labour_line/"
+    },
+    {
+      "id": "ilo-bsa-evidence",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Bharatiya Sakshya Adhiniyam 2023 — electronic records (s.61, s.62, s.63, Schedule certificate; s.170 savings)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Replaced the Evidence Act from 1 July 2024. s.63 governs admissibility of computer output with a Schedule certificate (described as two-part: person in charge + expert, with device particulars and hash). Discussion relies on accessible legal commentary; the original judgment/statute PDFs were not retrieved. Applies to FORMAL JUDICIAL PROCEEDINGS; a labour authority or mediation may be less formal. Never auto-generate a certificate as if legally effective.",
+      "url": "https://vidhilegalpolicy.in/blog/the-evolving-enigma/"
+    },
+    {
+      "id": "kerala-migrant-numbers-2025",
+      "category": "statistic",
+      "jurisdiction": "IN-KL",
+      "title": "Kerala — no official current survey of migrant worker numbers; ~31 lakh estimate (2021)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Labour Minister told the Assembly in 2025 that no official survey had established the current number. The ~31 lakh figure is a 2021 estimate. Registration counts (5.16L Aawaaz, 4.2L ATHIDHI, 1.65L ISMWWS) overlap and are not a headcount. Never present a definitive population figure.",
+      "url": "https://www.thehindu.com/news/national/kerala/no-accurate-data-on-number-of-migrant-workers-in-state/article70190377.ece"
+    },
+    {
+      "id": "india-labourline-wage-data",
+      "category": "statistic",
+      "jurisdiction": "IN-KL",
+      "title": "India Labourline wage-theft complaints: ~1,152-1,227 cases, ~INR 2.4 crore, 16-18 months",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Reporting cut-offs differ (Feb 2024 vs May 2024); totals must NOT be summed into one dataset. ~9 in 10 complaints concerned pending wages; 85%+ construction. Recovery ~INR 51-55 lakh. This is complaint data from one NGO channel, NOT prevalence and NOT an official state-wide count.",
+      "url": "https://www.thenewsminute.com/kerala/workplace-mishaps-lack-compensation-blot-kerala-s-migrant-worker-friendly-image-178175"
+    },
+    {
+      "id": "supreme-court-migrant-2023",
+      "category": "statistic",
+      "jurisdiction": "IN",
+      "title": "Supreme Court order, In Re: Problems and Miseries of Migrant Labourers (20 April 2023)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "~28.60 crore e-Shram registrations, of which ~20.63 crore also appeared in ration-card data. The Court said those without ration-card registration might be deprived of NFSA benefits and directed states/UTs to issue cards to eligible workers. The 28.60 crore figure is NOT a count of interstate migrant workers.",
+      "url": "https://www.supremecourtcases.com/in-re-problems-and-miseries-of-migrant-labourers-6/"
+    },
+    {
+      "id": "indic-trans2",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "AI4Bharat IndicTrans2 translation model",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Model checkpoints MIT-licensed. Covers Hindi, Bengali, Tamil, Telugu, Malayalam, Odia, Assamese, Maithili and other scheduled languages. DOES NOT LIST BHOJPURI. Self-hostable (Fairseq / Hugging Face / CTranslate2); no guaranteed minimum hardware spec. Dataset licences differ (CC0 and CC-BY-4.0) - check per artifact.",
+      "url": "https://github.com/AI4Bharat/IndicTrans2"
+    },
+    {
+      "id": "nllb-200",
+      "category": "ai",
+      "jurisdiction": "GLOBAL",
+      "title": "Meta NLLB-200 (includes Bhojpuri and Maithili) - NOT production-usable",
+      "status": "uncertain",
+      "verified_at": "2026-10-15",
+      "notes": "LICENCE CC-BY-NC 4.0. Model card states it is a RESEARCH model, not released for production deployment, NOT intended for legal or other domain-specific text or document translation, and cannot provide certified translations. DO NOT use as a production Bhojpuri fallback.",
+      "url": "https://huggingface.co/facebook/nllb-200-3.3B"
+    },
+    {
+      "id": "bhashini-api",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "Bhashini / ULCA hosted language API - PoC-only public terms",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Public API docs state use is FOR PROOF OF CONCEPT ONLY; production or paid-user use should contact Bhashini for its paid version. No published production price, guaranteed free quota or rate limits found. Onboarding requires DIBD approval for userID/keys; per-call flow is pipeline-config then pipeline-compute using the returned callbackURL and inference-key header. Credentials must stay server-side. Confirm data-retention and liability terms before sending worker legal/health/wage data.",
+      "url": "https://dibd-bhashini.gitbook.io/bhashini-apis"
+    },
+    {
+      "id": "indic-conformer",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "AI4Bharat IndicConformer ASR (MIT)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "MIT-licensed monolingual checkpoints for Assamese, Bengali, Hindi, Maithili, Malayalam, Odia, Tamil, Telugu, plus a multilingual 600M model. Uses AI4Bharat's NeMo fork. NO Bhojpuri checkpoint.",
+      "url": "https://github.com/AI4Bharat/IndicConformerASR"
+    },
+    {
+      "id": "vistaar-wer",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "Vistaar / IndicWhisper benchmark WER per language",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Average WER: Hindi 13.6%, Bengali 20.1%, Tamil 25.3%, Odia 27.4%, Telugu 28.8%, Malayalam 32.3%. Lowest WER on 39 of 59 benchmarks. No comparable figures for Assamese, Maithili or Bhojpuri. Benchmark results, NOT a guarantee for any worker, district, microphone or conversation.",
+      "url": "https://github.com/AI4Bharat/vistaar"
+    },
+    {
+      "id": "sruti-bhojpuri",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "Sruti study (2025) - Bhojpuri ASR baseline 33.3% WER vs Hindi 15%",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Only 23 transcribed Bhojpuri hours in Vaani; major collection/transcription barriers. Domain: health, agriculture, governance, finance for rural Bhojpuri-speaking women. Must inform refusal and read-back behaviour for Bhojpuri.",
+      "url": "https://arxiv.org/html/2506.09653v1"
+    },
+    {
+      "id": "whisper-indic-paper",
+      "category": "ai",
+      "jurisdiction": "GLOBAL",
+      "title": "Unadapted Whisper baseline WER on Indian languages (Kathbath)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Reported WER: Hindi 42.64, Bengali 134.98, Tamil 63.90, Malayalam 134.40. Fine-tuning improved results substantially but used four A100 GPUs. 'Whisper supports the language' is NOT evidence of fitness.",
+      "url": "https://arxiv.org/html/2412.19785v1"
+    },
+    {
+      "id": "indic-parler-tts",
+      "category": "ai",
+      "jurisdiction": "IN",
+      "title": "Indic Parler-TTS metadata",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Apache 2.0, 0.94B params, ~3.75 GB, gated: auto, inference: false - downloadable but NOT a turnkey hosted API. Language tags DO NOT list Bhojpuri or Maithili.",
+      "url": "https://huggingface.co/api/models/ai4bharat/indic-parler-tts"
+    },
+    {
+      "id": "wcag22",
+      "category": "design",
+      "jurisdiction": "GLOBAL",
+      "title": "WCAG 2.2 Quick Reference",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Text alternatives required for non-text content; accessible names for controls. Never make an icon the only explanation of a control.",
+      "url": "https://www.w3.org/WAI/WCAG22/quickref/"
+    },
+    {
+      "id": "nng-shared-devices",
+      "category": "design",
+      "jurisdiction": "IN",
+      "title": "NN/g research on mobile behaviour in India (shared phones, app locks, accidental disclosure)",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Small qualitative studies (incl. 2016, 10 participants) - use as a design signal, NOT a current prevalence estimate. Supports: ephemeral sessions, app lockers/PINs, and risk of disclosure via notifications and visible phone content.",
+      "url": "https://www.nngroup.com/articles/mobile-behavior-india/"
+    },
+    {
+      "id": "android-private-space",
+      "category": "design",
+      "jurisdiction": "GLOBAL",
+      "title": "Android Private Space - availability limits",
+      "status": "verified",
+      "verified_at": "2026-10-15",
+      "notes": "Requires Android 15 or later and supported hardware; cannot be used as a guest or secondary-user space. An optional user facility, NOT a safe baseline for the app.",
+      "url": "https://support.google.com/android/answer/15341885"
+    }
+  ],
+  "excluded_claims": [
+    {
+      "claim": "A current India-wide count specifically of interstate migrant workers",
+      "reason": "Not established by any readable official source."
+    },
+    {
+      "claim": "Representative Kerala language-share or origin-state-share percentages",
+      "reason": "No verified representative breakdown exists. Reported origin groups are qualitative."
+    },
+    {
+      "claim": "A typical agent fee for domestic recruitment into Kerala",
+      "reason": "No Kerala-specific verified figure. Overseas fees must never be substituted."
+    },
+    {
+      "claim": "Kerala-specific trafficking prevalence estimate",
+      "reason": "No verified study found."
+    },
+    {
+      "claim": "Official, complete Kerala series for migrant workplace injuries and deaths",
+      "reason": "Kerala Labour Department reportedly had no such data; officials learned of incidents from media reports."
+    },
+    {
+      "claim": "Official state-wide wage-theft count for Kerala",
+      "reason": "Only NGO helpline complaint data exists."
+    },
+    {
+      "claim": "Precise Mahatma Gandhi University (Sep 2025) health-coverage percentage",
+      "reason": "Page content not read; only the headline/slug obtained."
+    },
+    {
+      "claim": "Post-Code Kerala rules, forms, fees and procedures under the four Labour Codes",
+      "reason": "Kerala rules still listed as Draft Rules; amendment PDFs unreadable."
+    },
+    {
+      "claim": "That the OSH Code carries forward the 1979 Act's accommodation/medical/protective-clothing entitlements",
+      "reason": "Neither the full OSH Code text nor Kerala final rules could be extracted."
+    },
+    {
+      "claim": "A Code successor to the old 50% / INR 75 displacement allowance",
+      "reason": "Not verified. Do not restate the old formula."
+    },
+    {
+      "claim": "That 155214 is a Kerala labour helpline",
+      "reason": "Evidence associates 155214 with the Karnataka Labour Department."
+    },
+    {
+      "claim": "A public third-party API for ATHIDHI, e-Shram, NCS, ONORC, UMANG, CPGRAMS, KBOCWWB or eMigrate",
+      "reason": "No public API or developer onboarding path found for any of them. Treat all as permission-controlled."
+    },
+    {
+      "claim": "That a Delhi Labour Court rejected a worker's diary as a general rule",
+      "reason": "Sh. Neeru Singh v. Sh. Ajay Jain (4 Mar 2022) surfaced in search but the judgment text returned 403. An unverified lead, not a holding."
+    }
+  ]
+}

@@ -113,7 +113,10 @@
     "greetingAfternoon": "Good afternoon,",
     "greetingEvening": "Good evening,",
     "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints"
+    "recentGrievances": "Recent complaints",
+    "jobMatches": "Job matches",
+    "employers": "Employers",
+    "unpaid": "Unpaid"
   },
   "documents": {
     "title": "Document Wallet",
@@ -312,11 +315,80 @@
     "grievanceDescription": "As per my wage diary, {amount} of my agreed wages remain unpaid for {days} day(s) of work in {period}. Unpaid work dates: {dates}. I have not received the full agreed wages for this work. Please help me recover the pending amount.",
     "fileForDate": "File a complaint for {date}",
     "last90Days": "last 90 days",
-    "selfReported": "Entries are self-reported by you — they are not verified with your employer."
+    "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
+    "exportCSV": "Export CSV"
   },
   "errors": {
     "network": "You appear to be offline. Check your connection and try again.",
     "rateLimited": "Too many attempts. Please wait a minute and try again.",
     "aiUnavailable": "The AI assistant is unavailable right now. Your question was not answered — please try again later."
+  },
+  "services": {
+    "title": "Verified Services Directory"
+  },
+  "scamChecker": {
+    "title": "Scam Risk Checker"
+  },
+  "jobs": {
+    "title": "Job matches",
+    "disclaimer": "Listings are published by labour offices on ShramSetu. ShramSetu does not verify the employer or the wage. Never pay a fee to get a job.",
+    "searchPlaceholder": "Search by work or place",
+    "allTrades": "All trades",
+    "myApplications": "My applications",
+    "listingUnavailable": "Listing no longer available",
+    "appliedOn": "Applied on",
+    "empty": "No job matches right now. New listings from your district will appear here.",
+    "level": {
+      "strong": "Strong match",
+      "good": "Good match",
+      "possible": "Possible match"
+    },
+    "wageRange": "Stated wage",
+    "period": {
+      "day": "per day",
+      "week": "per week",
+      "month": "per month"
+    },
+    "openings": "Openings",
+    "reasons": {
+      "occupation_match": "Matches your trade",
+      "open_to_any_trade": "Open to any trade",
+      "same_district": "In your district",
+      "same_state": "In your state",
+      "recent_posting": "Posted recently",
+      "multiple_openings": "More than one opening",
+      "wage_listed": "Wage stated"
+    },
+    "unverifiedNote": "ShramSetu has not verified this employer or the wage. Confirm the terms in writing before starting work.",
+    "applied": "Applied",
+    "withdraw": "Withdraw",
+    "apply": "I am interested",
+    "applyShareContact": "Interested + share my number"
+  },
+  "employers": {
+    "title": "Recurring employers",
+    "intro": "Keep a private list of the employers you work for often. Only you can see it, and the totals come from your own wage diary.",
+    "totalOutstanding": "Outstanding across employers",
+    "add": "Add an employer",
+    "edit": "Edit employer",
+    "name": "Employer name",
+    "namePlaceholder": "e.g. Ravi Constructions",
+    "nameRequired": "Please enter the employer's name.",
+    "duplicate": "This employer is already in your list.",
+    "occupation": "Type of work",
+    "occupationNone": "Not specified",
+    "phoneOptional": "Phone (optional)",
+    "locationOptional": "Work site (optional)",
+    "districtOptional": "District",
+    "stateOptional": "State",
+    "dailyWageOptional": "Usual daily wage ₹ (optional)",
+    "notesOptional": "Notes (optional)",
+    "empty": "No employers saved yet. Add one to track your work and unpaid wages.",
+    "days": "Days",
+    "paid": "Paid",
+    "outstanding": "Unpaid",
+    "usualWage": "Usual daily wage",
+    "selfReported": "You entered this yourself — ShramSetu has not verified it with the employer.",
+    "fileUnpaid": "File unpaid wage complaint"
   }
 }
