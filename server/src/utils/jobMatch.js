@@ -58,7 +58,10 @@ export function scoreJob(job, worker, now = new Date()) {
     reasons.push("same_state");
   }
 
-  const postedAt = job.createdAt ? new Date(job.createdAt) : null;
+  // Accept both the Mongoose document (`createdAt`) and the serialised API
+  // shape (`created_at`); reading only one silently dropped the recency score.
+  const postedRaw = job.createdAt ?? job.created_at ?? null;
+  const postedAt = postedRaw ? new Date(postedRaw) : null;
   if (postedAt && !Number.isNaN(postedAt.getTime())) {
     const ageDays = Math.max(0, (now.getTime() - postedAt.getTime()) / DAY_MS);
     if (ageDays <= 7) {
@@ -88,4 +91,68 @@ export function scoreJob(job, worker, now = new Date()) {
 export function withMatch(jobJSON, worker, now = new Date()) {
   const { score, level, reasons } = scoreJob(jobJSON, worker, now);
   return { ...jobJSON, match: { score, level, reasons } };
+}
+
+/**
+ * The same idea in reverse: how well does an applicant's stored profile line up
+ * with one listing? Used when an office reviews applications.
+ *
+ * Only fields the worker themselves entered are compared (`occupation`,
+ * `current_district`, `current_state`) — nothing inferred, no name, caste,
+ * gender, age or document data. A missing field simply scores nothing and is
+ * reported as `detail_not_recorded` so the office knows the score is thin
+ * rather than reading a low number as a judgement about the worker.
+ */
+const APPLICANT_WEIGHTS = {
+  occupation: 50,
+  anyTrade: 20,
+  sameDistrict: 30,
+  sameState: 15,
+};
+
+/**
+ * @param {object} job    JobPosting document/JSON (occupation, district, state)
+ * @param {object} worker { occupation, current_district, current_state }
+ * @returns {{ score: number, level: "strong"|"good"|"possible", reasons: string[] }}
+ */
+export function scoreApplicant(job, worker = {}) {
+  let score = 0;
+  const reasons = [];
+  const recorded = [worker.occupation, worker.current_district, worker.current_state].filter(Boolean);
+
+  if (job?.occupation === "any") {
+    score += APPLICANT_WEIGHTS.anyTrade;
+    reasons.push("open_to_any_trade");
+  } else if (sameText(job?.occupation, worker.occupation)) {
+    score += APPLICANT_WEIGHTS.occupation;
+    reasons.push("occupation_match");
+  } else if (worker.occupation) {
+    reasons.push("different_trade");
+  }
+
+  if (job?.district && sameText(job.district, worker.current_district)) {
+    score += APPLICANT_WEIGHTS.sameDistrict;
+    reasons.push("same_district");
+  } else if (sameText(job?.state, worker.current_state)) {
+    score += APPLICANT_WEIGHTS.sameState;
+    reasons.push("same_state");
+  }
+
+  // Say so explicitly when the profile has too little to compare, so a low
+  // score is not mistaken for a verdict about the worker.
+  if (recorded.length < 3) reasons.push("detail_not_recorded");
+
+  const level = score >= 70 ? "strong" : score >= 40 ? "good" : "possible";
+  return { score, level, reasons };
+}
+
+/** Attach review metadata to a serialised application for the posting office. */
+export function withApplicantMatch(applicationJSON, job) {
+  const snapshot = applicationJSON.worker ?? {};
+  const review = scoreApplicant(job, {
+    occupation: snapshot.occupation ?? null,
+    current_district: snapshot.district ?? null,
+    current_state: snapshot.state ?? null,
+  });
+  return { ...applicationJSON, review };
 }

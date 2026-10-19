@@ -2,7 +2,13 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
-export const APPLICATION_STATUSES = ["submitted", "withdrawn"];
+/**
+ * `shortlisted` is an office-side triage mark, not an offer of work. It is
+ * visible to the worker so they know their application was read; nothing else
+ * about the decision is stored or implied.
+ */
+export const APPLICATION_STATUSES = ["submitted", "shortlisted", "withdrawn"];
+export const REVIEWABLE_STATUSES = ["submitted", "shortlisted"];
 
 /**
  * JobApplication — a worker's expression of interest in a JobPosting.
@@ -27,6 +33,10 @@ const JobApplicationSchema = new Schema(
       district: { type: String, default: null },
       state: { type: String, default: null },
     },
+
+    // Who triaged the application, and when. Kept for the audit trail only.
+    reviewed_at: { type: Date, default: null },
+    reviewed_by: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true, collection: "job_applications" }
 );
@@ -36,10 +46,13 @@ JobApplicationSchema.index({ job_id: 1, worker_id: 1 }, { unique: true });
 JobApplicationSchema.methods.toJSON = function () {
   return {
     id: String(this._id),
-    job_id: String(this.job_id),
+    // `job_id` may arrive populated (applications/mine); unwrap the document so
+    // the worker's client always receives an id string, never "[object Object]".
+    job_id: String(this.job_id?._id ?? this.job_id),
     status: this.status,
     note: this.note,
     share_contact: this.share_contact,
+    shortlisted: this.status === "shortlisted",
     created_at: this.createdAt,
     updated_at: this.updatedAt,
   };
@@ -61,6 +74,8 @@ JobApplicationSchema.methods.toOfficialJSON = function () {
       // Only present when the worker explicitly consented.
       contact_phone: this.share_contact ? this.contact_phone : null,
     },
+    shortlisted: this.status === "shortlisted",
+    reviewed_at: this.reviewed_at,
     created_at: this.createdAt,
   };
 };

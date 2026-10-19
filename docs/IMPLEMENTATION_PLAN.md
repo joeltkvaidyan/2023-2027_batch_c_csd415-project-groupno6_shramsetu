@@ -186,18 +186,33 @@ employer directory, employer accounts, and any verification claim.
 - `server/src/utils/jobMatch.js` — pure additive scorer with a documented
   weight table and a visibility floor; unit-tested
 - `server/src/routes/jobs.js` — worker matching/detail/apply/withdraw;
-  official create/close/applicants
+  official create/close/applicants/review
 - `frontend/src/pages/JobsPage.tsx`, `frontend/src/components/government/JobsPanel.tsx`
 - Rules: jurisdiction forced on create; ownership checked before any applicant
   query (404, not 403, for foreign ids); contact phone shared only on explicit
   worker consent; `verification` pinned to `unverified` in the schema.
 
+#### 9.2.1 Applicant review ("review workers")
+
+- `scoreApplicant()` in `server/src/utils/jobMatch.js` mirrors the worker
+  scorer: trade 50, district 30, state 15, any-trade 20. It reports
+  `detail_not_recorded` for a thin profile rather than scoring absence.
+- `PATCH /jobs/:id/applications/:applicationId` sets `submitted` or
+  `shortlisted` for the posting office only, records `reviewed_at` / `reviewed_by`,
+  and writes an audit entry. A foreign office gets `404`.
+- `shortlisted` is triage: the worker sees "the office read your application —
+  this is not an offer of work". Re-applying cannot wipe the mark; withdrawing
+  clears both the mark and any shared phone number.
+- `JobsPanel` shows the queue sorted by fit with reason chips, an All/Shortlisted
+  filter, consent-aware contact display, and the same disclaimers the worker
+  sees.
+
 ### 9.3 Dashboards
 
 - Worker: three-stat work snapshot (job matches, saved employers, unpaid
   wages) plus two new tiles, all fed by existing authenticated endpoints.
-- Government: "Job Listings" tab with create, close/reopen, applicant counts
-  and consent-aware applicant details.
+- Government: "Job Listings" tab with create, close/reopen, applicant and
+  shortlisted counts, and the ranked applicant review queue.
 
 ### 9.4 Remaining follow-ups (not implemented, listed honestly)
 
@@ -207,5 +222,11 @@ employer directory, employer accounts, and any verification claim.
    an age-out job is needed before the table grows.
 3. **Application notifications** — applying does not yet notify the posting
    office through the existing notification model.
-4. **Richer matching** — incorporate wage-diary history and availability.
-5. **AI-service test execution** — blocked by uninstalled ML dependencies.
+4. **Richer matching** — incorporate wage-diary history, experience and
+   availability into both directions of the score.
+5. **Review outcomes** — only shortlist/un-shortlist exists. Interview
+   scheduling, offer records and applicant messaging need a decision model with
+   its own audit trail before they are safe to add.
+6. **A live browser pass** over the review queue against the running stack;
+   everything so far is API-level plus jsdom.
+7. **AI-service test execution** — blocked by uninstalled ML dependencies.

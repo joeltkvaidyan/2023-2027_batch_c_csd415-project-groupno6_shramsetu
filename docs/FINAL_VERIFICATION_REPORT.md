@@ -30,28 +30,29 @@ ran and exited 0. Where a check could not run, that is stated as a limitation.
 ### Server tests — `cd server && npx vitest run`
 
 ```
-✓ tests/jobs.test.js          (20 tests)
+✓ tests/jobs.test.js          (32 tests)
 ✓ tests/security.test.js      (43 tests)
 ✓ tests/parity.test.js         (6 tests)
 ✓ tests/contentPolicy.test.js  (1 test)
 
 Test Files  4 passed (4)
-     Tests  70 passed (70)
-  Duration  8.92s
+     Tests  82 passed (82)
+  Duration  9.08s
 ```
 
 ### Frontend tests — `cd frontend && npx vitest run`
 
 ```
-✓ src/services/documentSecurity.test.ts   (23 tests)
-✓ src/components/ProtectedRoute.test.tsx   (7 tests)
-✓ src/components/GrievanceStatusBadge.test.tsx (8 tests)
-✓ src/i18n/languages.test.ts              (12 tests)
-✓ src/pages/phase2.pages.test.tsx          (7 tests)
+✓ src/services/documentSecurity.test.ts        (23 tests)
+✓ src/components/ProtectedRoute.test.tsx        (7 tests)
+✓ src/components/GrievanceStatusBadge.test.tsx  (8 tests)
+✓ src/components/government/JobsPanel.test.tsx   (4 tests)
+✓ src/i18n/languages.test.ts                   (12 tests)
+✓ src/pages/phase2.pages.test.tsx               (7 tests)
 
-Test Files  5 passed (5)
-     Tests  57 passed (57)
-  Duration  8.65s
+Test Files  6 passed (6)
+     Tests  61 passed (61)
+  Duration  11.19s
 ```
 
 ### Frontend typecheck — `cd frontend && npx tsc --noEmit`
@@ -61,14 +62,38 @@ Exits 0 with no diagnostics.
 ```
 > tsc -b && vite build
 ✓ 1714 modules transformed.
-dist/assets/index-DvhDMiUr.js  377.04 kB │ gzip: 93.75 kB
-✓ built in 5.69s
+dist/assets/index-Rs80ctuK.js  422.86 kB │ gzip: 105.73 kB
+✓ built in 6.40s
 ```
 
 ### Locale parity (scripted check)
-All six bundles (`en, hi, bn, te, ta, ml`) have identical top-level sections —
-verified by comparing key sets after the Phase 2 merge, and enforced in CI-able
-form by `src/i18n/languages.test.ts`.
+All six bundles (`en, hi, bn, te, ta, ml`) have identical top-level sections and
+identical job/review key sets (61 new keys per locale) — verified by comparing
+key sets after the applicant-review merge, and enforced in CI-able form by
+`src/i18n/languages.test.ts`.
+
+### Live end-to-end API smoke (real server, not mocked)
+
+Started the API in development mode against embedded MongoDB
+(`MONGODB_URI=memory`, which seeds 10 demo workers and the Kerala/Ernakulam
+officials) and drove the review flow over HTTP with the seeded accounts:
+
+| Step | Result |
+|---|---|
+| `POST /auth/government/login` (EKM001) | 200, district `Ernakulam` |
+| `POST /jobs` (mason, Ernakulam, 4 openings) | 201, `verification: unverified`, state forced to `Kerala` |
+| `POST /auth/worker/login` (9555500101) | 200, `SS-100001` |
+| `GET /jobs` as the worker | 200, top match `strong` 95 with `occupation_match`, `same_district`, `recent_posting`, `multiple_openings`, `wage_listed` |
+| `POST /jobs/:id/apply` | 201, `submitted`; contact not shared |
+| `GET /jobs/:id/applications` as the office | 200, `{total: 1, shortlisted: 0}`, review `strong` 80, `contact_phone: null` |
+| `PATCH /jobs/:id/applications/:appId` → `shortlisted` | 200, `shortlisted: true`, `reviewed_at` set |
+| `GET /jobs/applications/mine` as the worker | 200, `[('shortlisted', True)]` |
+| `GET /jobs/posted` as the office | 200, `applications_count: 1`, `shortlisted_count: 1` |
+| same `PATCH` without a token | 401 |
+
+This surfaced one real defect that the unit tests had missed (recency was read
+from `createdAt` while the API emits `created_at`, so fresh listings never earned
+the recency weight); see §5. The numbers above are from the re-run after the fix.
 
 ### AI service tests — NOT RUN (limitation)
 `ai-service/tests/` exists, but running it needs heavy ML dependencies
@@ -169,6 +194,33 @@ Hindi, Bengali, Telugu, Tamil and Malayalam. Occupation codes are mapped
 through a single `OCCUPATION_LABEL_KEYS` table so screens look up the existing
 `auth.occupation*` translations instead of inventing keys from the code.
 
+### 4.6 Applicant review — "review workers" for the posting office
+
+The office can now open a listing and review the workers who applied, ranked by
+a reverse of the same explainable scorer:
+
+| File | Purpose |
+|---|---|
+| `server/src/utils/jobMatch.js` | `scoreApplicant()` / `withApplicantMatch()` — additive fit from the worker's stored trade/district/state (50/30/15, `any` trade = 20) |
+| `server/src/models/JobApplication.js` | `shortlisted` status plus `reviewed_at` / `reviewed_by`; `toOfficialJSON` exposes both |
+| `server/src/routes/jobs.js` | `GET /jobs/:id/applications` now ranks + returns counts and a fit note; new `PATCH /jobs/:id/applications/:applicationId` |
+| `frontend/src/components/government/JobsPanel.tsx` | Review queue with fit badges, reason chips, All/Shortlisted filter, shortlist toggle |
+| `frontend/src/pages/JobsPage.tsx` | Score meter, shortlisted state, debounced search, clearer empty state |
+
+Honesty rules enforced in code and UI:
+
+- `shortlisted` is a triage mark. The worker sees "the office read your
+  application — this is not an offer of work", and the office card says the
+  same. No status implies hiring, and no wage/placement claim is made.
+- The fit score compares only trade, district and state. A thin profile yields
+  `detail_not_recorded` instead of a low score presented as a judgement.
+- A worker's phone still appears only when they ticked "share my number";
+  otherwise the panel says to contact them through the office.
+- Shortlisting is scoped to the posting office: a foreign official gets `404`,
+  and an application id is only reviewable through its own listing.
+- Re-applying cannot wipe a shortlist (`409 already_applied`), and withdrawing
+  clears both consent and the review mark.
+
 ---
 
 ## 5. Defects found and fixed during this work
@@ -190,6 +242,15 @@ through a single `OCCUPATION_LABEL_KEYS` table so screens look up the existing
 6. **Frontend test-mock identity bug** — the new screen tests initially hung
    because a re-created `t` function changed an effect dependency; the mock now
    mirrors react-i18next's stable `t`, matching production behaviour.
+7. **Recency never scored** — `scoreJob` read `job.createdAt`, but the API
+   serialises `created_at`. Every fresh listing was silently losing the
+   recency weight its reasons promised (live smoke showed 80 instead of 95).
+   Fixed to accept both shapes, with a regression test.
+8. **Populated `job_id` stringified** — `applications/mine` populates `job_id`,
+   and `String(this.job_id)` could yield a document string. It now unwraps
+   `_id` so the worker client always receives an id.
+9. **Missing `wages.exportCSV` in five locales** — the wage diary's export
+   button fell back to English for hi/bn/te/ta/ml. Translated.
 
 ---
 
@@ -208,15 +269,26 @@ through a single `OCCUPATION_LABEL_KEYS` table so screens look up the existing
   not consider wage history, availability or travel distance.
 - **AI service tests were not run** (missing heavy ML dependencies), so RAG
   retrieval/refusal behaviour is unchanged and unverified in this environment.
-- **No end-to-end browser test** was executed: the flow is covered by server
-  integration tests plus mocked-API component tests, not by a live browser
-  session against a running stack.
+- **No end-to-end browser test** was executed. The API flow *was* exercised
+  end-to-end against a running server (§2), and the screens are covered by
+  jsdom tests, but nobody has clicked through the review queue in a real
+  browser yet — the dev preview is running for exactly that check.
+- **Review is triage, not hiring.** There is no interview scheduling, no offer
+  letter, no candidate messaging and no notification to the applicant beyond a
+  status flag; all of that would need a decision-record model first.
 
 ## 7. Reproducing the verification
 
 ```bash
-cd server   && npx vitest run          # 70 passed
-cd frontend && npx tsc --noEmit        # clean
-cd frontend && npx vitest run          # 57 passed
-cd frontend && npm run build           # tsc -b && vite build succeeds
+cd server   && npx vitest run           # 82 passed (4 files)
+cd frontend && npx tsc --noEmit         # clean
+cd frontend && npx vitest run           # 61 passed (6 files)
+cd frontend && npm run build            # tsc -b && vite build succeeds
+
+# live API smoke (seeded demo data, embedded Mongo)
+cd server && MONGODB_URI=memory node src/index.js
 ```
+
+For the UI, the Vite dev server proxies `/api` to `localhost:8000`, so with both
+processes running the government dashboard's **Job Listings** tab exercises the
+real review flow (sign in as `EKM001` / `Ernakulam@123`).

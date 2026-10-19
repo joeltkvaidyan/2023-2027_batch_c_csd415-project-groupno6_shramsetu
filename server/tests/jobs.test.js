@@ -18,7 +18,7 @@ import { WageEntry } from "../src/models/WageEntry.js";
 import { JobPosting } from "../src/models/JobPosting.js";
 import { JobApplication } from "../src/models/JobApplication.js";
 import { hashPassword, signToken } from "../src/utils/crypto.js";
-import { scoreJob, MIN_MATCH_SCORE } from "../src/utils/jobMatch.js";
+import { scoreJob, scoreApplicant, MIN_MATCH_SCORE } from "../src/utils/jobMatch.js";
 
 const api = supertest(app);
 let mongod;
@@ -271,6 +271,24 @@ describe("jobMatch scorer", () => {
     expect(score).toBeGreaterThanOrEqual(MIN_MATCH_SCORE);
   });
 
+  it("credits recency from the serialised `created_at` field too", () => {
+    // Regression: the API sends created_at, so reading only createdAt meant a
+    // brand-new listing never earned the recency weight its reasons promised.
+    const { reasons, score } = scoreJob(
+      {
+        occupation: "construction",
+        district: "Ernakulam",
+        state: "Kerala",
+        openings: 1,
+        created_at: "2026-10-18T00:00:00.000Z",
+      },
+      worker,
+      now
+    );
+    expect(reasons).toContain("recent_posting");
+    expect(score).toBe(45 + 25 + 15);
+  });
+
   it("scores a mismatched, far-away, stale listing below the visibility floor", () => {
     const { score } = scoreJob(
       {
@@ -481,5 +499,211 @@ describe("job listings", () => {
   it("keeps applications unique per worker and listing", async () => {
     const count = await JobApplication.countDocuments({ job_id: kerakaJobId, worker_id: ids.workerA._id });
     expect(count).toBe(1);
+  });
+});
+
+// ── Applicant review (reverse matching for the posting office) ───────
+describe("scoreApplicant", () => {
+  const job = { occupation: "construction", district: "Thrissur", state: "Kerala" };
+
+  it("rates a same-trade, same-state applicant above a different-trade one", () => {
+    const near = scoreApplicant(job, {
+      occupation: "construction",
+      current_district: "Ernakulam",
+      current_state: "Kerala",
+    });
+    const far = scoreApplicant(job, {
+      occupation: "hospitality",
+      current_district: "Chennai",
+      current_state: "Tamil Nadu",
+    });
+
+    expect(near.score).toBe(65);
+    expect(near.level).toBe("good");
+    expect(near.reasons).toEqual(expect.arrayContaining(["occupation_match", "same_state"]));
+
+    expect(far.score).toBe(0);
+    expect(far.level).toBe("possible");
+    expect(far.reasons).toContain("different_trade");
+  });
+
+  it("flags a thin profile instead of scoring absence as a judgement", () => {
+    const { score, reasons } = scoreApplicant(job, { occupation: null });
+    expect(score).toBe(0);
+    expect(reasons).toContain("detail_not_recorded");
+    expect(reasons).not.toContain("different_trade");
+  });
+
+  it("gives an 'any trade' listing partial credit to everyone", () => {
+    const { score, reasons } = scoreApplicant({ occupation: "any", state: "Kerala" }, {
+      occupation: "weaving",
+      current_state: "Kerala",
+    });
+    expect(reasons).toContain("open_to_any_trade");
+    expect(reasons).not.toContain("different_trade");
+    expect(score).toBeGreaterThan(0);
+  });
+});
+
+describe("applicant review", () => {
+  let jobId;
+  let appA; // construction worker, Kerala (matches the trade)
+  let appB; // hospitality worker, Tamil Nadu (different trade)
+
+  beforeAll(async () => {
+    const created = await api
+      .post("/api/v1/jobs")
+      .set(auth("officialKL"))
+      .send({
+        title: "Mason for Thrissur site",
+        description: "Long enough description for the applicant review flow to pass validation.",
+        employer_name: "Thrissur Builders",
+        occupation: "construction",
+        district: "Thrissur",
+        wage_min: 700,
+        wage_max: 900,
+      });
+    expect(created.status).toBe(201);
+    jobId = created.body.id;
+
+    const a = await api
+      .post(`/api/v1/jobs/${jobId}/apply`)
+      .set(auth("workerA"))
+      .send({ note: "Ten years on site" });
+    expect(a.status).toBe(201);
+    appA = a.body.id;
+
+    const b = await api
+      .post(`/api/v1/jobs/${jobId}/apply`)
+      .set(auth("workerB"))
+      .send({ share_contact: true });
+    expect(b.status).toBe(201);
+    appB = b.body.id;
+  });
+
+  it("ranks the closer profile first and explains the fit", async () => {
+    const res = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialKL"));
+    expect(res.status).toBe(200);
+    expect(res.body.applications).toHaveLength(2);
+    expect(res.body.counts).toEqual({ total: 2, shortlisted: 0 });
+
+    const [first, second] = res.body.applications;
+    expect(first.id).toBe(appA);
+    expect(first.review.score).toBeGreaterThan(second.review.score);
+    expect(first.review.reasons).toEqual(expect.arrayContaining(["occupation_match", "same_state"]));
+    expect(second.review.reasons).toContain("different_trade");
+    expect(res.body.matching_note).toMatch(/not a rating of the worker/i);
+  });
+
+  it("never reveals a phone number the worker did not share", async () => {
+    const res = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialKL"));
+    const byId = new Map(res.body.applications.map((a) => [a.id, a]));
+    expect(byId.get(appA).worker.contact_phone).toBeNull();
+    expect(byId.get(appB).worker.contact_phone).toBe(ids.workerB.mobile_number);
+  });
+
+  it("shortlists an applicant, shows it to the worker, and can undo it", async () => {
+    const shortlist = await api
+      .patch(`/api/v1/jobs/${jobId}/applications/${appA}`)
+      .set(auth("officialKL"))
+      .send({ status: "shortlisted" });
+    expect(shortlist.status).toBe(200);
+    expect(shortlist.body.shortlisted).toBe(true);
+    expect(shortlist.body.reviewed_at).toBeTruthy();
+
+    const list = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialKL"));
+    expect(list.body.counts.shortlisted).toBe(1);
+
+    const posted = await api.get("/api/v1/jobs/posted").set(auth("officialKL"));
+    const posting = posted.body.jobs.find((j) => j.id === jobId);
+    expect(posting.applications_count).toBe(2);
+    expect(posting.shortlisted_count).toBe(1);
+
+    // The worker learns their application was read — nothing more.
+    const mine = await api.get("/api/v1/jobs/applications/mine").set(auth("workerA"));
+    const own = mine.body.applications.find((a) => a.job_id === jobId);
+    expect(own.status).toBe("shortlisted");
+    expect(own.shortlisted).toBe(true);
+
+    const undo = await api
+      .patch(`/api/v1/jobs/${jobId}/applications/${appA}`)
+      .set(auth("officialKL"))
+      .send({ status: "submitted" });
+    expect(undo.status).toBe(200);
+    expect(undo.body.shortlisted).toBe(false);
+  });
+
+  it("refuses to wipe a shortlist when the worker re-applies", async () => {
+    await api
+      .patch(`/api/v1/jobs/${jobId}/applications/${appA}`)
+      .set(auth("officialKL"))
+      .send({ status: "shortlisted" });
+
+    const again = await api.post(`/api/v1/jobs/${jobId}/apply`).set(auth("workerA")).send({});
+    expect(again.status).toBe(409);
+    expect(again.body.code).toBe("already_applied");
+
+    const list = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialKL"));
+    const still = list.body.applications.find((a) => a.id === appA);
+    expect(still.shortlisted).toBe(true);
+  });
+
+  it("hides a withdrawn application from the office queue", async () => {
+    const withdraw = await api.delete(`/api/v1/jobs/${jobId}/apply`).set(auth("workerA"));
+    expect(withdraw.status).toBe(200);
+
+    const list = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialKL"));
+    expect(list.body.applications.map((a) => a.id)).not.toContain(appA);
+    expect(list.body.counts.total).toBe(1);
+
+    // Re-applying revives the same row, so the API answers 200, not 201.
+    const readd = await api.post(`/api/v1/jobs/${jobId}/apply`).set(auth("workerA")).send({});
+    expect(readd.status).toBe(200);
+    // Re-applying starts a fresh, unreviewed application.
+    expect(await JobApplication.findById(readd.body.id).then((a) => a.reviewed_at)).toBeNull();
+    appA = readd.body.id;
+  });
+
+  it("validates the review status", async () => {
+    const bad = await api
+      .patch(`/api/v1/jobs/${jobId}/applications/${appA}`)
+      .set(auth("officialKL"))
+      .send({ status: "hired" });
+    expect(bad.status).toBe(422);
+  });
+
+  it("returns 404 — not 403 — to an office from another jurisdiction", async () => {
+    const foreign = await api
+      .patch(`/api/v1/jobs/${jobId}/applications/${appA}`)
+      .set(auth("officialTN"))
+      .send({ status: "shortlisted" });
+    expect(foreign.status).toBe(404);
+
+    const foreignList = await api.get(`/api/v1/jobs/${jobId}/applications`).set(auth("officialTN"));
+    expect(foreignList.status).toBe(404);
+
+    // The record is untouched by the foreign attempt.
+    const stillSubmitted = await JobApplication.findById(appA);
+    expect(stillSubmitted.status).toBe("submitted");
+  });
+
+  it("does not let an application be reviewed through the wrong listing", async () => {
+    const otherJob = await api
+      .post("/api/v1/jobs")
+      .set(auth("officialKL"))
+      .send({
+        title: "Helper for a second site",
+        description: "A second listing used to prove application ids are scoped to their job.",
+        employer_name: "Thrissur Builders",
+        occupation: "construction",
+        district: "Thrissur",
+      });
+    expect(otherJob.status).toBe(201);
+
+    const mismatched = await api
+      .patch(`/api/v1/jobs/${otherJob.body.id}/applications/${appA}`)
+      .set(auth("officialKL"))
+      .send({ status: "shortlisted" });
+    expect(mismatched.status).toBe(404);
   });
 });

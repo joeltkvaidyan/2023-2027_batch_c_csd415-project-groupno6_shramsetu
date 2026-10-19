@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Briefcase, MapPin, Phone, Search, Users } from "lucide-react";
+import { AlertTriangle, Briefcase, CheckCircle2, MapPin, Phone, Search, Users } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
@@ -15,11 +15,20 @@ import type { JobApplication, JobMatch, JobMatchLevel } from "../types";
  * from the worker's own profile (not a recommendation or a job guarantee), and
  * every listing is unverified by ShramSetu — so it repeats the "never pay a
  * fee" warning and links to the scam checker.
+ *
+ * "Shortlisted" is shown as "the office read your application", never as an
+ * offer: no status a worker sees here can promise work.
  */
 const LEVEL_TONE: Record<JobMatchLevel, "success" | "info" | "neutral"> = {
   strong: "success",
   good: "info",
   possible: "neutral",
+};
+
+const LEVEL_BAR: Record<JobMatchLevel, string> = {
+  strong: "bg-emerald-500",
+  good: "bg-sky-500",
+  possible: "bg-gray-400",
 };
 
 export default function JobsPage() {
@@ -28,14 +37,21 @@ export default function JobsPage() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [occupation, setOccupation] = useState("");
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [error, setError] = useState("");
   const [busyJobId, setBusyJobId] = useState<string | null>(null);
+
+  // Typing should not fire a request per keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const load = useCallback(async () => {
     try {
       const params: Record<string, string> = {};
       if (occupation) params.occupation = occupation;
-      if (query.trim()) params.q = query.trim();
+      if (debouncedQuery.trim()) params.q = debouncedQuery.trim();
 
       const [jobsRes, appsRes] = await Promise.all([
         api.get<{ jobs: JobMatch[] }>("/jobs", { params }),
@@ -48,7 +64,7 @@ export default function JobsPage() {
       setJobs([]);
       setError(apiErrorMessage(err, t("common.error")));
     }
-  }, [occupation, query, t]);
+  }, [occupation, debouncedQuery, t]);
 
   useEffect(() => {
     void load();
@@ -78,6 +94,11 @@ export default function JobsPage() {
     }
   };
 
+  const shortlistedCount = useMemo(
+    () => applications.filter((a) => a.status === "shortlisted").length,
+    [applications]
+  );
+
   return (
     <Screen title={t("jobs.title", "Job matches")} onBack={true}>
       <div className="space-y-4 mt-4 pb-10">
@@ -101,6 +122,7 @@ export default function JobsPage() {
               placeholder={t("jobs.searchPlaceholder", "Search by work or place")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label={t("jobs.searchPlaceholder", "Search by work or place")}
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -115,6 +137,14 @@ export default function JobsPage() {
               </button>
             ))}
           </div>
+          <p className="text-[11px] text-gray-400 mt-2">
+            {jobs === null
+              ? t("jobs.loadingMatches", "Finding listings near your profile…")
+              : t("jobs.resultsCount", {
+                  count: jobs.length,
+                  defaultValue: "{{count}} listing(s) match your profile",
+                })}
+          </p>
         </Card>
 
         {error && (
@@ -125,17 +155,42 @@ export default function JobsPage() {
 
         {applications.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              {t("jobs.myApplications", "My applications")}
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                {t("jobs.myApplications", "My applications")}
+              </h2>
+              {shortlistedCount > 0 && (
+                <span className="text-[11px] text-sky-600 dark:text-sky-300">
+                  {t("jobs.shortlistedCount", {
+                    count: shortlistedCount,
+                    defaultValue: "{{count}} shortlisted by the office",
+                  })}
+                </span>
+              )}
+            </div>
             {applications.map((a) => (
               <Card key={a.id} className="!p-3">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {a.job?.title ?? t("jobs.listingUnavailable", "Listing no longer available")}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {t("jobs.appliedOn", "Applied on")} {new Date(a.created_at).toLocaleDateString()}
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {a.job?.title ?? t("jobs.listingUnavailable", "Listing no longer available")}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {t("jobs.appliedOn", "Applied on")} {new Date(a.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {a.status === "shortlisted" && (
+                    <Badge tone="info">{t("jobs.shortlisted", "Shortlisted")}</Badge>
+                  )}
+                </div>
+                {a.status === "shortlisted" && (
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    {t(
+                      "jobs.shortlistedNote",
+                      "The office read your application. This is not an offer of work — keep applying."
+                    )}
+                  </p>
+                )}
               </Card>
             ))}
           </div>
@@ -149,6 +204,18 @@ export default function JobsPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("jobs.empty", "No job matches right now. New listings from your district will appear here.")}
             </p>
+            {(occupation || query) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOccupation("");
+                  setQuery("");
+                }}
+                className="mt-3 text-xs font-semibold text-brand-600 dark:text-brand-300 underline cursor-pointer"
+              >
+                {t("jobs.clearFilters", "Clear search and trade filter")}
+              </button>
+            )}
           </Card>
         ) : (
           <div className="space-y-3">
@@ -161,7 +228,24 @@ export default function JobsPage() {
                   </Badge>
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-300">{job.employer_name}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${LEVEL_BAR[job.match.level]}`}
+                      style={{ width: `${Math.min(100, Math.max(0, job.match.score))}%` }}
+                      role="meter"
+                      aria-valuenow={job.match.score}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={t("jobs.matchScore", "Profile fit")}
+                    />
+                  </div>
+                  <span className="text-[11px] tabular-nums text-gray-500 dark:text-gray-400">
+                    {job.match.score}/100
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{job.employer_name}</p>
 
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 space-y-1">
                   <p className="flex items-center gap-1">
@@ -177,8 +261,8 @@ export default function JobsPage() {
                   <p className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
                     {t("jobs.openings", "Openings")}: {job.openings}
+                    {job.posted_by_department && <span className="ml-1">· {job.posted_by_department}</span>}
                   </p>
-                  {job.posted_by_department && <p>{job.posted_by_department}</p>}
                 </div>
 
                 <p className="text-sm text-gray-700 dark:text-gray-300 mt-3">{job.description}</p>
@@ -205,10 +289,17 @@ export default function JobsPage() {
                   )}
                 </p>
 
-                <div className="flex gap-2 mt-3">
+                <div className="flex flex-wrap items-center gap-2 mt-3">
                   {job.applied ? (
                     <>
-                      <Badge tone="success">{t("jobs.applied", "Applied")}</Badge>
+                      {job.application_status === "shortlisted" ? (
+                        <Badge tone="info">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          {t("jobs.shortlisted", "Shortlisted")}
+                        </Badge>
+                      ) : (
+                        <Badge tone="success">{t("jobs.applied", "Applied")}</Badge>
+                      )}
                       <Button
                         size="sm"
                         variant="secondary"
@@ -238,6 +329,15 @@ export default function JobsPage() {
                     </>
                   )}
                 </div>
+
+                {job.application_status === "shortlisted" && (
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
+                    {t(
+                      "jobs.shortlistedNote",
+                      "The office read your application. This is not an offer of work — keep applying."
+                    )}
+                  </p>
+                )}
               </Card>
             ))}
           </div>

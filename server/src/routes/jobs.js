@@ -1,10 +1,10 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import { JobPosting, JOB_STATUSES, WORK_TYPES, WAGE_PERIODS } from "../models/JobPosting.js";
-import { JobApplication } from "../models/JobApplication.js";
+import { JobApplication, REVIEWABLE_STATUSES } from "../models/JobApplication.js";
 import { User } from "../models/User.js";
 import { JOB_OCCUPATIONS } from "../utils/occupations.js";
-import { MIN_MATCH_SCORE, withMatch } from "../utils/jobMatch.js";
+import { MIN_MATCH_SCORE, withMatch, withApplicantMatch } from "../utils/jobMatch.js";
 import { authenticate, requireWorker, requireGovernment, audit } from "../middleware/auth.js";
 
 const router = Router();
@@ -176,13 +176,17 @@ router.get("/", authenticate, requireWorker, async (req, res) => {
     // Applied state for this worker only.
     const applied = await JobApplication.find({
       worker_id: req.userId,
-      status: "submitted",
+      status: { $in: REVIEWABLE_STATUSES },
       job_id: { $in: jobs.map((j) => j.id) },
-    }).select("job_id");
-    const appliedIds = new Set(applied.map((a) => String(a.job_id)));
+    }).select("job_id status");
+    const appliedStatus = new Map(applied.map((a) => [String(a.job_id), a.status]));
 
     res.json({
-      jobs: jobs.map((job) => ({ ...job, applied: appliedIds.has(job.id) })),
+      jobs: jobs.map((job) => ({
+        ...job,
+        applied: appliedStatus.has(job.id),
+        application_status: appliedStatus.get(job.id) ?? null,
+      })),
       total: jobs.length,
       matching_note:
         "Match scores are guidance based on the trade, district and listing age you provided. They are not a promise of work or of the stated wage.",
@@ -195,7 +199,12 @@ router.get("/", authenticate, requireWorker, async (req, res) => {
 // ── My applications ──────────────────────────────────────────────────
 router.get("/applications/mine", authenticate, requireWorker, async (req, res) => {
   try {
-    const applications = await JobApplication.find({ worker_id: req.userId, status: "submitted" })
+    // Shortlisted applications stay visible to the worker: the office marked
+    // them as read, which is not an offer and must not silently vanish.
+    const applications = await JobApplication.find({
+      worker_id: req.userId,
+      status: { $in: REVIEWABLE_STATUSES },
+    })
       .sort({ createdAt: -1 })
       .populate("job_id");
 
@@ -224,13 +233,28 @@ router.get("/posted", authenticate, requireGovernment, async (req, res) => {
     const jobs = await JobPosting.find(filter).sort({ createdAt: -1 }).limit(200);
 
     const counts = await JobApplication.aggregate([
-      { $match: { job_id: { $in: jobs.map((j) => j._id) }, status: "submitted" } },
-      { $group: { _id: "$job_id", n: { $sum: 1 } } },
+      {
+        $match: {
+          job_id: { $in: jobs.map((j) => j._id) },
+          status: { $in: REVIEWABLE_STATUSES },
+        },
+      },
+      { $group: { _id: { job: "$job_id", status: "$status" }, n: { $sum: 1 } } },
     ]);
-    const countMap = new Map(counts.map((c) => [String(c._id), c.n]));
+    const totalMap = new Map();
+    const shortlistMap = new Map();
+    for (const c of counts) {
+      const key = String(c._id.job);
+      totalMap.set(key, (totalMap.get(key) ?? 0) + c.n);
+      if (c._id.status === "shortlisted") shortlistMap.set(key, c.n);
+    }
 
     res.json({
-      jobs: jobs.map((j) => ({ ...j.toJSON(), applications_count: countMap.get(String(j._id)) ?? 0 })),
+      jobs: jobs.map((j) => ({
+        ...j.toJSON(),
+        applications_count: totalMap.get(String(j._id)) ?? 0,
+        shortlisted_count: shortlistMap.get(String(j._id)) ?? 0,
+      })),
     });
   } catch (err) {
     fail(res, err, "Could not load your job listings.");
@@ -312,13 +336,83 @@ router.get("/:id/applications", authenticate, requireGovernment, async (req, res
     if (!job) return res.status(404).json({ detail: "Listing not found" });
     if (!canManage(official, job)) return res.status(404).json({ detail: "Listing not found" });
 
-    const applications = await JobApplication.find({ job_id: job._id, status: "submitted" }).sort({
-      createdAt: -1,
+    const applications = await JobApplication.find({
+      job_id: job._id,
+      status: { $in: REVIEWABLE_STATUSES },
     });
 
-    res.json({ applications: applications.map((a) => a.toOfficialJSON()) });
+    const jobJSON = job.toJSON();
+    const ranked = applications
+      .map((a) => withApplicantMatch(a.toOfficialJSON(), jobJSON))
+      // Best fit first, then oldest first so the queue is stable for two
+      // applicants with identical profiles.
+      .sort(
+        (a, b) =>
+          b.review.score - a.review.score ||
+          new Date(a.created_at) - new Date(b.created_at)
+      );
+
+    res.json({
+      applications: ranked,
+      counts: {
+        total: ranked.length,
+        shortlisted: ranked.filter((a) => a.shortlisted).length,
+      },
+      matching_note:
+        "Fit scores compare the trade, district and state the worker entered on their own profile with this listing. They are not a rating of the worker and must not replace reading the application.",
+    });
   } catch (err) {
     fail(res, err, "Could not load applicants.");
+  }
+});
+
+// ── Shortlist / un-shortlist an applicant ────────────────────────────
+//
+// Triage only: this records that the office read an application and wants to
+// follow up. It is not an offer, and the worker sees exactly that wording —
+// no status here can promise work.
+router.patch("/:id/applications/:applicationId", authenticate, requireGovernment, async (req, res) => {
+  try {
+    if (!isOid(req.params.id) || !isOid(req.params.applicationId)) {
+      return res.status(404).json({ detail: "Application not found" });
+    }
+
+    const status = String(req.body?.status || "");
+    if (!["submitted", "shortlisted"].includes(status)) {
+      return res.status(422).json({ detail: "status must be one of: submitted, shortlisted" });
+    }
+
+    const official = await User.findById(req.userId).select("is_superadmin");
+    const job = await JobPosting.findById(req.params.id);
+    if (!job) return res.status(404).json({ detail: "Application not found" });
+    // A foreign office gets the same 404 as a missing record.
+    if (!canManage(official, job)) return res.status(404).json({ detail: "Application not found" });
+
+    const application = await JobApplication.findOne({
+      _id: req.params.applicationId,
+      job_id: job._id,
+      status: { $in: REVIEWABLE_STATUSES },
+    });
+    if (!application) return res.status(404).json({ detail: "Application not found" });
+
+    application.status = status;
+    application.reviewed_at = new Date();
+    application.reviewed_by = official?._id ?? req.userId;
+    await application.save();
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: req.userId,
+      action: "job.application_review",
+      resourceType: "job_application",
+      resourceId: String(application._id),
+      ip: req.ip,
+      success: true,
+    });
+
+    res.json(withApplicantMatch(application.toOfficialJSON(), job.toJSON()));
+  } catch (err) {
+    fail(res, err, "Could not update the application.");
   }
 });
 
@@ -337,10 +431,11 @@ router.get("/:id", authenticate, async (req, res) => {
 
     // Workers can open an open listing, or any listing they applied to.
     const application = await JobApplication.findOne({ job_id: job._id, worker_id: req.userId });
-    if (job.status !== "open" && application?.status !== "submitted") {
+    const live = application && REVIEWABLE_STATUSES.includes(application.status);
+    if (job.status !== "open" && !live) {
       return res.status(404).json({ detail: "Listing not found" });
     }
-    res.json({ ...job.toJSON(), applied: application?.status === "submitted" });
+    res.json({ ...job.toJSON(), applied: Boolean(live), application_status: live ? application.status : null });
   } catch (err) {
     fail(res, err, "Could not load the listing.");
   }
@@ -357,7 +452,8 @@ router.post("/:id/apply", authenticate, requireWorker, async (req, res) => {
     }
 
     const existing = await JobApplication.findOne({ job_id: job._id, worker_id: req.userId });
-    if (existing?.status === "submitted") {
+    if (existing && REVIEWABLE_STATUSES.includes(existing.status)) {
+      // Re-applying must not quietly wipe a shortlist mark.
       return res.status(409).json({ detail: "You have already applied.", code: "already_applied" });
     }
 
@@ -376,6 +472,8 @@ router.post("/:id/apply", authenticate, requireWorker, async (req, res) => {
             note,
             share_contact: shareContact,
             contact_phone: shareContact ? worker?.mobile_number ?? null : null,
+            reviewed_at: null,
+            reviewed_by: null,
             worker_snapshot: {
               worker_code: worker?.worker_id ?? null,
               full_name: worker?.full_name ?? null,
@@ -425,8 +523,8 @@ router.delete("/:id/apply", authenticate, requireWorker, async (req, res) => {
   try {
     if (!isOid(req.params.id)) return res.status(404).json({ detail: "Application not found" });
     const application = await JobApplication.findOneAndUpdate(
-      { job_id: req.params.id, worker_id: req.userId, status: "submitted" },
-      { status: "withdrawn", contact_phone: null },
+      { job_id: req.params.id, worker_id: req.userId, status: { $in: REVIEWABLE_STATUSES } },
+      { status: "withdrawn", contact_phone: null, reviewed_at: null, reviewed_by: null },
       { new: true }
     );
     if (!application) return res.status(404).json({ detail: "Application not found" });

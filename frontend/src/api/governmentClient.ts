@@ -367,12 +367,22 @@ export interface GovJobPosting {
   verification: "unverified";
   created_at: string;
   applications_count: number;
+  shortlisted_count: number;
 }
+
+/** Why an applicant's stored profile lines up with this listing. */
+export type ApplicantReviewReason =
+  | "occupation_match"
+  | "open_to_any_trade"
+  | "different_trade"
+  | "same_district"
+  | "same_state"
+  | "detail_not_recorded";
 
 export interface GovJobApplicant {
   id: string;
   job_id: string;
-  status: string;
+  status: "submitted" | "shortlisted" | "withdrawn";
   note: string | null;
   worker: {
     worker_code: string | null;
@@ -383,6 +393,13 @@ export interface GovJobApplicant {
     /** null unless the worker ticked "share my number" when applying. */
     contact_phone: string | null;
   };
+  review: {
+    score: number;
+    level: "strong" | "good" | "possible";
+    reasons: ApplicantReviewReason[];
+  };
+  shortlisted: boolean;
+  reviewed_at: string | null;
   created_at: string;
 }
 
@@ -431,13 +448,38 @@ export async function govSetJobStatus(
   return data;
 }
 
+export interface JobApplicantsResponse {
+  applications: GovJobApplicant[];
+  counts: { total: number; shortlisted: number };
+  matching_note: string;
+}
+
 export async function govGetJobApplicants(
   token: string,
   jobId: string
-): Promise<{ applications: GovJobApplicant[] }> {
+): Promise<JobApplicantsResponse> {
   const { data } = await axios.get(`${API_BASE}/jobs/${jobId}/applications`, {
     headers: authHeaders(token),
   });
+  return data;
+}
+
+/**
+ * Triage mark only: "shortlisted" means this office read the application and
+ * wants to follow up. It is never an offer of work, and the worker sees it as
+ * exactly that.
+ */
+export async function govReviewJobApplicant(
+  token: string,
+  jobId: string,
+  applicationId: string,
+  status: "submitted" | "shortlisted"
+): Promise<GovJobApplicant> {
+  const { data } = await axios.patch(
+    `${API_BASE}/jobs/${jobId}/applications/${applicationId}`,
+    { status },
+    { headers: authHeaders(token) }
+  );
   return data;
 }
 

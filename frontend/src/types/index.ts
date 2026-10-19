@@ -207,14 +207,17 @@ export interface JobPosting {
 export interface JobMatch extends JobPosting {
   match: { score: number; level: JobMatchLevel; reasons: JobMatchReason[] };
   applied: boolean;
+  /** "shortlisted" only ever means the office read the application. */
+  application_status: "submitted" | "shortlisted" | null;
 }
 
 export interface JobApplication {
   id: string;
   job_id: string;
-  status: "submitted" | "withdrawn";
+  status: "submitted" | "shortlisted" | "withdrawn";
   note: string | null;
   share_contact: boolean;
+  shortlisted?: boolean;
   created_at: string;
   updated_at: string;
   job?: JobPosting;

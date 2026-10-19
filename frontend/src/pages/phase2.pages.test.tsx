@@ -18,7 +18,15 @@ const mocks = vi.hoisted(() => ({
   delete: vi.fn(),
   // Stable identity like the real react-i18next `t`: pages key their data
   // loading on `t`, so a new function per render would refetch forever.
-  t: (key: string, fallback?: string) => fallback ?? key,
+  // Mirrors i18next's fallback + {{count}} interpolation for object options.
+  t: (key: string, opts?: string | { defaultValue?: string; count?: number }) => {
+    if (typeof opts === "string") return opts;
+    if (opts && typeof opts === "object") {
+      const template = opts.defaultValue ?? key;
+      return template.replace(/\{\{count\}\}/g, String(opts.count ?? ""));
+    }
+    return key;
+  },
 }));
 
 vi.mock("../api/client", () => ({
