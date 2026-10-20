@@ -8,6 +8,7 @@ import i18n from "../i18n";
  */
 const TOKEN_KEY = "shramsetu.token";
 const GOV_TOKEN_KEY = "gov_token";
+const EMPLOYER_TOKEN_KEY = "employer_token";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -33,11 +34,34 @@ export function clearGovToken() {
   localStorage.removeItem(GOV_TOKEN_KEY);
 }
 
+export function getEmployerToken(): string | null {
+  return localStorage.getItem(EMPLOYER_TOKEN_KEY);
+}
+
+export function setEmployerToken(token: string) {
+  localStorage.setItem(EMPLOYER_TOKEN_KEY, token);
+}
+
+export function clearEmployerToken() {
+  localStorage.removeItem(EMPLOYER_TOKEN_KEY);
+}
+
 export const api = axios.create({
   // Absolute on Render static sites (VITE_API_BASE_URL is baked at build
   // time, e.g. https://shramsetu-api.onrender.com/api/v1); relative behind
   // the docker-compose nginx proxy where /api is same-origin.
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
+});
+
+/** Separate axios session for signed-in employer accounts (own token store). */
+export const employerApi = axios.create({
+  baseURL: api.defaults.baseURL,
+});
+
+employerApi.interceptors.request.use((config) => {
+  const token = getEmployerToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 /**

@@ -103,7 +103,7 @@ npm run dev
 # 2) AI service → http://127.0.0.1:8100   (first /ask or /speak downloads models)
 cd ai-service
   # Windows
-#   venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8100          # macOS/Linux
+#   venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8100          # macOS/Linux .\venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8100
 
 # 3) Frontend → http://localhost:5173
 #    (vite.config.ts sets port 5173. It serves HTTPS instead when a dev

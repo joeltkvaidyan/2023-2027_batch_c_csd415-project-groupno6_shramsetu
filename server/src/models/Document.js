@@ -39,7 +39,7 @@ const OtpCodeSchema = new Schema(
   {
     mobile_number: { type: String, required: true, index: true },
     code_hash: { type: String, required: true }, // sha256 — never store the raw OTP
-    purpose: { type: String, enum: ["register", "login"], default: "login" },
+    purpose: { type: String, enum: ["register", "login", "recovery"], default: "login" },
     attempts: { type: Number, default: 0 },
     expires_at: { type: Date, required: true },
     consumed_at: { type: Date, default: null },

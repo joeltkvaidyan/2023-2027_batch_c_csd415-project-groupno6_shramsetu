@@ -14,6 +14,7 @@ import json
 import logging
 import threading
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Optional
 
 try:
@@ -185,11 +186,26 @@ def _resolve_llm_chain():
             "LLM unavailable: no Groq or Gemini key. Falling back to a "
             "deterministic context answer (no facts invented)."
         )
-        _llm = {
-            "invoke": lambda messages: _local_fallback_answer(),
-        }
+        _llm = _LocalFallbackLLM()
         logger.info("LLM: local deterministic fallback (no remote keys)")
         return _llm
+
+
+class _LocalFallbackLLM:
+    """Stand-in LLM used only when no remote provider is configured.
+
+    Must behave like a ChatModel for answer_question(): .invoke(messages)
+    returns an object with a .content attribute (str). This used to be a
+    plain dict with an "invoke" lambda — which can never actually be
+    called via llm.invoke(), so every no-key request crashed into the
+    generic error path instead of serving the honest offline answer.
+    """
+
+    def invoke(self, messages):  # noqa: ARG002 - parity with ChatModel API
+        import json as _json
+
+        payload = _local_fallback_answer()
+        return SimpleNamespace(content=_json.dumps(payload))
 
 
 def _local_fallback_answer() -> dict:

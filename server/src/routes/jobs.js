@@ -458,8 +458,16 @@ router.post("/:id/apply", authenticate, requireWorker, async (req, res) => {
     }
 
     const worker = await User.findById(req.userId).select(
-      "worker_id full_name occupation current_district current_state mobile_number"
+      "worker_id full_name occupation current_district current_state mobile_number gov_approve_status"
     );
+    // Government acceptance gate: an official must have accepted the
+    // registration before the worker can apply to any listing.
+    if ((worker?.gov_approve_status ?? "pending") !== "accepted") {
+      return res.status(403).json({
+        detail: "Your registration is pending government acceptance. Once a labour office accepts you, you can apply to jobs.",
+        code: "gov_approval_pending",
+      });
+    }
 
     const shareContact = Boolean(req.body?.share_contact);
     const note = cleanText(req.body?.note, 300);

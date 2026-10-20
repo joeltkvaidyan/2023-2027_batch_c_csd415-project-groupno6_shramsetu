@@ -12,6 +12,21 @@ async function bootstrap() {
   fs.mkdirSync(config.uploadDir, { recursive: true });
   await connectDB();
 
+  // Schema-upgrade backfill: workers created BEFORE the government
+  // acceptance gate have no gov_approve_status field at all. The schema's
+  // documented intent is that they keep access ("accepted") — but every
+  // real filter is an equality match ("accepted"), so an absent field would
+  // hide them from the public directory forever. New registrations always
+  // set the field explicitly ("pending"), so this can never accept a fresh
+  // signup.
+  const backfill = await User.updateMany(
+    { role: "worker", gov_approve_status: { $exists: false } },
+    { $set: { gov_approve_status: "accepted" } }
+  );
+  if (backfill.modifiedCount) {
+    console.log(`[bootstrap] backfilled gov_approve_status=accepted for ${backfill.modifiedCount} pre-gate worker(s)`);
+  }
+
   // Bootstrap government superadmin — CREATE ONLY. The password is never
   // reset here: an attacker who can restart the server must not be able to
   // take over an admin account whose password was changed.

@@ -30,8 +30,9 @@ export default function WorkerRegisterPage() {
   const { loginWithToken } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [phase, setPhase] = useState<"form" | "otp">("form");
+  const [phase, setPhase] = useState<"form" | "recovery" | "otp">("form");
   const [formData, setFormData] = useState<RegistrationFormData>(EMPTY_FORM);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -166,11 +167,12 @@ export default function WorkerRegisterPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Registration successful, now need OTP verification.
-      // The code is delivered via the backend terminal (dev) or SMS
-      // (production) — it is never included in API responses.
+      // Registration successful. BEFORE the OTP screen, show the recovery key
+      // exactly once — the backup if the worker ever loses their phone AND
+      // password. Only a hash is stored server-side; this response is the
+      // only copy the worker will ever receive.
       setRegistrationData(res.data);
-      setPhase("otp");
+      setPhase(res.data.recovery_key ? "recovery" : "otp");
     } catch {
       setError(t("auth.registrationFailed"));
     } finally {
@@ -337,6 +339,39 @@ export default function WorkerRegisterPage() {
               </button>
             </p>
           </>
+        ) : phase === "recovery" && registrationData?.recovery_key ? (
+          /* ── Recovery key shown exactly once (hash-only server-side) ── */
+          <div className="space-y-4 animate-fade-up" data-testid="recovery-key-screen">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800 rounded-2xl p-5 text-center">
+              <p className="text-amber-900 dark:text-amber-200 font-bold">Back up your account</p>
+              <p className="text-amber-800 dark:text-amber-300 text-sm mt-1">
+                If you ever lose your phone AND your password, this key is the
+                only way to recover your account. Write it on paper now — it is
+                shown only this once.
+              </p>
+              <div className="mt-3 py-3 px-2 bg-white dark:bg-gray-900 rounded-xl font-mono text-lg font-bold tracking-widest text-gray-900 dark:text-brand-300 select-all">
+                {registrationData.recovery_key}
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(registrationData.recovery_key!);
+                    setKeyCopied(true);
+                    setTimeout(() => setKeyCopied(false), 1600);
+                  } catch {
+                    /* clipboard unavailable — the key is visible above */
+                  }
+                }}
+                className="mt-3 text-sm font-semibold text-amber-900 dark:text-amber-200 underline"
+              >
+                {keyCopied ? "Copied ✓" : "Copy the key"}
+              </button>
+            </div>
+            <button type="button" onClick={() => setPhase("otp")} className="btn-primary w-full">
+              I have saved my recovery key — continue
+            </button>
+          </div>
         ) : (
           <OtpPhase
             registrationData={registrationData}

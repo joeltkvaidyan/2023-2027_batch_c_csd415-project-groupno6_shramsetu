@@ -44,6 +44,8 @@ export interface RegistrationFormData {
 export interface RegistrationResponse {
   worker_id: string;
   mobile_number: string;
+  /** Shown ONCE on the next screen; the backend stores only its hash. */
+  recovery_key?: string;
 }
 
 export const STEPS = [

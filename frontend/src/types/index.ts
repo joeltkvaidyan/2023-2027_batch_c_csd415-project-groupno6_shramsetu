@@ -8,6 +8,36 @@ export interface Worker {
   profile_photo_path?: string | null;
   preferred_language: string;
   qr_code?: string | null;
+  /** Government acceptance gate state — the dashboard shows one honest badge. */
+  gov_approve_status?: "pending" | "accepted" | "rejected";
+  recovery_key_set?: boolean;
+}
+
+/** One row of the public “find a worker” directory (privacy-safe by design). */
+export interface PublicWorker {
+  id: string;
+  worker_code: string;
+  full_name: string;
+  occupation: string | null;
+  years_of_experience: number | null;
+  place: string | null;
+  current_district: string | null;
+  current_state: string | null;
+  rating: { average: number | null; count: number };
+  gov_accepted: true;
+}
+
+export interface PublicWorkersResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  workers: PublicWorker[];
+}
+
+export interface RatingSummary {
+  average: number | null;
+  count: number;
+  latest: { id: string; rater_role: string; rater_display_name: string; stars: number; comment: string | null; created_at: string }[];
 }
 
 export interface DocumentItem {

@@ -4,6 +4,7 @@ import { LogOut, Search, Users, UserCheck, Megaphone, Flag } from "lucide-react"
 import { getGovToken, clearGovToken } from "../api/client";
 import NotificationsPanel from "../components/government/NotificationsPanel";
 import JobsPanel from "../components/government/JobsPanel";
+import ApprovalsPanel from "../components/government/ApprovalsPanel";
 import {
   govGetStats,
   govGetWorkers,
@@ -20,7 +21,7 @@ import {
   type AuditLog,
 } from "../api/governmentClient";
 
-type Tab = "overview" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
+type Tab = "overview" | "approvals" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -103,6 +104,7 @@ export default function GovernmentDashboardPage() {
 
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: "overview", icon: "📊", label: "Overview" },
+    { key: "approvals", icon: "✅", label: "Approvals" },
     { key: "grievances", icon: "📢", label: "Grievances" },
     { key: "workers", icon: "👷", label: "Workers" },
     { key: "jobs", icon: "🧰", label: "Job Listings" },
@@ -177,7 +179,6 @@ export default function GovernmentDashboardPage() {
           </div>
         )}
 
-        {/* ── Overview Tab ──────────────────────────────────── */}
         {!loading && activeTab === "overview" && stats && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -245,7 +246,8 @@ export default function GovernmentDashboardPage() {
           </div>
         )}
 
-        {/* ── Workers Tab ───────────────────────────────────── */}
+        {/* ── Approvals Tab ───────────────────────────────────── */}
+        {!loading && activeTab === "approvals" && token && <ApprovalsPanel token={token} />}
         {!loading && activeTab === "workers" && (
           <div className="space-y-4">
             <div className="flex gap-3">

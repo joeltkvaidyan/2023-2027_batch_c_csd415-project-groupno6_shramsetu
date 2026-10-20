@@ -1,5 +1,6 @@
 import { Router } from "express";
 import crypto from "node:crypto";
+import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { Grievance, GRIEVANCE_STATUSES } from "../models/Grievance.js";
 import { PushNotification, WorkerNotification } from "../models/Notification.js";
@@ -72,6 +73,85 @@ router.get("/dashboard/stats", authenticate, requireGovernment, async (req, res)
   } catch (err) {
     console.error("[gov/stats]", err);
     res.status(500).json({ detail: "Could not load stats." });
+  }
+});
+
+// ── Worker acceptance queue (register → government accepts/rejects) ──
+router.get("/worker-approvals", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const status = ["pending", "accepted", "rejected"].includes(String(req.query.status))
+      ? String(req.query.status)
+      : "pending";
+    const filter = { role: "worker", ...workerScopeFilter(official), gov_approve_status: status };
+    const search = String(req.query.search || "").trim();
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ full_name: rx }, { worker_id: rx }, { mobile_number: rx }];
+    }
+    const workers = await User.find(filter).sort({ createdAt: -1 }).limit(200);
+    const counts = await Promise.all(
+      ["pending", "accepted", "rejected"].map(async (s) =>
+        ({ [s]: await User.countDocuments({ role: "worker", ...workerScopeFilter(official), gov_approve_status: s }) })
+      )
+    );
+    res.json({
+      status,
+      counts: Object.assign({}, ...counts),
+      workers: workers.map((w) => ({
+        id: String(w._id),
+        worker_id: w.worker_id,
+        full_name: w.full_name,
+        mobile_number: w.mobile_number,
+        occupation: w.occupation,
+        current_state: w.current_state,
+        current_district: w.current_district,
+        gov_approve_status: w.gov_approve_status,
+        created_at: w.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error("[gov/approvals]", err);
+    res.status(500).json({ detail: "Could not load the acceptance queue." });
+  }
+});
+
+router.patch("/workers/:id/approval", authenticate, requireGovernment, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ detail: "Worker not found" });
+    const status = String(req.body?.status || "");
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(422).json({ detail: "status must be one of: accepted, rejected" });
+    }
+    const official = await User.findById(req.userId);
+    const worker = await User.findById(req.params.id).select("worker_id role gov_approve_status");
+    if (!worker || worker.role !== "worker") return res.status(404).json({ detail: "Worker not found" });
+
+    // Jurisdiction boundary: an official outside the worker's registered
+    // state/district (and any non-superadmin) gets the same 404 as a missing
+    // worker, exactly like the grievance queue.
+    const { workerFilter } = await grievanceScopeFilter(official);
+    const inScope = await User.countDocuments({ _id: worker._id, ...workerFilter });
+    if (!inScope) return res.status(404).json({ detail: "Worker not found" });
+
+    worker.gov_approve_status = status;
+    worker.gov_approve_at = status === "accepted" ? new Date() : null;
+    worker.gov_approve_by = official._id;
+    await worker.save();
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: req.userId,
+      action: "worker.approval",
+      resourceType: "user",
+      resourceId: String(worker._id),
+      ip: req.ip,
+      success: true,
+    });
+    res.json({ id: String(worker._id), worker_id: worker.worker_id, gov_approve_status: worker.gov_approve_status });
+  } catch (err) {
+    console.error("[gov/approval]", err);
+    res.status(500).json({ detail: "Could not update the approval." });
   }
 });
 

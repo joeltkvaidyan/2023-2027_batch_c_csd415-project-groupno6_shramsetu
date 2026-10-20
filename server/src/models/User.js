@@ -11,7 +11,7 @@ const UserSchema = new Schema(
   {
     worker_id: { type: String, index: true }, // SS-XXXXXX (workers only)
     employee_id: { type: String }, // officials only; unique sparse index below
-    role: { type: String, enum: ["worker", "government"], required: true, index: true },
+    role: { type: String, enum: ["worker", "government", "employer"], required: true, index: true },
 
     full_name: { type: String, required: true, trim: true },
     mobile_number: { type: String, required: true },
@@ -50,6 +50,26 @@ const UserSchema = new Schema(
     is_superadmin: { type: Boolean, default: false },
 
     is_phone_verified: { type: Boolean, default: false },
+    // Government acceptance gate: every NEW worker registration starts as
+    // "pending" and a jurisdiction official must accept or reject the worker.
+    // Only "accepted" workers appear in the public find-a-worker directory and
+    // can apply to job listings. Existing/seeded rows default to "accepted" so
+    // no account silently loses access during the schema upgrade.
+    gov_approve_status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "accepted",
+      index: true,
+    },
+    gov_approve_at: { type: Date, default: null },
+    gov_approve_by: { type: Schema.Types.ObjectId, ref: "User", default: null },
+
+    // Account recovery: a one-time secret shown ONCE at registration (and via
+    // password login). Only its sha-256 hash is stored, so a database leak
+    // cannot reveal it. Losing BOTH the password and this key means the
+    // account can only be recovered at a Common Service Centre / labour office.
+    recovery_key_hash: { type: String, default: null },
+
     // Privacy notice at registration: worker consented to chat text/voice
     // being processed by third-party AI providers (see the registration UI).
     consent_ai_processing: { type: Boolean, default: false },
@@ -61,6 +81,12 @@ const UserSchema = new Schema(
 // Sparse unique indexes: null values don't collide.
 UserSchema.index({ mobile_number: 1 }, { unique: true, sparse: false });
 UserSchema.index({ employee_id: 1 }, { unique: true, sparse: true });
+// Worker codes (SS-XXXXXX) must be globally unique: they are printed on
+// IDs, quoted in audits, and are the lookup key for account recovery — a
+// collision would let one worker's recovery key target another's account.
+// Partial (workers only) so officials/employers without a code never
+// collide with each other.
+UserSchema.index({ worker_id: 1 }, { unique: true, partialFilterExpression: { role: "worker" } });
 
 /** Public worker shape (what the frontend Worker type expects). */
 UserSchema.methods.toWorkerJSON = function () {
@@ -74,6 +100,19 @@ UserSchema.methods.toWorkerJSON = function () {
     profile_photo_path: this.profile_photo_path,
     preferred_language: this.preferred_language,
     qr_code: this.qr_code,
+    // Acceptance is worker-visible: the dashboard shows one honest badge.
+    gov_approve_status: this.gov_approve_status ?? "pending",
+    recovery_key_set: Boolean(this.recovery_key_hash),
+  };
+};
+
+UserSchema.methods.toEmployerJSON = function () {
+  return {
+    id: String(this._id),
+    full_name: this.full_name,
+    mobile_number: this.mobile_number,
+    role: this.role,
+    preferred_language: this.preferred_language,
   };
 };
 

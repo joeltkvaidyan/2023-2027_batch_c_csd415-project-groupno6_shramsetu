@@ -96,16 +96,18 @@ export async function seedDemoData() {
   // then the worker/grievance corpus unless it already exists.
   await seedOfficials();
 
-  const existing = await User.countDocuments({ role: "worker" });
-  if (existing >= 10) {
-    console.log(`[seed] ${existing} demo workers already present — skipping (delete DB or set SEED_DEMO_DATA=false to reseed).`);
-    return;
-  }
-
-  console.log("[seed] creating 10 demo workers + grievances + notifications…");
+  // Create-only PER WORKER: a partial corpus (say 9 of 10 after a stray
+  // deletion) must neither re-create the others — duplicating accounts —
+  // nor skip the missing one because the total fell below 10.
+  console.log("[seed] ensuring 10 demo workers + grievances + notifications…");
   const mobileToWorker = new Map();
 
   for (const w of WORKERS) {
+    const existingUser = await User.findOne({ role: "worker", mobile_number: w.mobile });
+    if (existingUser) {
+      mobileToWorker.set(w.mobile, existingUser);
+      continue;
+    }
     const user = await User.create({
       worker_id: `SS-${100001 + (Number(w.mobile.slice(-2)) - 1)}`,
       role: "worker",
@@ -129,8 +131,35 @@ export async function seedDemoData() {
       emergency_contact_number: "9555599" + w.mobile.slice(-2),
       is_phone_verified: true,
       is_active: true,
+      // Demo acceptance mix: most workers are accepted; the last signed-up one
+      // stays pending so the government acceptance queue has live content.
+      gov_approve_status: "accepted",
     });
     mobileToWorker.set(w.mobile, user);
+  }
+
+  // Demo acceptance mix, written as an explicit status pass so it stays
+  // idempotent across partial re-seeds: nine accepted, the newest worker
+  // (Meena, the last mobile) pending so the government acceptance queue has
+  // live content.
+  const pendingMobile = WORKERS[WORKERS.length - 1].mobile;
+  for (const w of WORKERS) {
+    const user = mobileToWorker.get(w.mobile);
+    if (!user) continue;
+    const status = w.mobile === pendingMobile ? "pending" : "accepted";
+    if (user.gov_approve_status !== status || (status === "accepted" && !user.gov_approve_at)) {
+      user.gov_approve_status = status;
+      user.gov_approve_at = status === "accepted" ? (user.gov_approve_at ?? new Date()) : null;
+      await user.save();
+    }
+  }
+
+  // Grievances + welcome broadcast ride along with the corpus: seed them
+  // only when none exist, so a re-run with partial workers can't duplicate
+  // complaint history or re-broadcast to inboxes that already have it.
+  if (await Grievance.countDocuments({}) > 0) {
+    console.log("[seed] grievance corpus already present — skipping.");
+    return;
   }
 
   for (const g of GRIEVANCES) {

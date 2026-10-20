@@ -25,6 +25,7 @@ export default function WorkerDashboardPage() {
   const { t } = useTranslation();
   const { worker } = useAuth();
   const navigate = useNavigate();
+  const govStatus = worker?.gov_approve_status ?? "accepted";
   const [copied, setCopied] = useState(false);
   const [recent, setRecent] = useState<Grievance[] | null>(null);
   // Phase 2 snapshot: job matches, saved recurring employers, unpaid wages.
@@ -93,6 +94,32 @@ export default function WorkerDashboardPage() {
       </header>
 
       <main className="px-4 -mt-8 relative">
+        {/* Government acceptance gate — the single honest status badge */}
+        {govStatus !== "accepted" && (
+          <div
+            className={`mb-4 rounded-2xl border p-4 flex items-start gap-3 animate-fade-up ${
+              govStatus === "rejected"
+                ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                : "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800"
+            }`}
+            role="status"
+          >
+            <span className="text-xl shrink-0" aria-hidden="true">{govStatus === "rejected" ? "❌" : "⏳"}</span>
+            <div>
+              <p className={`font-semibold text-sm ${govStatus === "rejected" ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-200"}`}>
+                {govStatus === "rejected"
+                  ? "Registration not accepted"
+                  : "Waiting for government approval"}
+              </p>
+              <p className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}>
+                {govStatus === "rejected"
+                  ? "A labour-office official did not verify this registration. Please visit your nearest labour office."
+                  : "A labour-office official must accept your registration before you can apply to jobs or appear in the public worker directory."}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Worker ID card — the product's "Aadhaar-lite" identity moment */}
         <Card className="!p-0 overflow-hidden animate-rise">
           <div className="flex items-center justify-between px-4 py-3.5">

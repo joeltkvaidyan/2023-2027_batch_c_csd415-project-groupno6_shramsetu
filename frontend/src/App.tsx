@@ -27,6 +27,10 @@ import ServiceDirectoryPage from "./pages/ServiceDirectoryPage";
 import ScamCheckerPage from "./pages/ScamCheckerPage";
 import JobsPage from "./pages/JobsPage";
 import EmployersPage from "./pages/EmployersPage";
+import AccountRecoveryPage from "./pages/AccountRecoveryPage";
+import EmployerLoginPage from "./pages/EmployerLoginPage";
+import EmployerDashboardPage from "./pages/EmployerDashboardPage";
+import FindWorkersPage from "./pages/FindWorkersPage";
 
 function GovernmentRoute({ children }: { children: React.ReactNode }) {
   const token = getGovToken();
@@ -47,6 +51,7 @@ export default function App() {
       {/* Worker routes */}
       <Route path="/worker/login" element={<WorkerLoginPage />} />
       <Route path="/worker/register" element={<WorkerRegisterPage />} />
+      <Route path="/worker/recover" element={<AccountRecoveryPage />} />
       <Route
         path="/worker/dashboard"
         element={<ProtectedRoute><WorkerDashboardPage /></ProtectedRoute>}
@@ -99,6 +104,13 @@ export default function App() {
         path="/worker/employers"
         element={<ProtectedRoute><EmployersPage /></ProtectedRoute>}
       />
+
+      {/* Employer routes — separate token store from worker/government */}
+      <Route path="/employer/login" element={<EmployerLoginPage />} />
+      <Route path="/employer/dashboard" element={<EmployerDashboardPage />} />
+
+      {/* Public directory — no login, for people outside the platform */}
+      <Route path="/find-workers" element={<FindWorkersPage />} />
 
       {/* Government routes — completely separate */}
       <Route path="/government/login" element={<GovernmentLoginPage />} />

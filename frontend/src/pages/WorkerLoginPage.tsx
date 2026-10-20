@@ -234,6 +234,17 @@ export default function WorkerLoginPage() {
           {t("auth.createAccount")}
         </button>
       </p>
+
+      {/* Account backup: lost phone and/or lost password (recovery key). */}
+      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+        Lost your phone or password?{" "}
+        <button
+          onClick={() => navigate("/worker/recover")}
+          className="text-brand-600 dark:text-brand-400 font-semibold"
+        >
+          Recover with your recovery key
+        </button>
+      </p>
     </Screen>
   );
 }

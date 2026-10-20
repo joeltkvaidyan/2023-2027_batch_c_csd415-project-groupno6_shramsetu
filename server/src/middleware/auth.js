@@ -68,6 +68,13 @@ export function requireGovernment(req, res, next) {
   next();
 }
 
+export function requireEmployer(req, res, next) {
+  if (req.userRole !== "employer") {
+    return res.status(403).json({ detail: "Employer access required" });
+  }
+  next();
+}
+
 /** Best-effort audit logging — never blocks the request. */
 export async function audit({ actorRole, actorIdentifier, action, resourceType, resourceId = null, ip = null, success = true, failureReason = null }) {
   try {

@@ -11,7 +11,8 @@
     "seed": "node src/seed/run.js",
     "demo:reset": "node scripts/reset-demo.mjs",
     "test": "vitest run",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "smoke": "node scripts/smoke-new-features.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
