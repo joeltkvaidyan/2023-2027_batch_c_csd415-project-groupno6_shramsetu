@@ -9,6 +9,7 @@ import i18n from "../i18n";
 const TOKEN_KEY = "shramsetu.token";
 const GOV_TOKEN_KEY = "gov_token";
 const EMPLOYER_TOKEN_KEY = "employer_token";
+const CITIZEN_TOKEN_KEY = "citizen_token";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -46,6 +47,18 @@ export function clearEmployerToken() {
   localStorage.removeItem(EMPLOYER_TOKEN_KEY);
 }
 
+export function getCitizenToken(): string | null {
+  return localStorage.getItem(CITIZEN_TOKEN_KEY);
+}
+
+export function setCitizenToken(token: string) {
+  localStorage.setItem(CITIZEN_TOKEN_KEY, token);
+}
+
+export function clearCitizenToken() {
+  localStorage.removeItem(CITIZEN_TOKEN_KEY);
+}
+
 export const api = axios.create({
   // Absolute on Render static sites (VITE_API_BASE_URL is baked at build
   // time, e.g. https://shramsetu-api.onrender.com/api/v1); relative behind
@@ -60,6 +73,17 @@ export const employerApi = axios.create({
 
 employerApi.interceptors.request.use((config) => {
   const token = getEmployerToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+/** Citizen (general public / household) session — own token store. */
+export const citizenApi = axios.create({
+  baseURL: api.defaults.baseURL,
+});
+
+citizenApi.interceptors.request.use((config) => {
+  const token = getCitizenToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });

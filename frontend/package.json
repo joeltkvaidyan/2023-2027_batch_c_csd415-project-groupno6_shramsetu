@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:direct": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "vitest"
   },
   "dependencies": {

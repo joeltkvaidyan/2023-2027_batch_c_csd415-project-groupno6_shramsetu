@@ -1,7 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "node:path";
-import fs from "node:fs";
 import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
@@ -9,7 +8,8 @@ import { OtpCode } from "../models/Document.js";
 import { hashPassword, verifyPassword, signToken, sha256, randomOtp } from "../utils/crypto.js";
 import { validateDocumentFile } from "../utils/fileValidation.js";
 import { config } from "../config.js";
-import { authenticate, requireWorker, requireGovernment, audit } from "../middleware/auth.js";
+import { send } from "../services/smsAdapter.js";
+import { authenticate, requireWorker, requireGovernment, requireEmployer, requireCitizen, audit } from "../middleware/auth.js";
 import {
   otpRequestLimiter,
   otpVerifyLimiter,
@@ -24,27 +24,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: con
 
 const MOBILE_RE = /^[6-9]\d{9}$/;
 
-// ── OTP delivery: printed to the backend terminal (dev/demo mode) ─────
-function sendOtp(mobile, code) {
-  const line = "─".repeat(52);
-  console.log(`\n${line}`);
-  console.log(`  📩 OTP for +91 ${mobile}:  ${code}`);
-  console.log(`  (valid ${Math.round(config.otp.expireSeconds / 60)} min — ShramSetu dev terminal delivery)`);
-  console.log(`${line}\n`);
-  // Mirror to a file so automated checks can assert on THIS run's OTP even
-  // when the API runs in a user terminal (node --watch) instead of a log we
-  // control. Dev/demo convenience only; OTP_ECHO_ENABLED=false silences both.
-  try {
-    if (config.otp.echoEnabled) {
-      fs.mkdirSync("logs", { recursive: true });
-      fs.appendFileSync(
-        "logs/otp-dev.log",
-        `${new Date().toISOString()} +91 ${mobile} OTP ${code}\n`
-      );
-    }
-  } catch {
-    /* best-effort; never block the login flow over a log write */
-  }
+// ── OTP delivery: via SMS adapter (terminal by default, real gateway in prod) ──
+async function sendOtp(mobile, code) {
+  await send(mobile, code);
 }
 
 async function issueOtp(mobile, purpose) {
@@ -495,21 +477,54 @@ router.post("/employer/register", registerLimiter, async (req, res) => {
     }
 
     const recoveryKey = generateRecoveryKey();
+    // Location + business name are optional but strongly encouraged: the
+    // labour office that must ACCEPT this employer scopes its review queue by
+    // state/district, so an employer without location is only reviewable by a
+    // superadmin or a state official.
+    const cleanLoc = (v) => {
+      const s = String(v || "").trim();
+      return s.length ? s.slice(0, 80) : null;
+    };
     await User.create({
       role: "employer",
       full_name: fullName,
+      business_name: cleanLoc(req.body?.business_name),
+      current_state: cleanLoc(req.body?.business_state ?? req.body?.current_state),
+      current_district: cleanLoc(req.body?.business_district ?? req.body?.current_district),
+      current_village_or_city: cleanLoc(req.body?.current_village_or_city),
       mobile_number: mobile,
       password_hash: await hashPassword(password),
       recovery_key_hash: sha256(recoveryKey),
       preferred_language: req.body?.preferred_language || "en",
       is_phone_verified: false,
+      // NEW: employer accounts now go through the same labour-office
+      // acceptance gate as workers (posting jobs / rating workers stays
+      // locked until a jurisdiction official accepts the account).
+      gov_approve_status: "pending",
     });
     const { wait } = await issueOtp(mobile, "register");
     if (wait) return res.status(429).json({ detail: `Please wait ${wait}s before requesting another OTP.` });
-    res.status(201).json({ mobile_number: mobile, recovery_key: recoveryKey });
+    res.status(201).json({
+      mobile_number: mobile,
+      recovery_key: recoveryKey,
+      gov_approve_status: "pending",
+      detail: "Registration received. A labour office must accept this account before it can post jobs or rate workers.",
+    });
   } catch (err) {
     console.error("[auth/employer/register]", err);
     res.status(500).json({ detail: "Registration failed. Please try again." });
+  }
+});
+
+// ── Employer: current profile (fresh approval state after login) ────────
+router.get("/employer/me", authenticate, requireEmployer, async (req, res) => {
+  try {
+    const employer = await User.findById(req.userId);
+    if (!employer) return res.status(404).json({ detail: "Employer not found" });
+    res.json(employer.toEmployerJSON());
+  } catch (err) {
+    console.error("[auth/employer/me]", err);
+    res.status(500).json({ detail: "Could not load profile." });
   }
 });
 
@@ -588,6 +603,148 @@ router.post("/employer/login", workerLoginLimiter, async (req, res) => {
   } catch (err) {
     console.error("[auth/employer/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
+  }
+});
+
+// ── Citizen: register (household / general public access) ───────────────
+// A citizen is NOT a worker and needs no labour-office gate for their own
+// account: they use the public directory and can post help requests near
+// their area. Workers' contact details stay private — a citizen only ever
+// reaches a worker when that worker ACCEPTS the citizen's request (both
+// sides then see each other's number).
+router.post("/citizen/register", registerLimiter, async (req, res) => {
+  try {
+    const mobile = String(req.body?.mobile_number || "").replace(/\D/g, "");
+    if (!MOBILE_RE.test(mobile)) {
+      return res.status(422).json({ detail: [{ loc: ["body", "mobile_number"], msg: "Enter a valid 10-digit Indian mobile number" }] });
+    }
+    const fullName = String(req.body?.full_name || "").trim();
+    if (fullName.length < 2) {
+      return res.status(422).json({ detail: [{ loc: ["body", "full_name"], msg: "Full name is required" }] });
+    }
+    const password = String(req.body?.password || "");
+    if (password.length < 6) {
+      return res.status(422).json({ detail: [{ loc: ["body", "password"], msg: "Password must be at least 6 characters" }] });
+    }
+
+    const existing = await User.findOne({ mobile_number: mobile });
+    if (existing && existing.is_phone_verified) {
+      return res.status(409).json({ detail: "This mobile number is already registered. Please log in." });
+    }
+    if (existing && !existing.is_phone_verified) {
+      const { wait } = await issueOtp(mobile, "register");
+      if (wait) return res.status(429).json({ detail: `Please wait ${wait}s before requesting another OTP.` });
+      return res.status(200).json({ resent: true });
+    }
+
+    const recoveryKey = generateRecoveryKey();
+    const cleanLoc = (v) => {
+      const s = String(v || "").trim();
+      return s.length ? s.slice(0, 80) : null;
+    };
+    await User.create({
+      role: "citizen",
+      full_name: fullName,
+      current_village_or_city: cleanLoc(req.body?.current_village_or_city),
+      current_district: cleanLoc(req.body?.current_district),
+      current_state: cleanLoc(req.body?.current_state),
+      mobile_number: mobile,
+      password_hash: await hashPassword(password),
+      recovery_key_hash: sha256(recoveryKey),
+      preferred_language: req.body?.preferred_language || "en",
+      is_phone_verified: false,
+    });
+    const { wait } = await issueOtp(mobile, "register");
+    if (wait) return res.status(429).json({ detail: `Please wait ${wait}s before requesting another OTP.` });
+    res.status(201).json({ mobile_number: mobile, recovery_key: recoveryKey });
+  } catch (err) {
+    console.error("[auth/citizen/register]", err);
+    res.status(500).json({ detail: "Registration failed. Please try again." });
+  }
+});
+
+router.post("/citizen/otp/verify", otpVerifyLimiter, async (req, res) => {
+  try {
+    const mobile = String(req.body.mobile_number || "").replace(/\D/g, "");
+    const code = String(req.body.otp || "").replace(/\D/g, "");
+    const result = await consumeOtp(mobile, code, "register");
+    if (!result.ok) return res.status(400).json({ detail: result.reason });
+    const citizen = await User.findOne({ role: "citizen", mobile_number: mobile });
+    if (!citizen) return res.status(404).json({ detail: "Registration not found." });
+    citizen.is_phone_verified = true;
+    await citizen.save();
+    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+  } catch (err) {
+    console.error("[auth/citizen/otp/verify]", err);
+    res.status(500).json({ detail: "Verification failed. Please try again." });
+  }
+});
+
+router.post("/citizen/login/otp/request", otpRequestLimiter, async (req, res) => {
+  try {
+    const mobile = String(req.body?.mobile_number || "").replace(/\D/g, "");
+    if (!MOBILE_RE.test(mobile)) {
+      return res.status(422).json({ detail: "Enter a valid 10-digit Indian mobile number" });
+    }
+    await issueOtp(mobile, "login");
+    res.json({ detail: "OTP sent" });
+  } catch (err) {
+    console.error("[auth/citizen/otp/request]", err);
+    res.status(500).json({ detail: "Could not send OTP. Please try again." });
+  }
+});
+
+router.post("/citizen/login/otp", otpVerifyLimiter, async (req, res) => {
+  try {
+    const mobile = String(req.body.mobile_number || "").replace(/\D/g, "");
+    const code = String(req.body.otp || "").replace(/\D/g, "");
+    const result = await consumeOtp(mobile, code, "login");
+    if (!result.ok) return res.status(400).json({ detail: result.reason });
+    const citizen = await User.findOne({ role: "citizen", mobile_number: mobile });
+    if (!citizen) return res.status(404).json({ detail: "No citizen account for this number." });
+    if (!citizen.is_active) return res.status(403).json({ detail: "Account disabled." });
+    if (!citizen.is_phone_verified) {
+      citizen.is_phone_verified = true;
+      await citizen.save();
+    }
+    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+  } catch (err) {
+    console.error("[auth/citizen/otp/login]", err);
+    res.status(500).json({ detail: "Login failed. Please try again." });
+  }
+});
+
+router.post("/citizen/login", workerLoginLimiter, async (req, res) => {
+  try {
+    const mobile = String(req.body.mobile_number || "").replace(/\D/g, "");
+    const citizen = await User.findOne({ role: "citizen", mobile_number: mobile });
+    const ok = citizen?.password_hash ? await verifyPassword(String(req.body.password || ""), citizen.password_hash) : false;
+    if (!citizen || !ok) {
+      await audit({
+        actorRole: "citizen", actorIdentifier: mobile, action: "citizen.login.password",
+        resourceType: "user", resourceId: null, ip: req.ip, success: false, failureReason: "invalid credentials",
+      });
+      return res.status(401).json({ detail: "Invalid mobile number or password." });
+    }
+    if (!citizen.is_active) return res.status(403).json({ detail: "Account disabled." });
+    if (!citizen.is_phone_verified) {
+      return res.status(403).json({ detail: "Account not verified. Complete registration with the OTP sent to your mobile." });
+    }
+    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+  } catch (err) {
+    console.error("[auth/citizen/login]", err);
+    res.status(500).json({ detail: "Login failed. Please try again." });
+  }
+});
+
+router.get("/citizen/me", authenticate, requireCitizen, async (req, res) => {
+  try {
+    const citizen = await User.findById(req.userId);
+    if (!citizen) return res.status(404).json({ detail: "Citizen not found" });
+    res.json(citizen.toCitizenJSON());
+  } catch (err) {
+    console.error("[auth/citizen/me]", err);
+    res.status(500).json({ detail: "Could not load profile." });
   }
 });
 

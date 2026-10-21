@@ -1,0 +1,30 @@
+TITLE: AAWAZ health insurance scheme for migrant workers in Kerala — what it covered and its current status
+DEPARTMENT: Kerala Department of Labour and Skills (DOLS) / Awaaz Health Insurance Society
+AUTHORITY: Government of Kerala — Department of Labour and Skills
+SOURCE_URL: https://www.thenewsminute.com/kerala/kerala-s-aawaz-health-insurance-migrant-labourers-benefited-only-handful-171316
+PUBLISHED_DATE: 2016-02-20
+EFFECTIVE_DATE: Unknown
+LAST_UPDATED: 2026-10-20
+LAST_VERIFIED: 2026-10-20
+STATUS: current
+---
+AAWAZ (Awaaz) was a health-insurance package launched in 2016 by Kerala's Department of Labour and Skills exclusively for inter-state migrant workers in Kerala. Enrolment was free. Reported benefits: cashless medical treatment worth Rs 15,000 per year and Rs 2 lakh cover for accidental death. Enrolment was done through DOLS facilitation centres and outreach campaigns, with biometric (fingerprint/iris) registration and an identity card. Reported scheme scope: interstate migrant workers aged 18–60 working in Kerala.
+
+CURRENT STATUS — VERIFY BEFORE RELYING ON IT:
+- Reporting indicates enrolment CLOSED in 2022, and researchers have described the scheme as largely non-functional in recent years. The scheme's own portal may not reliably reflect current status.
+- Uptake was extremely low: of roughly 5.16 lakh AAWAZ cards issued, only about 350–375 cardholders are known to have received medical help across about four years (News Minute, 2022; related reporting into 2023 recorded a similar figure). That is well under 0.1%.
+- The documented reasons the card did not reach workers: workers saw the card only as an ID needed for work, did not know it carried health insurance, did not know which hospitals were empanelled or how to claim, and outreach material was mostly in Malayalam or English rather than the workers' own languages.
+- Because of this uncertainty, DO NOT assume a card enrols you for treatment today. Confirm your cover with the Kerala Labour Department or a DOLS facilitation centre before attempting a hospital claim.
+
+WHAT A WORKER WITH AN AAWAZ CARD SHOULD DO NOW:
+- Treat the card as a possible insurance record, not proof of current cover.
+- Call the Kerala Labour Call Centre 1800 42555 214 or visit a labour facilitation centre and ask in your own language for the hospital list and claim steps.
+- If hospitalisation is needed and confirmation of AAWAZ cover fails, seek treatment at a public health centre and ask about other schemes: e-Shram lists schemes you may be eligible for (see the e-Shram documents), construction workers in Kerala may register with the Kerala Building and Other Construction Workers Welfare Board (KBOCWWB) for its own benefits, and Ayushman Bharat (PM-JAY) may cover eligible families.
+
+WHAT THIS DOCUMENT DOES NOT SAY:
+- Registration on ATHIDHI (Kerala's online registration system for migrant workers) does NOT activate AAWAZ cover; ATHIDHI is an administration system, not a welfare scheme.
+- The Rs 15,000 figure is what the scheme offered during the documented period; it is NOT confirmation that any amount is payable today.
+- AAWAZ is NOT the same as ISMWWS (the Inter-State Migrant Workers Welfare Scheme, 2010), ONORC ration portability, or e-Shram registration, and none of them implies any of the others.
+
+HELPLINE: Kerala Labour 1800 42555 214 | Citizen Call 155300 | e-Shram 14434 | Emergency 108
+WEBSITE: lc.kerala.gov.in | the News Minute (2022 reporting on AAWAZ uptake)

@@ -13,6 +13,8 @@ import {
   IndianRupee,
   Briefcase,
   Building2,
+  ThermometerSun,
+  Handshake,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../store/AuthContext";
@@ -215,10 +217,31 @@ export default function WorkerDashboardPage() {
             delay={280}
           />
           <ActionTile
+            Icon={Handshake}
+            label={t("requests.tile", "House requests")}
+            onClick={() => navigate("/worker/requests")}
+            delay={320}
+          />
+          <ActionTile
             Icon={Building2}
             label={t("employers.title", "Recurring employers")}
             onClick={() => navigate("/worker/employers")}
-            delay={320}
+            delay={340}
+          />
+          <ActionTile
+            Icon={ThermometerSun}
+            label={t("dashboard.heatSafety", "Heat safety")}
+            onClick={() =>
+              navigate("/worker/chat", {
+                state: {
+                  initialQuestion: t(
+                    "chat.heatPrefillQuestion",
+                    "What should I do to stay safe during extreme heat?",
+                  ),
+                },
+              })
+            }
+            delay={360}
           />
           <ActionTile
             Icon={Settings}

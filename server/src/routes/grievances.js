@@ -8,6 +8,8 @@ import { Grievance, GRIEVANCE_CATEGORIES } from "../models/Grievance.js";
 import { authenticate, requireWorker, audit } from "../middleware/auth.js";
 import { config } from "../config.js";
 import { validateDocumentFile, ALLOWED_DOC_EXTENSIONS } from "../utils/fileValidation.js";
+import { encryptBuffer } from "../utils/crypto.js";
+import { wrapKey, unwrapKey } from "../utils/docKeys.js";
 
 const router = Router();
 // Memory storage: nothing ever touches disk on validation failure, and the
@@ -161,9 +163,11 @@ router.post("/:id/attachments", authenticate, requireWorker, upload.single("file
     if (!verdict.ok) return res.status(422).json({ detail: verdict.reason });
 
     const attId = crypto.randomBytes(6).toString("hex");
+    const { key, payload } = encryptBuffer(req.file.buffer);
+    const wrapped = wrapKey(Buffer.from(key, "base64"));
     const dest = path.join(config.uploadDir, `grievance-${g._id}-${attId}`);
     await fs.promises.mkdir(config.uploadDir, { recursive: true });
-    await fs.promises.writeFile(dest, req.file.buffer);
+    await fs.promises.writeFile(dest, payload);
     try {
       g.attachments.push({
         id: attId,
@@ -171,6 +175,7 @@ router.post("/:id/attachments", authenticate, requireWorker, upload.single("file
         content_type: req.file.mimetype,
         size_bytes: req.file.size,
         created_at: new Date(),
+        encryption_key: wrapped,
       });
       await g.save();
     } catch (err) {

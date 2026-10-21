@@ -8,14 +8,17 @@ export const WORK_TYPES = ["daily", "part_time", "full_time", "seasonal"];
 export const WAGE_PERIODS = ["day", "week", "month"];
 
 /**
- * JobPosting — a job listing created by a government/partner official inside
- * their own jurisdiction.
+ * JobPosting — a job listing. Two poster paths:
+ *  1. government/partner officials inside their own jurisdiction
+ *     (`posted_by_role: "government"`, department snapshotted);
+ *  2. gov-ACCEPTED employer accounts (`posted_by_role: "employer"`), gated by
+ *     requireGovAcceptedEmployer — a pending employer cannot post.
  *
  * Honesty constraints baked into the schema:
- *  - there is no employer self-service account, so `posted_by` is always an
- *    authenticated official and `posted_by_department` is snapshotted;
  *  - `verification` is always "unverified": ShramSetu cannot verify that a
  *    third-party employer will honour the listed wage. The UI must show this.
+ *  - `employer_accepted` says ONLY that the POSTER ACCOUNT was accepted by a
+ *    labour office — never that the listing itself was vetted.
  *  - contact details are optional; if absent the UI tells workers to apply
  *    through the portal instead of inventing a phone number.
  */
@@ -40,9 +43,13 @@ const JobPostingSchema = new Schema(
     status: { type: String, enum: JOB_STATUSES, default: "open", index: true },
 
     posted_by: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    posted_by_role: { type: String, enum: ["government", "employer"], default: "government", index: true },
+    employer_id: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     posted_by_department: { type: String, default: null },
     // Never claim a listing is verified — see model comment.
     verification: { type: String, enum: ["unverified"], default: "unverified" },
+    // True ONLY when the posting employer account is government-accepted.
+    employer_accepted: { type: Boolean, default: false, index: true },
   },
   { timestamps: true, collection: "job_postings" }
 );
@@ -67,6 +74,8 @@ JobPostingSchema.methods.toJSON = function () {
     contact_phone: this.contact_phone,
     status: this.status,
     posted_by_department: this.posted_by_department,
+    posted_by_role: this.posted_by_role,
+    employer_accepted: Boolean(this.employer_accepted),
     verification: this.verification,
     created_at: this.createdAt,
     updated_at: this.updatedAt,

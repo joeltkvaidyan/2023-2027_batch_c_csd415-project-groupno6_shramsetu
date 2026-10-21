@@ -74,7 +74,7 @@ router.post("/worker/:id", async (req, res) => {
       try {
         const { verifyToken } = await import("../utils/crypto.js");
         const payload = verifyToken(token);
-        if (payload?.sub) authenticatedUser = await User.findById(payload.sub).select("role is_active full_name");
+        if (payload?.sub) authenticatedUser = await User.findById(payload.sub).select("role is_active full_name gov_approve_status");
       } catch {
         authenticatedUser = null; // an invalid/expired token degrades to "public"
       }
@@ -83,6 +83,20 @@ router.post("/worker/:id", async (req, res) => {
     // token would otherwise fall into.
     if (authenticatedUser && String(authenticatedUser._id) === String(worker._id)) {
       return res.status(403).json({ detail: "A worker cannot rate themselves." });
+    }
+    // Employer raters must be government-ACCEPTED, same as workers must be
+    // before they can apply anywhere: an unlaboured, unreviewed account
+    // should not be able to attach public ratings to workers.
+    if (
+      authenticatedUser?.role === "employer" &&
+      authenticatedUser?.is_active &&
+      (authenticatedUser.gov_approve_status ?? "accepted") !== "accepted"
+    ) {
+      return res.status(403).json({
+        detail:
+          "Your employer registration is pending government acceptance. Once a labour office accepts your account, you can rate workers.",
+        code: "gov_approval_pending",
+      });
     }
     const isEmployerRater = authenticatedUser?.role === "employer" && authenticatedUser?.is_active;
 

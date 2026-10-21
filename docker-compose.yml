@@ -21,14 +21,14 @@ services:
     image: mongo:8
     container_name: shramsetu-mongo
     restart: unless-stopped
-    # Root credentials must match the server's MONGODB_URI below
-    # (mongodb://root:shramsetu123@mongo:27017/...authSource=admin).
-    # Only applied on first boot when the mongo_data volume is empty.
+    # Root credentials come from the host environment via MONGO_INITDB_ROOT_*
+    # (never hardcoded here — see root .env.example). Only applied on first
+    # boot when the mongo_data volume is empty.
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=shramsetu123
-    ports:
-      - "27017:27017"
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    # MongoDB is reachable only via the internal Docker network (service name
+    # `mongo`). The host port is intentionally NOT published.
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -78,6 +78,7 @@ services:
       # Per-language fine-tuned Whisper checkpoints (WHISPER_INDIC_MODELS in
       # config.py) lazy-load on first use of each language — no override here.
       - HF_TOKEN
+      - REDIS_URL=redis://redis:6379
     deploy:
       resources:
         limits:
@@ -96,25 +97,46 @@ services:
         condition: service_healthy
       ai-service:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - ENV=production
       - DEBUG=false
-      - MONGODB_URI=mongodb://root:shramsetu123@mongo:27017/shramsetu?authSource=admin
+      - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET_KEY
       - AI_SERVICE_URL=http://ai-service:8100
       - AI_INTERNAL_KEY
       - BOOTSTRAP_ADMIN_PASSWORD
-      # assertProductionSafe() refuses to boot with OTP echo on (default is on!).
+      # assertProductionSafe() refuses to boot with OTP echo on.
       - OTP_ECHO_ENABLED=false
       - SEED_DEMO_DATA=false
       - DOC_MASTER_KEY
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://localhost:5173}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - REDIS_URL=redis://redis:6379
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "0.8"
     healthcheck:
       test: ["CMD", "node", "scripts/healthcheck.js"]
       interval: 20s
       timeout: 10s
       retries: 15
       start_period: 120s
+
+  redis:
+    image: redis:7-alpine
+    container_name: shramsetu-redis
+    restart: unless-stopped
+    # Redis is internal-only: no host port published. Rate-limit counters are
+    # shared across server and ai-service containers via this store.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   frontend:
     build:
@@ -132,6 +154,11 @@ services:
       - VITE_API_BASE_URL=/api
     volumes:
       - frontend_uploads:/app/uploads
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 20s

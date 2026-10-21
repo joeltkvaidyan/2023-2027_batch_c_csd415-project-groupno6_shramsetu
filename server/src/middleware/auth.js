@@ -75,6 +75,42 @@ export function requireEmployer(req, res, next) {
   next();
 }
 
+export function requireCitizen(req, res, next) {
+  if (req.userRole !== "citizen") {
+    return res.status(403).json({ detail: "Citizen access required" });
+  }
+  next();
+}
+
+/**
+ * Employer actions that earn public visibility (posting job listings,
+ * rating workers) require the employer account to have been ACCEPTED by a
+ * labour office — the same gate workers face before they can apply or be
+ * listed. Fresh from the DB, not from the JWT (approval state changes).
+ */
+export async function requireGovAcceptedEmployer(req, res, next) {
+  if (req.userRole !== "employer") {
+    return res.status(403).json({ detail: "Employer access required" });
+  }
+  try {
+    const employer = await User.findById(req.userId).select("gov_approve_status is_active").lean();
+    if (!employer || !employer.is_active) {
+      return res.status(401).json({ detail: "Account disabled or removed." });
+    }
+    if ((employer.gov_approve_status ?? "accepted") !== "accepted") {
+      return res.status(403).json({
+        detail:
+          "Your employer registration is pending government acceptance. Once a labour office accepts your account, you can post jobs publicly and rate workers.",
+        code: "gov_approval_pending",
+      });
+    }
+    next();
+  } catch (err) {
+    console.error("[auth/acceptedEmployer]", err.message);
+    return res.status(503).json({ detail: "Auth service unavailable." });
+  }
+}
+
 /** Best-effort audit logging — never blocks the request. */
 export async function audit({ actorRole, actorIdentifier, action, resourceType, resourceId = null, ip = null, success = true, failureReason = null }) {
   try {

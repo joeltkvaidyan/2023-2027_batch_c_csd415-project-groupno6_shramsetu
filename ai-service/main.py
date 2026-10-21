@@ -53,6 +53,15 @@ try:
 except Exception:  # pragma: no cover - torch missing / already initialized
     pass
 
+# Optional shared Redis rate-limit store (multi-container). Falls back to
+# per-process in-memory when the `redis` package or REDIS_URL is absent.
+try:
+    import redis as _redis  # type: ignore
+    _REDIS_URL = settings.REDIS_URL if hasattr(settings, "REDIS_URL") else None
+    _redis_client = _redis.Redis.from_url(_REDIS_URL) if _REDIS_URL else None
+except Exception:
+    _redis_client = None
+
 LANGS = {"en", "hi", "bn", "te", "ta", "ml"}
 
 # Health/readiness probes. These are the only unauthenticated paths: a container
@@ -118,24 +127,49 @@ def _client_ip(request: Request) -> str:
 _hits: dict[str, deque] = defaultdict(lambda: deque(maxlen=256))
 
 
+def _rate_limit_ok(ip: str) -> bool:
+    """Per-IP rate limit. Uses Redis when available (shared across
+    containers), otherwise falls back to per-process in-memory."""
+    now = time.monotonic()
+
+    if _redis_client is not None:
+        try:
+            key = f"ai:ratelimit:{ip}"
+            count = _redis_client.incr(key)
+            if count == 1:
+                _redis_client.expire(key, 60)
+            return count <= settings.AI_RATE_LIMIT_PER_MIN
+        except Exception:
+            # Redis failure — fall back to in-memory rather than failing open/closed.
+            pass
+
+    window = _hits[ip]
+    while window and now - window[0] > 60:
+        window.popleft()
+    if len(window) >= settings.AI_RATE_LIMIT_PER_MIN:
+        return False
+    window.append(now)
+    return True
+
+
 @app.middleware("http")
 async def guard_middleware(request: Request, call_next):
     path = request.url.path
 
     # Health is intentionally open (container probes, verify scripts).
     if path not in _OPEN_PATHS:
-        if settings.AI_INTERNAL_KEY and request.headers.get("X-Internal-Key") != settings.AI_INTERNAL_KEY:
+        expected = settings.AI_INTERNAL_KEY
+        # Only enforce when a key is configured: the docstring contract (and
+        # the tests' registry fixture) treat an EMPTY key as "auth disabled",
+        # e.g. for local/self-hosted runs where the Node gateway fronts this
+        # service. An unset key must never lock the whole service out.
+        if expected and request.headers.get("X-Internal-Key") != expected:
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
         # Per-IP rate limit.
         ip = _client_ip(request)
-        now = time.monotonic()
-        window = _hits[ip]
-        while window and now - window[0] > 60:
-            window.popleft()
-        if len(window) >= settings.AI_RATE_LIMIT_PER_MIN:
+        if not _rate_limit_ok(ip):
             return JSONResponse({"detail": "Rate limit exceeded, slow down."}, status_code=429)
-        window.append(now)
 
         # Request-size cap (headers only; body streams are validated per-route).
         try:

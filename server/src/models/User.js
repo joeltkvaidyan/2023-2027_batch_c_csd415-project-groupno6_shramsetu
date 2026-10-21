@@ -11,12 +11,15 @@ const UserSchema = new Schema(
   {
     worker_id: { type: String, index: true }, // SS-XXXXXX (workers only)
     employee_id: { type: String }, // officials only; unique sparse index below
-    role: { type: String, enum: ["worker", "government", "employer"], required: true, index: true },
+    role: { type: String, enum: ["worker", "government", "employer", "citizen"], required: true, index: true },
 
     full_name: { type: String, required: true, trim: true },
     mobile_number: { type: String, required: true },
     email: { type: String, default: null, lowercase: true, trim: true },
     password_hash: { type: String, default: null },
+
+    // employer self-service fields (readable only through laboured routes)
+    business_name: { type: String, default: null, trim: true, maxlength: 120 },
 
     // worker profile
     gender: { type: String, enum: ["male", "female", "other", null], default: null },
@@ -55,6 +58,11 @@ const UserSchema = new Schema(
     // Only "accepted" workers appear in the public find-a-worker directory and
     // can apply to job listings. Existing/seeded rows default to "accepted" so
     // no account silently loses access during the schema upgrade.
+    //
+    // The same gate now applies to EMPLOYERS: a new employer account starts
+    // "pending" and must be accepted by a labour office before it can post
+    // listings publicly or rate workers. Defaults stay "accepted" for legacy
+    // rows (the bootstrap backfill covers them).
     gov_approve_status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],
@@ -110,9 +118,31 @@ UserSchema.methods.toEmployerJSON = function () {
   return {
     id: String(this._id),
     full_name: this.full_name,
+    business_name: this.business_name,
     mobile_number: this.mobile_number,
     role: this.role,
     preferred_language: this.preferred_language,
+    // Acceptance is employer-visible: the dashboard shows one honest badge and
+    // gates job posting + rating on it, exactly like the worker dashboard.
+    gov_approve_status: this.gov_approve_status ?? "accepted",
+    current_village_or_city: this.current_village_or_city,
+    current_district: this.current_district,
+    current_state: this.current_state,
+  };
+};
+
+/** Citizen (household) shape — minimal, no sensitive fields beyond contact. */
+UserSchema.methods.toCitizenJSON = function () {
+  return {
+    id: String(this._id),
+    full_name: this.full_name,
+    mobile_number: this.mobile_number,
+    role: this.role,
+    preferred_language: this.preferred_language,
+    recovery_key_set: Boolean(this.recovery_key_hash),
+    current_village_or_city: this.current_village_or_city,
+    current_district: this.current_district,
+    current_state: this.current_state,
   };
 };
 

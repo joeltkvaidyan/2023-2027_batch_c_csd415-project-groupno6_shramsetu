@@ -22,10 +22,12 @@ class Settings(BaseSettings):
     # When set, every request except GET /health must carry the matching
     # X-Internal-Key header (the Node server sends it from AI_INTERNAL_KEY).
     # Leave empty only for throwaway local debugging.
-    AI_INTERNAL_KEY: str = ""
+    AI_INTERNAL_KEY: str
     # Per-IP request cap per minute (simple in-memory limiter; adequate for
     # the single-instance demo deployment).
     AI_RATE_LIMIT_PER_MIN: int = 120
+    # Shared Redis rate-limit store (multi-container). Empty = per-process.
+    REDIS_URL: str = ""
 
     # --- Groq (LLM provider for RAG chatbot) ---
     GROQ_API_KEY: str = ""

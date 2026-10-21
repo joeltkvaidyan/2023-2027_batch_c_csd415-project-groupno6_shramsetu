@@ -55,4 +55,4 @@ EXPOSE 8100
 # uvicorn is the production ASGI server. The ASGI lifespan hook does the
 # boot warm-up (embedding model + FAISS index + translation + whisper), so
 # /health/ready stays at 503 until /ask can actually answer.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8100", "--timeout-keep-alive", "60"]
+CMD ["uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8100", "--timeout-keep-alive", "60"]

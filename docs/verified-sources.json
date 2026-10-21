@@ -449,6 +449,66 @@
       "verified_at": "2026-10-15",
       "notes": "Requires Android 15 or later and supported hardware; cannot be used as a guest or secondary-user space. An optional user facility, NOT a safe baseline for the app.",
       "url": "https://support.google.com/android/answer/15341885"
+    },
+    {
+      "id": "heat-advisory-mole-2026",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Ministry of Labour & Employment nationwide heatwave advisory to States/UTs (28 April 2026)",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "Advisory-only (non-binding guidance to States/UTs and attached organisations): flexibility/slower pace in extreme heat, two-person crews where continuous work is unavoidable, rest areas with ventilation/cooling, special attention to construction, brick-kiln, daily-wage and casual workers, awareness campaigns at labour chowks. NOT a cash benefit and NOT an enforceable rule.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2256186&reg=3&lang=1"
+    },
+    {
+      "id": "labour-codes-central-rules-2026-summary",
+      "category": "analysis",
+      "jurisdiction": "IN",
+      "title": "KPMG summary — final Central Rules under the four Labour Codes notified 8 May 2026",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "Secondary summary; the underlying Gazette notifications were not read directly. Reports: Grievance Redressal Committee mandatory for industrial establishments with 20+ workers (max 20 members; worker representatives not fewer than employer representatives); contract-labour grievances on wages, health or working conditions addressed by the principal employer through a committee, escalating to the Inspector-cum-Facilitator if unresolved within 30 days. Codes in force 21 November 2025. Central-sector rules only — state rules may still be drafts; do not quote state-specific forms or fees.",
+      "url": "https://kpmg.com/xx/en/our-insights/gms-flash-alert/2026/flash-alert-2026-127.html"
+    },
+    {
+      "id": "aawaz-uptake-newsminute-2022",
+      "category": "statistic",
+      "jurisdiction": "IN-KL",
+      "title": "News Minute (2022) — AAWAZ uptake: ~374 of ~5.16 lakh cardholders received medical help over ~4 years",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "Awareness-failure evidence: card seen as work ID, empanelled hospitals and claim steps unknown, outreach mostly Malayalam/English rather than workers' own languages. Enrolment reportedly closed 2022; scheme described as largely non-functional in recent years. NEVER present AAWAZ cover as currently active (pair with aawaz-status entry).",
+      "url": "https://www.thenewsminute.com/kerala/kerala-s-aawaz-health-insurance-migrant-labourers-benefited-only-handful-171316"
+    },
+    {
+      "id": "siims-2026-unfpa",
+      "category": "statistic",
+      "jurisdiction": "IN-South",
+      "title": "UNFPA–IIMAD South India Interstate Migration Survey (SIIMS 2026) — 1,824 workers across KA/KL/TN",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "Survey (not prevalence) across 33 districts: 86.4% no signed employment contract, 57.6% paid in cash, 77.4% recruited via non-contractor channels, 73.3% problems accessing welfare, 69.2% trouble with healthcare. Average monthly wage Rs 17,640; average working day 9.87 hours. Read with category-specific caution; do not present as Kerala-only figures.",
+      "url": "https://india.unfpa.org/sites/default/files/pub-pdf/2date26-date9/UNFPA-IIMAD%20Report.pdf"
+    },
+    {
+      "id": "pib-codes-commencement",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "PIB press release PRID 2192463 — four Labour Codes effective 21 November 2025",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "The commencement release the current/superseded corpus headers cite. pib.gov.in returned 403 to automated fetch on 2026-10-20; the 21 Nov 2025 commencement date is independently corroborated (KPMG alert 2026-007, DLA Piper) and matches every dated repo document. Registrar entry exists so the loader gate passes the four current-Code documents; source pages themselves were exercised via registry-approved secondary reporting.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463"
+    },
+    {
+      "id": "pib-cow-subsumed",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "PIB press release PRID 2193095 — Code on Wages, 2019 (laws subsumed: Minimum Wages 1948, Payment of Wages 1936, Bonus 1965, Equal Remuneration 1976)",
+      "status": "verified",
+      "verified_at": "2026-10-20",
+      "notes": "Same 403 caveat as pib-codes-commencement: automated fetch blocked, content corroborated through the repo's Code on Wages documents and secondary legal reporting. Gate entry so code-on-wages-2019.txt and unpaid-wage-remedies-code-on-wages-2019.txt load.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2193095"
     }
   ],
   "excluded_claims": [

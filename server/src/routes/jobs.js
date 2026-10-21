@@ -5,7 +5,7 @@ import { JobApplication, REVIEWABLE_STATUSES } from "../models/JobApplication.js
 import { User } from "../models/User.js";
 import { JOB_OCCUPATIONS } from "../utils/occupations.js";
 import { MIN_MATCH_SCORE, withMatch, withApplicantMatch } from "../utils/jobMatch.js";
-import { authenticate, requireWorker, requireGovernment, audit } from "../middleware/auth.js";
+import { authenticate, requireWorker, audit } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -221,15 +221,21 @@ router.get("/applications/mine", authenticate, requireWorker, async (req, res) =
   }
 });
 
-// ── Listings I posted (government) ───────────────────────────────────
-router.get("/posted", authenticate, requireGovernment, async (req, res) => {
+// ── Listings I posted (government officials + accepted employers) ────
+router.get("/posted", authenticate, async (req, res) => {
   try {
-    const official = await User.findById(req.userId).select("is_superadmin state district");
-    if (!official) return res.status(401).json({ detail: "Not authenticated" });
+    const actor = await User.findById(req.userId).select("role is_superadmin state district");
+    if (!actor) return res.status(401).json({ detail: "Not authenticated" });
 
     // Non-superadmins only ever see their own postings. A superadmin sees all,
-    // which is the same visibility rule used for grievances.
-    const filter = official.is_superadmin ? {} : { posted_by: official._id };
+    // which is the same visibility rule used for grievances. Employers always
+    // see ONLY their own self-service listings.
+    const filter =
+      req.userRole === "employer"
+        ? { posted_by: actor._id, posted_by_role: "employer" }
+        : actor.is_superadmin
+          ? {}
+          : { posted_by: actor._id };
     const jobs = await JobPosting.find(filter).sort({ createdAt: -1 }).limit(200);
 
     const counts = await JobApplication.aggregate([
@@ -261,25 +267,68 @@ router.get("/posted", authenticate, requireGovernment, async (req, res) => {
   }
 });
 
-// ── Create a listing (government, within own jurisdiction) ───────────
-router.post("/", authenticate, requireGovernment, async (req, res) => {
+// ── Create a listing ─────────────────────────────────────────────────
+// Two poster paths:
+//   government official → within their own jurisdiction (unchanged);
+//   employer account    → only after a labour office ACCEPTED the account.
+router.post("/", authenticate, async (req, res) => {
   try {
-    const scope = await resolveScope(req.userId, req.body);
-    if (scope.forbidden) return res.status(403).json({ detail: "Listing is outside your jurisdiction" });
+    let scopeState = null;
+    let scopeDistrict = null;
+    let poster = null;
+    let postedRole = "government";
+    let employerAccepted = false;
 
-    const { value, error } = validateJob(req.body);
+    if (req.userRole === "employer") {
+      poster = await User.findById(req.userId);
+      if (!poster || poster.role !== "employer") return res.status(401).json({ detail: "Not authenticated" });
+      // Gov-accepted gate, mirroring requireGovAcceptedEmployer exactly.
+      if (!poster.is_active) return res.status(401).json({ detail: "Account disabled or removed." });
+      if ((poster.gov_approve_status ?? "accepted") !== "accepted") {
+        return res.status(403).json({
+          detail:
+            "Your employer registration is pending government acceptance. Once a labour office accepts your account, you can post jobs publicly and rate workers.",
+          code: "gov_approval_pending",
+        });
+      }
+      // The listing's stated employer name comes from the ACCEPTED account —
+      // an employer cannot paste an arbitrary, unattributed name.
+      scopeState = cleanText(req.body?.state, 80);
+      if (!scopeState) return res.status(422).json({ detail: "state is required" });
+      scopeDistrict = cleanText(req.body?.district, 80);
+      postedRole = "employer";
+      employerAccepted = true;
+    } else {
+      const scope = await resolveScope(req.userId, req.body);
+      if (scope.forbidden) return res.status(403).json({ detail: "Listing is outside your jurisdiction" });
+      poster = scope.official;
+      scopeState = scope.state;
+      scopeDistrict = scope.district;
+    }
+
+    const { value, error } = validateJob({
+      ...req.body,
+      // Employers may not set an arbitrary employer_name — it is the account's.
+      employer_name:
+        postedRole === "employer"
+          ? poster.business_name || poster.full_name
+          : req.body?.employer_name,
+    });
     if (error) return res.status(422).json({ detail: error });
 
     const job = await JobPosting.create({
       ...value,
-      state: scope.state,
-      district: scope.district,
-      posted_by: scope.official._id,
-      posted_by_department: scope.official.department || null,
+      state: scopeState,
+      district: scopeDistrict,
+      posted_by: poster._id,
+      posted_by_role: postedRole,
+      employer_id: postedRole === "employer" ? poster._id : null,
+      employer_accepted: employerAccepted,
+      posted_by_department: postedRole === "government" ? poster?.department || null : null,
     });
 
     await audit({
-      actorRole: "government",
+      actorRole: postedRole,
       actorIdentifier: req.userId,
       action: "job.create",
       resourceType: "job_posting",
@@ -295,7 +344,10 @@ router.post("/", authenticate, requireGovernment, async (req, res) => {
 });
 
 // ── Open / close a listing I posted ──────────────────────────────────
-router.patch("/:id/status", authenticate, requireGovernment, async (req, res) => {
+// Officials manage per jurisdiction rules; the posting employer manages their
+// own self-service listings (any live account can CLOSE what it created —
+// closing is a safety action and must never be blocked on review state).
+router.patch("/:id/status", authenticate, async (req, res) => {
   try {
     if (!isOid(req.params.id)) return res.status(404).json({ detail: "Listing not found" });
     const status = String(req.body?.status || "");
@@ -303,16 +355,17 @@ router.patch("/:id/status", authenticate, requireGovernment, async (req, res) =>
       return res.status(422).json({ detail: `status must be one of: ${JOB_STATUSES.join(", ")}` });
     }
 
-    const official = await User.findById(req.userId).select("is_superadmin");
+    const actor = await User.findById(req.userId).select("is_superadmin is_active");
     const job = await JobPosting.findById(req.params.id);
     if (!job) return res.status(404).json({ detail: "Listing not found" });
-    if (!canManage(official, job)) return res.status(404).json({ detail: "Listing not found" });
+    if (!canManage(actor, job)) return res.status(404).json({ detail: "Listing not found" });
+    if (actor && actor.is_active === false) return res.status(401).json({ detail: "Account disabled or removed." });
 
     job.status = status;
     await job.save();
 
     await audit({
-      actorRole: "government",
+      actorRole: req.userRole,
       actorIdentifier: req.userId,
       action: "job.status",
       resourceType: "job_posting",
@@ -328,13 +381,17 @@ router.patch("/:id/status", authenticate, requireGovernment, async (req, res) =>
 });
 
 // ── Applicants for a listing I posted ────────────────────────────────
-router.get("/:id/applications", authenticate, requireGovernment, async (req, res) => {
+// The posting employer (and the office) can read applicants. Worker phone
+// numbers are only included when the worker's own consent flag allows it —
+// unchanged for the employer path.
+router.get("/:id/applications", authenticate, async (req, res) => {
   try {
     if (!isOid(req.params.id)) return res.status(404).json({ detail: "Listing not found" });
-    const official = await User.findById(req.userId).select("is_superadmin");
+    const actor = await User.findById(req.userId).select("is_superadmin is_active");
+    if (actor && actor.is_active === false) return res.status(401).json({ detail: "Account disabled or removed." });
     const job = await JobPosting.findById(req.params.id);
     if (!job) return res.status(404).json({ detail: "Listing not found" });
-    if (!canManage(official, job)) return res.status(404).json({ detail: "Listing not found" });
+    if (!canManage(actor, job)) return res.status(404).json({ detail: "Listing not found" });
 
     const applications = await JobApplication.find({
       job_id: job._id,
@@ -371,7 +428,7 @@ router.get("/:id/applications", authenticate, requireGovernment, async (req, res
 // Triage only: this records that the office read an application and wants to
 // follow up. It is not an offer, and the worker sees exactly that wording —
 // no status here can promise work.
-router.patch("/:id/applications/:applicationId", authenticate, requireGovernment, async (req, res) => {
+router.patch("/:id/applications/:applicationId", authenticate, async (req, res) => {
   try {
     if (!isOid(req.params.id) || !isOid(req.params.applicationId)) {
       return res.status(404).json({ detail: "Application not found" });
@@ -382,11 +439,12 @@ router.patch("/:id/applications/:applicationId", authenticate, requireGovernment
       return res.status(422).json({ detail: "status must be one of: submitted, shortlisted" });
     }
 
-    const official = await User.findById(req.userId).select("is_superadmin");
+    const actor = await User.findById(req.userId).select("is_superadmin is_active");
+    if (actor && actor.is_active === false) return res.status(401).json({ detail: "Account disabled or removed." });
     const job = await JobPosting.findById(req.params.id);
     if (!job) return res.status(404).json({ detail: "Application not found" });
-    // A foreign office gets the same 404 as a missing record.
-    if (!canManage(official, job)) return res.status(404).json({ detail: "Application not found" });
+    // A foreign office or employer gets the same 404 as a missing record.
+    if (!canManage(actor, job)) return res.status(404).json({ detail: "Application not found" });
 
     const application = await JobApplication.findOne({
       _id: req.params.applicationId,
@@ -397,11 +455,11 @@ router.patch("/:id/applications/:applicationId", authenticate, requireGovernment
 
     application.status = status;
     application.reviewed_at = new Date();
-    application.reviewed_by = official?._id ?? req.userId;
+    application.reviewed_by = actor?._id ?? req.userId;
     await application.save();
 
     await audit({
-      actorRole: "government",
+      actorRole: req.userRole,
       actorIdentifier: req.userId,
       action: "job.application_review",
       resourceType: "job_application",

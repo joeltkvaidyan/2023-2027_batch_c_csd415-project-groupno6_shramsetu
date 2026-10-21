@@ -9,6 +9,25 @@ scheme documents — with **voice in/out**. The worker dashboard also carries a
 **QR digital ID card** and a **wage diary** that can pre-fill an unpaid-wages
 grievance (a day already recorded as fully paid is locked from further edits).
 
+Trust is gated on both sides of the work: **new WORKER and EMPLOYER accounts
+both start pending and a jurisdiction labour office must accept them** before
+they reach the public surfaces (directory, job applications, postings, public
+ratings). Accepted employers can self-post job listings that carry an honest
+"labour-office accepted" poster signal (never a listing certification), and
+**households (the general public) get their own account**: they post area-
+scoped work requests, workers see them ranked by the same explainable matcher,
+and phone numbers pass between the two sides **only after the worker accepts**
+— `tel:`/`sms:` buttons appear on both dashboards, nothing is shown publicly.
+The RAG corpus further answers the questions the 2026 evidence showed are
+actually failing on the ground: the 8-May-2026 final Labour-Code grievance
+path (GRC at 20+ workers; contract-labour grievance → principal-employer
+committee → Inspector-cum-Facilitator after 30 days), the 28-Apr-2026 MoLE
+heatwave advisory with NCDC heat-illness guidance (one-tap from a dashboard
+**Heat safety** tile, prefilled question in the worker's language), and an
+honestly-scoped AAWAZ explainer (status uncertain, enrolment reported closed
+2022). The evidence→feature→metric mapping lives in
+[docs/SOCIAL_IMPACT.md](docs/SOCIAL_IMPACT.md).
+
 Supported languages: **English, Hindi, Bengali, Telugu, Tamil, Malayalam**.
 
 ## Architecture (polyglot microservices)
@@ -135,14 +154,49 @@ demo workers/grievances if the users collection is empty.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 49 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring |
-| Frontend unit/component | `cd frontend && npm test` | 50 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
+| Server unit/security | `cd server && npm test` | 120 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests |
+| Frontend unit/component | `cd frontend && npm test` | 61 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
 | RAG eval harness | `venv/Scripts/python eval/run_eval.py` | hit@1/hit@3, retrieval refusals, per-language → `eval/RESULTS.md` |
 
 All four run in CI on every push (`.github/workflows/ci.yml`): server tests,
 AI-service tests, frontend typecheck + tests + build, and a dependency audit.
+
+### Why `npm test` fails on Git Bash (and `npm run test:direct`)
+
+On Windows under Git Bash, `npm test` can fail before running a single test with:
+
+```
+'node' is not recognized as an internal or external command,
+```
+
+This is an npm environment problem, not a test failure. npm's run-script hands
+its child shell a `PATH` that stops before the Node install directory
+(`npm run env | grep ^PATH` shows the truncated value), so the shell cannot
+resolve `node` even though `which node` succeeds in the parent shell. The same
+thing breaks `npx vitest`.
+
+Both packages therefore expose a `test:direct` script that bypasses the shim and
+invokes vitest's binary by path:
+
+```bash
+cd server   && npm run test:direct   # node ./node_modules/vitest/vitest.mjs run
+cd frontend && npm run test:direct
+```
+
+If `npm run test:direct` still reports `'node' is not recognized`, the same
+truncated `PATH` is the cause — run the invocation directly, or run the script
+through cmd, which gets the intact environment:
+
+```bash
+node ./node_modules/vitest/vitest.mjs run        # from the package directory
+cmd //c "npm run test:direct"                    # or hand it to cmd
+```
+
+All three forms exit non-zero when a test fails; `test:direct` does not swallow
+the status. Confirmed counts at the time of writing: **server 120/120**,
+**frontend 61/61**.
 
 ## Production notes (honest scope)
 

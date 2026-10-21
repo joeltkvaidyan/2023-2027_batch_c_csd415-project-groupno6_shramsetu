@@ -15,6 +15,7 @@ import jobRoutes from "./routes/jobs.js";
 import employerRoutes from "./routes/employers.js";
 import ratingRoutes from "./routes/ratings.js";
 import publicRoutes from "./routes/public.js";
+import requestRoutes from "./routes/requests.js";
 
 /**
  * The Express app, separated from bootstrap (DB connect + listen) so the
@@ -54,6 +55,7 @@ app.use("/api/v1/jobs", jobRoutes);
 app.use("/api/v1/employers", employerRoutes);
 app.use("/api/v1/ratings", ratingRoutes);
 app.use("/api/v1/public", publicRoutes);
+app.use("/api/v1/requests", requestRoutes);
 
 // 404 for unknown API routes
 app.use("/api", (req, res) => res.status(404).json({ detail: "Not found" }));

@@ -106,3 +106,50 @@ jobs:
       - name: Document dev-only frontend advisories (does not fail the build)
         working-directory: frontend
         run: npm audit --audit-level=high || true
+
+  python-dependency-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pip-audit and bandit
+        run: pip install pip-audit bandit
+      - name: pip-audit — check for known vulnerabilities
+        run: pip-audit -r requirements.txt || true
+      - name: bandit — SAST scan for security issues
+        run: bandit -r app -ll || true
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
+      - name: Scan for committed secrets
+        run: gitleaks detect --source . --no-banner || true
+
+  docker-image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      - name: Build and scan server image
+        run: |
+          docker build -t shramsetu-server ./server
+          trivy image --exit-code 1 --severity HIGH,CRITICAL shramsetu-server || true
+      - name: Build and scan ai-service image
+        run: |
+          docker build -t shramsetu-ai-service ./ai-service
+          trivy image --exit-code 1 --severity HIGH,CRITICAL shramsetu-ai-service || true

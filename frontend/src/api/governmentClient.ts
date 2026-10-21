@@ -73,6 +73,8 @@ export interface DashboardStats {
   open_grievances: number;
   resolved_grievances: number;
   urgent_grievances: number;
+  total_employers?: number;
+  pending_employers?: number;
   grievances_by_category: Record<string, number>;
   grievances_by_status: Record<string, number>;
   recent_filings: Array<{

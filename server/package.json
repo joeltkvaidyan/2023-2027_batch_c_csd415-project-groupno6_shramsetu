@@ -11,6 +11,7 @@
     "seed": "node src/seed/run.js",
     "demo:reset": "node scripts/reset-demo.mjs",
     "test": "vitest run",
+    "test:direct": "node ./node_modules/vitest/vitest.mjs run",
     "verify": "node scripts/verify.mjs",
     "smoke": "node scripts/smoke-new-features.mjs"
   },

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Search, Users, UserCheck, Megaphone, Flag } from "lucide-react";
+import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
 import { getGovToken, clearGovToken } from "../api/client";
 import NotificationsPanel from "../components/government/NotificationsPanel";
 import JobsPanel from "../components/government/JobsPanel";
 import ApprovalsPanel from "../components/government/ApprovalsPanel";
+import EmployerApprovalsPanel from "../components/government/EmployerApprovalsPanel";
 import {
   govGetStats,
   govGetWorkers,
@@ -21,7 +22,7 @@ import {
   type AuditLog,
 } from "../api/governmentClient";
 
-type Tab = "overview" | "approvals" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
+type Tab = "overview" | "approvals" | "employers" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -105,6 +106,7 @@ export default function GovernmentDashboardPage() {
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: "overview", icon: "📊", label: "Overview" },
     { key: "approvals", icon: "✅", label: "Approvals" },
+    { key: "employers", icon: "🏢", label: "Employers" },
     { key: "grievances", icon: "📢", label: "Grievances" },
     { key: "workers", icon: "👷", label: "Workers" },
     { key: "jobs", icon: "🧰", label: "Job Listings" },
@@ -184,6 +186,8 @@ export default function GovernmentDashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard icon={Users} label="Total Workers" value={stats.total_workers} color="blue" />
               <StatCard icon={UserCheck} label="Active Workers" value={stats.active_workers} color="green" />
+              <StatCard icon={Building2} label="Employers" value={stats.total_employers ?? 0} color="emerald" />
+              <StatCard icon={Clock} label="Employers Pending" value={stats.pending_employers ?? 0} color="amber" />
               <StatCard icon={Megaphone} label="Open Grievances" value={stats.open_grievances} color="amber" />
               <StatCard icon={Flag} label="Resolved" value={stats.resolved_grievances} color="emerald" />
             </div>
@@ -248,6 +252,8 @@ export default function GovernmentDashboardPage() {
 
         {/* ── Approvals Tab ───────────────────────────────────── */}
         {!loading && activeTab === "approvals" && token && <ApprovalsPanel token={token} />}
+
+        {!loading && activeTab === "employers" && token && <EmployerApprovalsPanel token={token} />}
         {!loading && activeTab === "workers" && (
           <div className="space-y-4">
             <div className="flex gap-3">

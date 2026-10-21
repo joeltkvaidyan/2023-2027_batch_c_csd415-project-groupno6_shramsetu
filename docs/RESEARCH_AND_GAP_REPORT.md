@@ -37,6 +37,23 @@ Based on current research (2024-2025):
 - Document loss/retention: Weak evidence of widespread ID withholding; stronger evidence of missing employment proof hindering claims.
 - Grievance redressal: Channels exist (Labour Call 1800-42555-214, Citizen Call 155300, CPGRAMS) but resolution not guaranteed.
 
+### 2.5 Access, not registration (SIIMS 2026 — 1,824 workers, 33 districts, KA/TN/KL)
+- The UNFPA–IIMAD **South India Interstate Migration Survey (SIIMS 2026)** found 73.3% of interstate migrant workers had problems accessing welfare schemes and services, 69.2% had trouble accessing healthcare, 86.4% had no signed employment contract and 57.6% were paid in cash; 77.4% were recruited through non-contractor channels. Its recommendations include **multilingual helplines and help desks**, ration-portability awareness and stronger labour inspection ([UNFPA–IIMAD report](https://india.unfpa.org/sites/default/files/pub-pdf/2date26-date9/UNFPA-IIMAD%20Report.pdf); [Down To Earth coverage](https://www.downtoearth.org.in/governance/nearly-three-in-four-migrant-workers-in-southern-india-report-improved-living-standards-survey-finds)).
+- **Implication:** the platform's social value is the last mile — telling a worker in their own language what a scheme covers, where to claim it, and how — not creating one more registration gateway.
+
+### 2.6 Registration ≠ welfare (e-Shram at national scale, AAWAZ in Kerala)
+- e-Shram passed **31.78 crore** unorganised-worker registrations on 14 July 2026 ([PIB](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2286757&reg=48&lang=2)) — one of the world's largest worker registries — but its headline metric is registrations, not benefits received; independent analysis argues it made workers "visible to the state" without enabling claims ([The e-SHRAM Paradox, Mainstream Weekly](https://mainstreamweekly.net/article16755.html)).
+- Kerala's **AAWAZ** card is the sharpest local case: ~5.16 lakh cards issued, but only **~374 cardholders** are known to have received medical help across about four years — well under 0.1%. Documented causes: workers saw the card as a work ID, did not know which hospitals were empanelled or how to claim, and outreach ran mainly in Malayalam or English ([The News Minute, 2022](https://www.thenewsminute.com/kerala/kerala-s-aawaz-health-insurance-migrant-labourers-benefited-only-handful-171316)). Enrolment is reported to have closed in 2022; the current status is treated as **uncertain** in `verified-sources.json` (`aawaz-status`), never presented as active.
+- **Implication:** ShramSetu must never present a card or registration as an entitlement (already enforced via registry `excluded_claims`). The AI assistant and service directory must answer the three exact questions that failed here: what does my card cover, where can I claim, how — in the worker's language.
+
+### 2.7 New rights under the 2026 final Labour Code Rules
+- The four Codes took effect 21 November 2025; **final Central Rules were notified 8 May 2026**. Reportedly: a **Grievance Redressal Committee is mandatory** in industrial establishments with 20+ workers, and **contract-labour grievances** on wages, health or working conditions go to a committee of the **principal employer**, escalating to the **Inspector-cum-Facilitator** if unresolved within **30 days** ([KPMG flash alert](https://kpmg.com/xx/en/our-insights/gms-flash-alert/2026/flash-alert-2026-127.html)). Central-sector scope — Kerala/state rules may still be drafts.
+- **Implication:** rights this new are unclaimable unless workers know they exist; added to the RAG corpus as `labour-codes-grievance-path-2026.txt` (verified 2026-10-20, registry entry `labour-codes-central-rules-2026-summary`).
+
+### 2.8 Heat — an advisory without teeth
+- The Labour Ministry issued a **nationwide heatwave advisory on 28 April 2026** (flexible/slower pace in extreme heat, two-person crews, rest areas with ventilation, special attention to construction and brick-kiln workers, awareness campaigns at labour chowks) ([PIB](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2256186&reg=3&lang=1)) — but it is **advisory, non-binding**, and unions were still demanding binding heat provisions into mid-2026 ([India Mongabay, May 2026](https://india.mongabay.com/2026/05/workers-groups-are-pushing-for-legal-protections-against-deadly-heat)).
+- **Implication:** until protected hours are binding, a worker-facing heat guidance capability (scheduling, water/rest, buddy system, red-flag symptoms) in the worker's language partially fills the gap; added as `heat-stress-advisory.txt` with a dashboard entry point.
+
 ---
 
 ## 3. Existing Government Services (Verification)
@@ -104,6 +121,14 @@ Based on current research (2024-2025):
 - [The Hindu, Oct 2025 - No accurate data on migrant workers in Kerala](https://www.thehindu.com/news/national/kerala/no-accurate-data-on-number-of-migrant-workers-in-state/article70190377.ece)
 - [The South First, Jan 2024 - Wage theft helpline data](https://thesouthfirst.com/keralam/helpline-unveils-%E2%82%B91-3-crore-wage-theft-from-migrant-labourers-in-kerala-over-14-months/)
 - [Mondal et al, 2024 - Language barriers in healthcare access](https://jswep.in/index.php/jswep/article/view/304)
+- [UNFPA–IIMAD, SIIMS 2026 - South India Interstate Migration Survey (1,824 workers; access findings)](https://india.unfpa.org/sites/default/files/pub-pdf/2date26-date9/UNFPA-IIMAD%20Report.pdf)
+- [Down To Earth, 2026 - Coverage of the SIIMS 2026 findings](https://www.downtoearth.org.in/governance/nearly-three-in-four-migrant-workers-in-southern-india-report-improved-living-standards-survey-finds)
+- [PIB, 14 Jul 2026 - e-Shram registrations cross 31.78 crore](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2286757&reg=48&lang=2)
+- [Mainstream Weekly, 2026 - The e-SHRAM Paradox: visible to the state, invisible in welfare](https://mainstreamweekly.net/article16755.html)
+- [The News Minute, 2022 - AAWAZ: only a handful benefited](https://www.thenewsminute.com/kerala/kerala-s-aawaz-health-insurance-migrant-labourers-benefited-only-handful-171316)
+- [KPMG, May 2026 - Government notifies final Rules on four Labour Codes](https://kpmg.com/xx/en/our-insights/gms-flash-alert/2026/flash-alert-2026-127.html)
+- [PIB, 28 Apr 2026 - Nationwide heatwave advisory to protect workers](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2256186&reg=3&lang=1)
+- [India Mongabay, May 2026 - Workers groups push for legal protections against deadly heat](https://india.mongabay.com/2026/05/workers-groups-are-pushing-for-legal-protections-against-deadly-heat)
 - [Kerala Labour Commissionerate](https://lc.kerala.gov.in/)
 - [e-Shram](https://eshram.gov.in/)
 - [CPGRAMS](https://pgportal.gov.in/)

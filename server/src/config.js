@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import path from "node:path";
-import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,7 +41,7 @@ export const config = {
   mongodbUri: resolveMongoUri(),
   seedDemoData: bool(process.env.SEED_DEMO_DATA, true),
 
-  jwtSecret: process.env.JWT_SECRET_KEY || "",
+  jwtSecret: process.env.JWT_SECRET_KEY,
   // Short-lived tokens: a stolen token expires fast, and the /authenticate
   // re-check (see middleware/auth.js) catches disabled users sooner.
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
@@ -56,7 +55,7 @@ export const config = {
 
   bootstrapAdmin: {
     employeeId: process.env.BOOTSTRAP_ADMIN_EMPLOYEE_ID || "ADMIN001",
-    password: process.env.BOOTSTRAP_ADMIN_PASSWORD || "Admin@123",
+    password: process.env.BOOTSTRAP_ADMIN_PASSWORD,
   },
 
   uploadDir: process.env.UPLOAD_DIR || path.join(__dirname, "..", "uploads"),
@@ -76,10 +75,9 @@ export const config = {
   aiInternalKey: process.env.AI_INTERNAL_KEY || "",
 
   // Document-wallet master key (32 bytes, base64). Wraps per-file AES keys.
-  docMasterKeyRaw: process.env.DOC_MASTER_KEY || "",
+  docMasterKeyRaw: process.env.DOC_MASTER_KEY,
 
-  corsOrigins: (process.env.CORS_ORIGINS ||
-    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:5199,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176,http://127.0.0.1:5177,http://127.0.0.1:5199")
+  corsOrigins: (process.env.CORS_ORIGINS || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean),
@@ -112,9 +110,10 @@ function parseDocMasterKey() {
 config.docMasterKey = parseDocMasterKey();
 
 if (!config.jwtSecret) {
-  // Dev convenience with a loud notice. Production MUST set JWT_SECRET_KEY.
-  config.jwtSecret = crypto.randomBytes(32).toString("hex");
-  console.warn("[config] JWT_SECRET_KEY not set — generated an ephemeral secret (tokens die on restart). Set it in server/.env for stable sessions.");
+  throw new Error(
+    "JWT_SECRET_KEY is not set — refusing to boot without a signing secret. " +
+      "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  );
 }
 
 // ── Production startup guard: fail loud, fail early ─────────────────

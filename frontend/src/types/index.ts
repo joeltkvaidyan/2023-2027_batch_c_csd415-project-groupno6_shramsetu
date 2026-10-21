@@ -203,9 +203,13 @@ export type JobMatchReason =
   | "open_to_any_trade"
   | "same_district"
   | "same_state"
+  | "same_area" // citizen service requests only
   | "recent_posting"
   | "multiple_openings"
-  | "wage_listed";
+  | "wage_listed"
+  | "employer_accepted" // poster account is labour-office accepted (not a listing verification)
+  | "different_trade" // applicant-review direction
+  | "detail_not_recorded"; // applicant-review direction
 
 /**
  * A job listing published by a government/partner official inside their own
@@ -220,6 +224,10 @@ export interface JobPosting {
   occupation: string;
   state: string;
   district: string | null;
+  /** "government" = official posting (legacy); "employer" = gov-accepted employer self-service listing. */
+  posted_by_role?: "government" | "employer";
+  /** True only when the POSTER was labour-office accepted — never a listing verification. */
+  employer_accepted?: boolean;
   work_location: string | null;
   wage_min: number | null;
   wage_max: number | null;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { BottomNav } from "../components/BottomNav";
@@ -76,6 +77,19 @@ export default function ChatbotPage() {
     loadHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Dashboard deep links (e.g. the Heat-safety tile) pre-seed a question via
+  // navigation state. Send it once, AFTER history settles — loadHistory()
+  // replaces the message list, so sending earlier would lose the bubble.
+  const location = useLocation();
+  const initialQuestion = (location.state as { initialQuestion?: string } | null)?.initialQuestion;
+  const prefillSentRef = useRef(false);
+  useEffect(() => {
+    if (!initialQuestion || prefillSentRef.current || historyLoading) return;
+    prefillSentRef.current = true;
+    void sendQuestion(initialQuestion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion, historyLoading]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

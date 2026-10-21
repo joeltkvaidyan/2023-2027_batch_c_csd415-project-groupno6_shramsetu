@@ -1,0 +1,36 @@
+TITLE: Labour Codes in force from 21 November 2025 — final Central Rules (8 May 2026) and the worker grievance path
+DEPARTMENT: Ministry of Labour & Employment, Government of India
+AUTHORITY: Ministry of Labour & Employment
+SOURCE_URL: https://kpmg.com/xx/en/our-insights/gms-flash-alert/2026/flash-alert-2026-127.html
+PUBLISHED_DATE: 2026-05-08
+EFFECTIVE_DATE: 2026-05-08
+LAST_UPDATED: 2026-10-20
+LAST_VERIFIED: 2026-10-20
+STATUS: current
+---
+The four Labour Codes — the Code on Wages, the Code on Social Security, the Occupational Safety, Health and Working Conditions (OSH) Code and the Industrial Relations Code — came into force on 21 November 2025, replacing 29 earlier central labour Acts (Government announcement on pib.gov.in, PIB release 2192463). Draft Central Rules were issued on 30 December 2025, and on 8 May 2026 the Government of India notified the FINAL Central Rules: the Code on Wages (Central) Rules 2026, Social Security (Central) Rules 2026, OSH (Central) Rules 2026 and Industrial Relations (Central) Rules 2026.
+
+IMPORTANT SCOPE NOTE: a Code being in force is not the same as every State's rules being final. These entries describe the CENTRAL rules, which directly govern central-sector establishments. State rule notifications (for example Kerala's) may still be drafts and can change forms, fees and procedures — always confirm the current form with the state Labour Department before relying on it.
+
+GRIEVANCE REDRESSAL COMMITTEE (GRC) — workplaces with 20 or more workers:
+- Every industrial establishment with 20 or more workers is required to have a Grievance Redressal Committee under the Industrial Relations framework.
+- The Committee has at most 20 members, and includes representatives of both employers and workers, with worker representatives not fewer than employer representatives.
+- Worker-facing meaning: an employee can file a workplace grievance with this committee and expect time-bound handling instead of going straight outside the company.
+
+CONTRACT-LABOUR GRIEVANCES — committee first, then the Inspector-cum-Facilitator:
+- Where the grievance of a contract worker relates to wages, health or working conditions, the principal employer addresses it through a committee constituted by the principal employer.
+- If the issue is not resolved within 30 days, the worker escalates to the Inspector-cum-Facilitator.
+- Worker-facing meaning: keep records (dates, employer/contractor names, wage diary entries) from day one — the 30-day escalation clock and the inspector's enquiry both depend on evidence. ShramSetu's wage diary can pre-fill this record.
+
+UNPAID WAGES — the direct claim route is unchanged:
+- Alongside grievance machinery, wages due can be claimed through the statutory claim route under section 45 of the Code on Wages 2019 (the authority decides claims of non-payment, under-payment or unauthorised deductions). See the documents "unpaid-wage-remedies-code-on-wages-2019" and "code-on-wages-2019" in this knowledge base for that route and for the rule that the employer bears the burden of proving wages were paid.
+
+INSPECTOR-CUM-FACILITATOR — what changed:
+- The old "inspector" regime is replaced by an Inspector-cum-Facilitator with an advisory role and digital inspections; first-time defaults typically attract an improvement opportunity before penalty. Documented, prompt correction by the establishment is therefore valuable.
+
+WHAT THIS DOCUMENT DOES NOT SAY:
+- It does not state any minimum-wage amount, fee or state-specific form (these vary by trade, skill class, area and state notification).
+- It does not replace the separate legal routes described in the grievance and claims documents.
+
+HELPLINE: e-Shram 14434 | Kerala Labour Call Centre 1800 42555 214 | Citizen Call 155300
+WEBSITE: labour.gov.in | pib.gov.in (commencement 21 November 2025) | kpmg.com (summary of the 8 May 2026 final Rules)

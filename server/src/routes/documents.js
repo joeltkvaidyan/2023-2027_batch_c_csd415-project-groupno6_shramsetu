@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import { Document } from "../models/Document.js";
 import { encryptBuffer, decryptBuffer } from "../utils/crypto.js";
 import { wrapKey, unwrapKey } from "../utils/docKeys.js";
@@ -14,6 +15,20 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.maxUploadMb * 1024 * 1024 } });
 
 const MAX_BYTES = config.maxUploadMb * 1024 * 1024;
+
+// Characters not allowed in a storage key: path separators, traversal, etc.
+const STORAGE_KEY_RE = /^[A-Za-z0-9_.-]+$/;
+
+function makeStorageKey(userId) {
+  return `${userId}-${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+}
+
+function safeStorageKey(key) {
+  if (!STORAGE_KEY_RE.test(key)) {
+    throw new Error("Invalid storage key");
+  }
+  return key;
+}
 
 /**
  * RFC 5987/6266 Content-Disposition with an ASCII fallback:
@@ -53,9 +68,9 @@ router.post("/", authenticate, requireWorker, upload.single("file"), async (req,
     const { key, payload } = encryptBuffer(req.file.buffer);
     const wrapped = wrapKey(Buffer.from(key, "base64"));
 
-    const storageKey = `${req.userId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const storageKey = makeStorageKey(req.userId);
     await fs.promises.mkdir(config.uploadDir, { recursive: true });
-    const dest = path.join(config.uploadDir, storageKey);
+    const dest = path.join(config.uploadDir, safeStorageKey(storageKey));
     await fs.promises.writeFile(dest, payload);
     let doc;
     try {
@@ -86,7 +101,7 @@ router.get("/:id/download", authenticate, requireWorker, async (req, res) => {
   try {
     const doc = await Document.findOne({ _id: req.params.id, owner_id: req.userId });
     if (!doc) return res.status(404).json({ detail: "Document not found." });
-    const payload = await fs.promises.readFile(path.join(config.uploadDir, doc.storage_key));
+    const payload = await fs.promises.readFile(path.join(config.uploadDir, safeStorageKey(doc.storage_key)));
     const perFileKey = unwrapKey(doc.encryption_key);
     const raw = decryptBuffer(payload, perFileKey.toString("base64"));
     res.setHeader("Content-Type", doc.content_type);
@@ -121,7 +136,7 @@ router.delete("/:id", authenticate, requireWorker, async (req, res) => {
   try {
     const doc = await Document.findOneAndDelete({ _id: req.params.id, owner_id: req.userId });
     if (!doc) return res.status(404).json({ detail: "Document not found." });
-    await fs.promises.unlink(path.join(config.uploadDir, doc.storage_key)).catch(() => {});
+    await fs.promises.unlink(path.join(config.uploadDir, safeStorageKey(doc.storage_key))).catch(() => {});
     res.json({ detail: "Document deleted" });
   } catch (err) {
     console.error("[documents/delete]", err);

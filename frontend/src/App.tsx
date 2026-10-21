@@ -30,6 +30,9 @@ import EmployersPage from "./pages/EmployersPage";
 import AccountRecoveryPage from "./pages/AccountRecoveryPage";
 import EmployerLoginPage from "./pages/EmployerLoginPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
+import CitizenLoginPage from "./pages/CitizenLoginPage";
+import CitizenDashboardPage from "./pages/CitizenDashboardPage";
+import WorkerRequestsPage from "./pages/WorkerRequestsPage";
 import FindWorkersPage from "./pages/FindWorkersPage";
 
 function GovernmentRoute({ children }: { children: React.ReactNode }) {
@@ -104,10 +107,20 @@ export default function App() {
         path="/worker/employers"
         element={<ProtectedRoute><EmployersPage /></ProtectedRoute>}
       />
+      <Route
+        path="/worker/requests"
+        element={<ProtectedRoute><WorkerRequestsPage /></ProtectedRoute>}
+      />
 
-      {/* Employer routes — separate token store from worker/government */}
+      {/* Employer routes — separate token store from worker/government.
+          The dashboard itself redirects to /employer/login without a token and
+          refreshes its labour-office acceptance state from the server. */}
       <Route path="/employer/login" element={<EmployerLoginPage />} />
       <Route path="/employer/dashboard" element={<EmployerDashboardPage />} />
+
+      {/* Citizen (household) routes — separate token store */}
+      <Route path="/citizen/login" element={<CitizenLoginPage />} />
+      <Route path="/citizen/dashboard" element={<CitizenDashboardPage />} />
 
       {/* Public directory — no login, for people outside the platform */}
       <Route path="/find-workers" element={<FindWorkersPage />} />

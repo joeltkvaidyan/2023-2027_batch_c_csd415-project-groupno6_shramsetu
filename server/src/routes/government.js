@@ -20,16 +20,27 @@ router.get("/dashboard/stats", authenticate, requireGovernment, async (req, res)
   try {
     const official = await User.findById(req.userId);
     const { workerFilter, grievanceFilter } = await grievanceScopeFilter(official);
+    const employerFilter = employerScopeFilter(official);
 
-    const [total_workers, active_workers, total_grievances, open_grievances, resolved_grievances, urgent_grievances] =
-      await Promise.all([
-        User.countDocuments(workerFilter),
-        User.countDocuments({ ...workerFilter, is_active: true }),
-        Grievance.countDocuments(grievanceFilter),
-        Grievance.countDocuments({ ...grievanceFilter, status: { $in: ["submitted", "under_review"] } }),
-        Grievance.countDocuments({ ...grievanceFilter, status: "resolved" }),
-        Grievance.countDocuments({ ...grievanceFilter, priority: "urgent", status: { $nin: ["resolved", "rejected", "withdrawn"] } }),
-      ]);
+    const [
+      total_workers,
+      active_workers,
+      total_grievances,
+      open_grievances,
+      resolved_grievances,
+      urgent_grievances,
+      total_employers,
+      pending_employers,
+    ] = await Promise.all([
+      User.countDocuments(workerFilter),
+      User.countDocuments({ ...workerFilter, is_active: true }),
+      Grievance.countDocuments(grievanceFilter),
+      Grievance.countDocuments({ ...grievanceFilter, status: { $in: ["submitted", "under_review"] } }),
+      Grievance.countDocuments({ ...grievanceFilter, status: "resolved" }),
+      Grievance.countDocuments({ ...grievanceFilter, priority: "urgent", status: { $nin: ["resolved", "rejected", "withdrawn"] } }),
+      User.countDocuments({ role: "employer", ...employerFilter }),
+      User.countDocuments({ role: "employer", ...employerFilter, gov_approve_status: "pending" }),
+    ]);
 
     const [byCategory, byStatus, byState, recent] = await Promise.all([
       Grievance.aggregate([
@@ -58,6 +69,8 @@ router.get("/dashboard/stats", authenticate, requireGovernment, async (req, res)
       open_grievances,
       resolved_grievances,
       urgent_grievances,
+      total_employers,
+      pending_employers,
       grievances_by_category: toMap(byCategory),
       grievances_by_status: toMap(byStatus),
       workers_by_state: toMap(byState),
@@ -151,6 +164,115 @@ router.patch("/workers/:id/approval", authenticate, requireGovernment, async (re
     res.json({ id: String(worker._id), worker_id: worker.worker_id, gov_approve_status: worker.gov_approve_status });
   } catch (err) {
     console.error("[gov/approval]", err);
+    res.status(500).json({ detail: "Could not update the approval." });
+  }
+});
+
+/**
+ * Employer review scope. Employers register an OPTIONAL business location
+ * (current_state / current_district), so staffing rules differ from workers:
+ *  - an employer WITH a district is reviewable by that district's officials;
+ *  - an employer with only a state (or none at all) is reviewable by their
+ *    state officials; location-less employers fall to whoever can see them —
+ *    never dropped silently (fail visible, not fail open for citizens).
+ */
+function employerScopeFilter(official) {
+  if (!official) return { _id: null };
+  if (official.is_superadmin) return {};
+  if (official.district) {
+    return {
+      $or: [
+        { current_district: official.district },
+        { current_district: null },
+        { current_district: "" },
+      ],
+    };
+  }
+  if (official.state) {
+    return {
+      $or: [{ current_state: official.state }, { current_state: null }, { current_state: "" }],
+    };
+  }
+  return { _id: null }; // fail closed, same rule as workers
+}
+
+// ── Employer acceptance queue (new employer → labour office accepts) ──
+// Mirrors worker-approvals: pending/accepted/rejected segments with counts,
+// search, and the same jurisdiction logic so employers cannot pick their own
+// reviewing office.
+router.get("/employer-approvals", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const status = ["pending", "accepted", "rejected"].includes(String(req.query.status))
+      ? String(req.query.status)
+      : "pending";
+    const search = String(req.query.search || "").trim();
+    const base = { role: "employer", ...employerScopeFilter(official) };
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      base.$or = [{ full_name: rx }, { business_name: rx }, { mobile_number: rx }];
+    }
+
+    const filter = { ...base, gov_approve_status: status };
+    const [employers, pendingCount, acceptedCount, rejectedCount] = await Promise.all([
+      User.find(filter).sort({ createdAt: -1 }).limit(200),
+      User.countDocuments({ ...base, gov_approve_status: "pending" }),
+      User.countDocuments({ ...base, gov_approve_status: "accepted" }),
+      User.countDocuments({ ...base, gov_approve_status: "rejected" }),
+    ]);
+    res.json({
+      status,
+      counts: { pending: pendingCount, accepted: acceptedCount, rejected: rejectedCount },
+      employers: employers.map((e) => ({
+        id: String(e._id),
+        full_name: e.full_name,
+        business_name: e.business_name,
+        mobile_number: e.mobile_number,
+        current_state: e.current_state,
+        current_district: e.current_district,
+        gov_approve_status: e.gov_approve_status,
+        created_at: e.createdAt,
+      })),
+      notice:
+        "Accepting an employer lets it post listings publicly and rate workers. ShramSetu does not certify businesses — acceptance records that a labour office reviewed the account.",
+    });
+  } catch (err) {
+    console.error("[gov/employer-approvals]", err);
+    res.status(500).json({ detail: "Could not load the employer acceptance queue." });
+  }
+});
+
+router.patch("/employers/:id/approval", authenticate, requireGovernment, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ detail: "Employer not found" });
+    const status = String(req.body?.status || "");
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(422).json({ detail: "status must be one of: accepted, rejected" });
+    }
+    const official = await User.findById(req.userId);
+    const employer = await User.findById(req.params.id).select("full_name role gov_approve_status");
+    if (!employer || employer.role !== "employer") return res.status(404).json({ detail: "Employer not found" });
+
+    const scoped = await User.countDocuments({ _id: employer._id, ...employerScopeFilter(official) });
+    if (!scoped) return res.status(404).json({ detail: "Employer not found" });
+
+    employer.gov_approve_status = status;
+    employer.gov_approve_at = status === "accepted" ? new Date() : null;
+    employer.gov_approve_by = official._id;
+    await employer.save();
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: req.userId,
+      action: "employer.approval",
+      resourceType: "user",
+      resourceId: String(employer._id),
+      ip: req.ip,
+      success: true,
+    });
+    res.json({ id: String(employer._id), gov_approve_status: employer.gov_approve_status });
+  } catch (err) {
+    console.error("[gov/employer-approval]", err);
     res.status(500).json({ detail: "Could not update the approval." });
   }
 });
