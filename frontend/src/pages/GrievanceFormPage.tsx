@@ -34,6 +34,9 @@ export default function GrievanceFormPage() {
         description?: string;
         incident_date?: string;
         employer_name?: string;
+        // Platform records cited by the draft (wage slips / confirmed
+        // engagements) — attached through the same attachments array.
+        evidence?: { kind: string; ref_id: string; label?: string }[];
       }
     | null;
   const prefillCategory = CATEGORIES.includes(state?.category as GrievanceCategory)
@@ -108,6 +111,9 @@ export default function GrievanceFormPage() {
         incident_date: incidentDate
           ? new Date(incidentDate).toISOString()
           : undefined,
+        // Server re-checks every reference against the worker and drops any
+        // that is not theirs; a stale id never blocks the filing.
+        evidence: state?.evidence?.length ? state.evidence : undefined,
       });
       await deleteCachedGrievanceDraft();
       navigate(`/worker/grievances/${res.data.id}`, { replace: true });

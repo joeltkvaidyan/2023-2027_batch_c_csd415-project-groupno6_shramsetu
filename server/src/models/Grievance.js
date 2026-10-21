@@ -52,10 +52,19 @@ const GrievanceSchema = new Schema(
     worker_feedback: { type: String, default: null },
     feedback_at: { type: Date, default: null },
 
+    // One array, two kinds of evidence. `kind: "file"` is an uploaded and
+    // encrypted document (the original path). `kind: "wage_slip"` and
+    // `kind: "engagement"` are references to records the platform already holds,
+    // so a wage complaint can cite employer-confirmed days without the worker
+    // having to photograph anything. Existing rows have no `kind` and read as
+    // "file".
     attachments: [
       {
         _id: false,
         id: String, // subdoc string id for the frontend
+        kind: { type: String, default: "file" },
+        ref_id: { type: String, default: null },
+        label: { type: String, default: null },
         original_filename: String,
         content_type: String,
         size_bytes: Number,

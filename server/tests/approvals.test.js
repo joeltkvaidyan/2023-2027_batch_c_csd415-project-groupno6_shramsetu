@@ -203,6 +203,23 @@ describe("public worker directory", () => {
 
 // ── Ratings ───────────────────────────────────────────────────────────
 describe("worker ratings", () => {
+  // The employer path now requires a confirmed engagement with the worker, so
+  // these tests set one up and keep testing the RATING rules. The gate itself
+  // (no engagement -> 403 no_confirmed_engagement) is covered in
+  // tests/evidenceLoop.test.js.
+  beforeAll(async () => {
+    const created = await api.post("/api/v1/engagements").set(auth("employer")).send({
+      worker_id: String(ids.acceptedWorker._id),
+      work_date: "2026-09-09",
+      wage_basis: "day",
+      agreed_wage: 700,
+    });
+    expect(created.status).toBe(201);
+    const id = created.body.engagement.id;
+    expect((await api.post(`/api/v1/engagements/${id}/accept`).set(auth("acceptedWorker"))).status).toBe(200);
+    expect((await api.post(`/api/v1/engagements/${id}/worked`).set(auth("employer"))).status).toBe(200);
+  });
+
   it("an employer rates an accepted worker once; re-rating updates it", async () => {
     const first = await api
       .post(`/api/v1/ratings/worker/${ids.acceptedWorker._id}`)

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { WorkerRating } from "../models/WorkerRating.js";
 import { OCCUPATIONS } from "../utils/occupations.js";
+import { engagementSignalsFor } from "../utils/engagementSignals.js";
 
 /**
  * Public "find a worker" directory — the open surface for people who are NOT
@@ -27,6 +28,11 @@ router.get("/workers", async (req, res) => {
     const place = String(req.query?.place || "").trim();
     const occupation = String(req.query?.occupation || "").trim();
 
+    // Visibility is decided by TWO facts only: the worker is active, and a
+    // labour office accepted them. Ratings are never part of this filter, and
+    // an employer's opinion must never be able to remove a worker from the
+    // directory — that is the whole reason the objective signals below exist.
+    // `tests/evidenceLoop.test.js` fails if a rating ever creeps in here.
     const filter = {
       role: "worker",
       is_active: true,
@@ -60,6 +66,10 @@ router.get("/workers", async (req, res) => {
       ratingRows.map((r) => [String(r._id), { average: Math.round(r.average * 10) / 10, count: r.count }])
     );
 
+    // Objective signals, computed at read time from confirmed engagements. A
+    // new worker with no ratings can still show three corroborated shifts.
+    const signalsMap = await engagementSignalsFor(workers.map((w) => w._id));
+
     res.json({
       total,
       page,
@@ -74,10 +84,11 @@ router.get("/workers", async (req, res) => {
         current_district: w.current_district,
         current_state: w.current_state,
         rating: ratingMap.get(String(w._id)) ?? { average: null, count: 0 },
+        signals: signalsMap.get(String(w._id)) ?? null,
         gov_accepted: true,
       })),
       notice:
-        "Only government-accepted workers are listed, with just their name, trade and place visible. Approach them for work directly — ShramSetu never shares phone numbers here. Ratings are community feedback, not verification.",
+        "Only government-accepted workers are listed, with just their name, trade and place visible. Approach them for work directly — ShramSetu never shares phone numbers here. Ratings are community feedback, not verification; the shift counts and paid-on-time figures come from employer-confirmed engagements. A low rating never removes anyone from this list.",
     });
   } catch (err) {
     console.error("[public/workers]", err);

@@ -154,7 +154,7 @@ demo workers/grievances if the users collection is empty.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 179 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
+| Server unit/security | `cd server && npm test` | 200 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
 | Frontend unit/component | `cd frontend && npm test` | 61 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
@@ -197,6 +197,28 @@ as "not recorded". Nothing is invented to fill a statutory box.
 The Form IX attendance-cum-muster roll is built only from engagements whose shift
 was confirmed as worked: `GET /api/v1/records/muster-roll?month=2027-03` (JSON) or
 `…/muster-roll/print` (printable HTML).
+
+### Evidence reaching a complaint, and how a rating is labelled
+
+`GET /api/v1/wages/grievance-prefill?month=YYYY-MM` builds the unpaid-wages draft
+on the server, so every day in it states its own evidential weight. An
+`employer_confirmed` day cites its engagement, the employer account, the confirmed
+wage and any wage slip; a `self_reported` day is labelled as the worker's own
+account. The draft never presents the two as equal, and it still produces a draft
+when nothing has been confirmed at all. Confirmed days can be cited on the filed
+complaint as evidence references through the existing `attachments` array; the
+server re-checks every reference against the filer and drops anything that is not
+theirs rather than rejecting the filing.
+
+Ratings carry `verification` (`confirmed_engagement` | `public_self_declared`) and
+`rater_label` (`verified_employer` | `unverified_public`). An employer account can
+rate only after a shift it confirmed as worked; the public form stays open and is
+labelled unverified everywhere. The rated worker has a 14-day right of reply; until
+they reply (or the window closes) the rating is not final and its author may still
+amend it, after which it locks. `shifts_confirmed` and `paid_on_time` are computed
+from engagements at read time and never stored, and a low rating never removes a
+worker from the public directory — `server/tests/evidenceLoop.test.js` fails if
+that ever changes.
 
 ### Why `npm test` fails on Git Bash (and `npm run test:direct`)
 

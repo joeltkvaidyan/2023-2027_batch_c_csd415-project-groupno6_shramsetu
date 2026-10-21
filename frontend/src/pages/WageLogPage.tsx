@@ -139,9 +139,36 @@ export default function WageLogPage() {
     });
   };
 
-  // From the month summary: every unpaid day in the selected month.
-  const fileUnpaidGrievance = () => {
+  // From the month summary: ask the SERVER for the draft, so every day in it
+  // says whether the employer confirmed it. A confirmed day carries its
+  // engagement and wage slip; a self-reported day says it is only the worker's
+  // own account. Falls back to the local draft if the request fails — the
+  // worker is never blocked from filing.
+  const fileUnpaidGrievance = async () => {
     if (!summary || summary.total_unpaid <= 0) return;
+    try {
+      const res = await api.get<{
+        subject: string;
+        description: string;
+        incident_date: string;
+        employer_name: string | null;
+        suggested_evidence: { kind: string; ref_id: string; label: string }[];
+      }>("/wages/grievance-prefill", { params: { month } });
+      const draft = res.data;
+      navigate("/worker/grievances/new", {
+        state: {
+          category: "unpaid_wages",
+          subject: draft.subject,
+          description: draft.description,
+          incident_date: draft.incident_date || "",
+          employer_name: draft.employer_name ?? "",
+          evidence: draft.suggested_evidence ?? [],
+        },
+      });
+      return;
+    } catch {
+      // fall through to the local draft below
+    }
     const dates = unpaidEntries.map((e) => day(e.work_date));
     fileGrievance({
       amount: summary.total_unpaid,

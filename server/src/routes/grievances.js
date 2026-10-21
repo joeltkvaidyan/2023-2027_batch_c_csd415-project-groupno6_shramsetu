@@ -1,10 +1,13 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import multer from "multer";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { User } from "../models/User.js";
 import { Grievance, GRIEVANCE_CATEGORIES } from "../models/Grievance.js";
+import { WageSlip } from "../models/WageSlip.js";
+import { Engagement } from "../models/Engagement.js";
 import { authenticate, requireWorker, audit } from "../middleware/auth.js";
 import { config } from "../config.js";
 import { validateDocumentFile, ALLOWED_DOC_EXTENSIONS } from "../utils/fileValidation.js";
@@ -56,11 +59,23 @@ function detailJSON(g, worker = null) {
     feedback_at: g.feedback_at,
     attachments: (g.attachments || []).map((a) => ({
       id: a.id,
-      original_filename: a.original_filename,
-      content_type: a.content_type,
-      size_bytes: a.size_bytes,
+      // "file" for an uploaded document, otherwise the record it points at.
+      kind: a.kind ?? "file",
+      ref_id: a.ref_id ?? null,
+      label: a.label ?? a.original_filename ?? null,
+      original_filename: a.original_filename ?? null,
+      content_type: a.content_type ?? null,
+      size_bytes: a.size_bytes ?? null,
       created_at: a.created_at,
     })),
+    // Evidence split by kind, so a reader (or a labour office) can see at a
+    // glance how much of this complaint is corroborated rather than asserted.
+    evidence: {
+      platform_records: (g.attachments || [])
+        .filter((a) => (a.kind ?? "file") !== "file")
+        .map((a) => ({ kind: a.kind, ref_id: a.ref_id ?? null, label: a.label ?? null })),
+      uploaded_files: (g.attachments || []).filter((a) => (a.kind ?? "file") === "file").length,
+    },
     timeline: (g.timeline || []).map((t) => ({
       status: t.status, note: t.note ?? null, changed_by: t.changed_by, created_at: t.created_at,
     })),
@@ -77,6 +92,61 @@ const fail = (res, err, msg) => {
   console.error("[grievances]", err);
   res.status(500).json({ detail: msg });
 };
+
+const EVIDENCE_KINDS = ["wage_slip", "engagement"];
+const isoDay = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null);
+
+/**
+ * Turn `evidence: [{kind, ref_id}]` into rows in the EXISTING attachments array.
+ *
+ * Every reference is re-checked against the filer: a worker can cite their own
+ * wage slip or their own engagement, and nothing else. A bad or foreign
+ * reference is dropped rather than failing the whole filing — losing the
+ * complaint because one evidence id was stale would be worse than losing the
+ * citation.
+ */
+async function resolveEvidence(workerId, rawEvidence) {
+  const list = Array.isArray(rawEvidence) ? rawEvidence.slice(0, 20) : [];
+  const out = [];
+  const seen = new Set();
+
+  for (const item of list) {
+    const kind = String(item?.kind || "");
+    const refId = String(item?.ref_id || "");
+    if (!EVIDENCE_KINDS.includes(kind) || !mongoose.isValidObjectId(refId)) continue;
+
+    const key = `${kind}:${refId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    let label = null;
+    if (kind === "wage_slip") {
+      const slip = await WageSlip.findOne({ _id: refId, worker_id: workerId }).select(
+        "slip_number issue_date"
+      );
+      if (!slip) continue;
+      label = `Wage slip ${slip.slip_number} (${isoDay(slip.issue_date)})`;
+    } else {
+      const engagement = await Engagement.findOne({ _id: refId, worker_id: workerId }).select(
+        "work_date employer_name"
+      );
+      if (!engagement) continue;
+      label = `Employer-confirmed day ${isoDay(engagement.work_date)}${
+        engagement.employer_name ? ` — ${engagement.employer_name}` : ""
+      }`;
+    }
+
+    out.push({
+      id: crypto.randomBytes(6).toString("hex"),
+      kind,
+      ref_id: refId,
+      label,
+      created_at: new Date(),
+    });
+  }
+
+  return out;
+}
 
 // ── Create ───────────────────────────────────────────────────────────
 router.post("/", authenticate, requireWorker, async (req, res) => {
@@ -99,6 +169,7 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
     // scope grievances without a join and the filing district survives a
     // later worker move (see utils/scope.js).
     const filer = await User.findById(req.userId).select("current_state current_district");
+    const evidence = await resolveEvidence(req.userId, req.body?.evidence);
 
     const g = await Grievance.create({
       owner_id: req.userId,
@@ -114,7 +185,7 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
       incident_location: incident_location || null,
       incident_date: incident_date ? new Date(incident_date) : null,
       sla_deadline: new Date(Date.now() + slaDays * 86400000),
-      attachments: [],
+      attachments: evidence,
       timeline: [{ status: "submitted", note: null, changed_by: "Worker", created_at: new Date() }],
       comments: [],
     });
