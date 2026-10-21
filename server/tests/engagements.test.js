@@ -588,3 +588,120 @@ describe("isolation and the confirmed-day guard", () => {
     expect(paid.body.engagement_id).toBe(id);
   });
 });
+
+// ── Every basis, and the branches the happy loop never reaches ────────
+describe("wage bases and the remaining branches", () => {
+  it("accepts all five bases and derives the total from the one each needs", async () => {
+    const cases = [
+      { date: "2026-11-01", wage_basis: "day", agreed_wage: 800, expected: 800 },
+      { date: "2026-11-02", wage_basis: "hour", agreed_wage: 100, hours: 8, expected: 800 },
+      { date: "2026-11-03", wage_basis: "piece", agreed_wage: 50, units: 12, expected: 600 },
+      { date: "2026-11-04", wage_basis: "week", agreed_wage: 4000, expected: 4000 },
+      { date: "2026-11-05", wage_basis: "month", agreed_wage: 15000, expected: 15000 },
+    ];
+
+    for (const c of cases) {
+      const res = await offer("employer", {
+        work_date: c.date,
+        wage_basis: c.wage_basis,
+        agreed_wage: c.agreed_wage,
+        hours: c.hours,
+        units: c.units,
+      });
+      expect(res.status).toBe(201);
+      expect(res.body.engagement.wage_basis).toBe(c.wage_basis);
+      expect(res.body.engagement.expected_amount).toBe(c.expected);
+    }
+  });
+
+  it("bounds a piece-rate payment by units × rate", async () => {
+    const id = await offeredAndAccepted("employer", {
+      work_date: "2026-11-06",
+      wage_basis: "piece",
+      agreed_wage: 50,
+      units: 12,
+    });
+    await api.post(`/api/v1/engagements/${id}/worked`).set(auth("employer"));
+
+    const over = await api
+      .post(`/api/v1/engagements/${id}/payment`)
+      .set(auth("employer"))
+      .send({ amount: 601 });
+    expect(over.status).toBe(422);
+    expect(over.body.code).toBe("payment_exceeds_agreed");
+    expect(over.body.expected_amount).toBe(600);
+
+    const ok = await api
+      .post(`/api/v1/engagements/${id}/payment`)
+      .set(auth("employer"))
+      .send({ amount: 600 });
+    expect(ok.status).toBe(200);
+    expect(ok.body.engagement.status).toBe("paid");
+  });
+
+  it("lets the employer cancel its own offer, and refuses every later move", async () => {
+    const created = await offer("employer", { work_date: "2026-11-07" });
+    const id = created.body.engagement.id;
+
+    const cancel = await api.post(`/api/v1/engagements/${id}/cancel`).set(auth("employer"));
+    expect(cancel.status).toBe(200);
+    expect(cancel.body.engagement.status).toBe("cancelled");
+    expect(cancel.body.engagement.cancelled_at).toBeTruthy();
+
+    const accept = await api.post(`/api/v1/engagements/${id}/accept`).set(auth("worker"));
+    expect(accept.status).toBe(409);
+
+    const noShow = await api.post(`/api/v1/engagements/${id}/no-show`).set(auth("employer"));
+    expect(noShow.status).toBe(409);
+  });
+
+  it("scopes /mine to the caller in both directions", async () => {
+    const created = await offer("employer", { work_date: "2026-11-08" });
+    const id = created.body.engagement.id;
+
+    const mine = await api.get("/api/v1/engagements/mine").set(auth("employer"));
+    expect(mine.status).toBe(200);
+    expect(mine.body.role).toBe("employer");
+    expect(mine.body.engagements.some((e) => e.id === id)).toBe(true);
+    expect(mine.body.engagements.every((e) => e.employer.id === String(ids.employer._id))).toBe(true);
+
+    const theirs = await api.get("/api/v1/engagements/mine").set(auth("otherEmployer"));
+    expect(theirs.body.engagements.some((e) => e.id === id)).toBe(false);
+
+    const workerView = await api.get("/api/v1/engagements/mine").set(auth("worker"));
+    expect(workerView.status).toBe(200);
+    expect(workerView.body.role).toBe("worker");
+  });
+
+  it("refuses a non-party dispute and validates the payment metadata", async () => {
+    const id = await offeredAndAccepted("employer", { work_date: "2026-11-09", agreed_wage: 800 });
+
+    const stranger = await api
+      .post(`/api/v1/engagements/${id}/dispute`)
+      .set(auth("otherEmployer"))
+      .send({ reason: "Not my engagement at all." });
+    expect(stranger.status).toBe(404);
+
+    await api.post(`/api/v1/engagements/${id}/worked`).set(auth("employer"));
+
+    const badMethod = await api
+      .post(`/api/v1/engagements/${id}/payment`)
+      .set(auth("employer"))
+      .send({ amount: 800, method: "cheque" });
+    expect(badMethod.status).toBe(422);
+
+    const badDate = await api
+      .post(`/api/v1/engagements/${id}/payment`)
+      .set(auth("employer"))
+      .send({ amount: 800, paid_at: "not-a-date" });
+    expect(badDate.status).toBe(422);
+
+    const ok = await api
+      .post(`/api/v1/engagements/${id}/payment`)
+      .set(auth("employer"))
+      .send({ amount: 800, method: "bank_transfer", reference: "NEFT-9911" });
+    expect(ok.status).toBe(200);
+    expect(ok.body.engagement.payment.method).toBe("bank_transfer");
+    expect(ok.body.engagement.payment.reference).toBe("NEFT-9911");
+  });
+});

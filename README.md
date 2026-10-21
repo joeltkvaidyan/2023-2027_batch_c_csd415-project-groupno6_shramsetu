@@ -154,7 +154,7 @@ demo workers/grievances if the users collection is empty.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 149 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
+| Server unit/security | `cd server && npm test` | 154 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
 | Frontend unit/component | `cd frontend && npm test` | 61 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
