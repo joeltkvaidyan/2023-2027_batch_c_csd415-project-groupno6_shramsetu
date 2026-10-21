@@ -540,10 +540,15 @@ export function renderMusterHtml(roll, language) {
 <meta charset="utf-8">
 <title>${escapeHtml(t.muster_title)} — ${escapeHtml(roll.month)}</title>
 <style>${STYLE}
-  th, td { padding: 3px 4px; font-size: 10px; }
-  th { width: auto; }
+  /* Landscape A4 is ~1122px wide; capping the sheet at 820px squeezed the
+     name column to 20px while leaving 300px unused. Let the table take the
+     page and size columns to their content instead of to an equal share. */
+  .sheet { max-width: none; }
+  table { table-layout: auto; }
+  th, td { padding: 3px 4px; font-size: 9px; }
+  th { width: auto; white-space: nowrap; }
+  td:nth-child(2) { min-width: 96px; }
   .mark { text-align: center; font-weight: 600; }
-  table { table-layout: fixed; }
   @media print { @page { size: A4 landscape; margin: 10mm; } }
 </style>
 </head>

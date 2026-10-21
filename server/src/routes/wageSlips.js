@@ -135,20 +135,10 @@ function buildSlipPayload({ engagement, body, employer }) {
     };
   }
 
-  // 2. Deductions never exceed half the period wages.
-  if (totals.total_deductions > Math.round((totals.gross_wages / 2) * 100) / 100 + 1e-6) {
-    return {
-      error: {
-        status: 422,
-        code: "deductions_exceed_half",
-        detail: `Total deductions (${totals.total_deductions}) may not exceed half the period wages.`,
-        max_deductions: Math.round((totals.gross_wages / 2) * 100) / 100,
-      },
-    };
-  }
-
-  // 3. net is never negative. Unreachable behind rule 2, kept as a hard stop so
-  //    a future change to the cap cannot quietly produce a negative slip.
+  // 2. net is never negative. Checked BEFORE the 50% cap so that the more
+  //    fundamental illegality is the one reported: deductions above the gross
+  //    produce a negative slip, which is a different (and worse) thing than
+  //    deductions merely exceeding the statutory ceiling.
   if (totals.net_wages < 0) {
     return {
       error: {
@@ -156,6 +146,18 @@ function buildSlipPayload({ engagement, body, employer }) {
         code: "net_negative",
         detail: "Net wages would be negative.",
         net_wages: totals.net_wages,
+      },
+    };
+  }
+
+  // 3. Deductions never exceed half the period wages.
+  if (totals.total_deductions > Math.round((totals.gross_wages / 2) * 100) / 100 + 1e-6) {
+    return {
+      error: {
+        status: 422,
+        code: "deductions_exceed_half",
+        detail: `Total deductions (${totals.total_deductions}) may not exceed half the period wages.`,
+        max_deductions: Math.round((totals.gross_wages / 2) * 100) / 100,
       },
     };
   }

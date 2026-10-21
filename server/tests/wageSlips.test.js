@@ -270,6 +270,17 @@ describe("arithmetic guards refuse instead of correcting", () => {
     expect(text.body.code).toBe("invalid_amount");
   });
 
+  it("refuses deductions that would make net wages negative", async () => {
+    const other = await paidEngagement({ date: "2026-12-11", wage: 800 });
+    const res = await issue("employer", {
+      engagement_id: other,
+      deductions: { pf: 900 },
+    });
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe("net_negative");
+    expect(res.body.net_wages).toBe(-100);
+  });
+
   it("refuses deductions above half the period wages", async () => {
     const res = await issue("employer", {
       engagement_id: id,
