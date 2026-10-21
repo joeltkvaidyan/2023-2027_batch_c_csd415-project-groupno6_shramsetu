@@ -14,16 +14,9 @@ function dayBounds(dateStr) {
 }
 
 function entryJSON(e) {
-  return {
-    id: String(e._id),
-    work_date: e.work_date,
-    employer_name: e.employer_name,
-    agreed_amount: e.agreed_amount,
-    paid_amount: e.paid_amount,
-    payment_status: e.payment_status,
-    created_at: e.createdAt,
-    updated_at: e.updatedAt,
-  };
+  // One shape, defined by the model, so the new provenance fields
+  // (source / confirmed_at / engagement_id) cannot drift between routes.
+  return e.toJSON();
 }
 
 const fail = (res, err, msg) => {
@@ -134,12 +127,25 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
       });
     }
 
+    // An employer-confirmed day is a two-party record. The worker may still
+    // correct WHAT WAS PAID, but not rewrite the agreed figure the employer
+    // signed off on — that is what a dispute is for. Without this, "confirmed"
+    // would be cosmetic: the worker could quietly drop the amount afterwards.
+    const confirmed = Boolean(existing) && (existing.source ?? "worker_reported") !== "worker_reported";
+    if (confirmed && Math.abs(agreed - existing.agreed_amount) > 0.005) {
+      return res.status(409).json({
+        detail:
+          "This day was confirmed by the employer, so the agreed amount can no longer be changed. Record what was paid, or raise a dispute.",
+        code: "wage_confirmed_locked",
+      });
+    }
+
     const entry = await WageEntry.findOneAndUpdate(
       { worker_id: req.userId, work_date: { $gte: bounds.start, $lt: bounds.end } },
       {
         worker_id: req.userId,
         work_date: bounds.start,
-        employer_name: employer_name || null,
+        employer_name: confirmed ? existing.employer_name : employer_name || null,
         agreed_amount: agreed,
         paid_amount: paid,
         payment_status: status,
