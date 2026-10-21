@@ -154,7 +154,7 @@ demo workers/grievances if the users collection is empty.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 154 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
+| Server unit/security | `cd server && npm test` | 179 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
 | Frontend unit/component | `cd frontend && npm test` | 61 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
@@ -162,6 +162,41 @@ demo workers/grievances if the users collection is empty.
 
 All four run in CI on every push (`.github/workflows/ci.yml`): server tests,
 AI-service tests, frontend typecheck + tests + build, and a dependency audit.
+
+### Wage slips (Form V) and the muster roll (Form IX)
+
+A wage slip is issued once from a paid engagement
+(`POST /api/v1/wage-slips`) and is immutable afterwards: a correction is a new
+slip that supersedes the old one, never an edit.
+
+It ships in **exactly two formats, and neither needs a PDF library**:
+
+| Format | Endpoint | How it becomes a PDF |
+|---|---|---|
+| Printable HTML | `GET /api/v1/wage-slips/:id/print` | the browser (Ctrl/Cmd + P → Save as PDF) |
+| Plain text | `GET /api/v1/wage-slips/:id/text?language=ml` | sent over WhatsApp/SMS as-is |
+
+There is no server-side PDF renderer and no binary document generator in this
+repository. Rendering a PDF here would mean bundling fonts for six Indic scripts
+— a dependency and a licensing question — for something every browser already
+does. `?language=` accepts `en`, `hi`, `ml`, `ta`, `te`, `bn` and falls back to
+`en`.
+
+The arithmetic is enforced as code, not as display: gross must equal
+basic + DA + allowances + overtime **and** the amount actually paid; net must be
+gross minus deductions; deductions may not exceed half the period wages; and a
+slip may not be dated after the payment it evidences. A slip that would break any
+of those is refused with a specific code (`gross_mismatch`,
+`deductions_exceed_half`, `slip_after_payment`, …), never silently corrected.
+
+Fields the platform does not hold — UAN, bank account, relation name,
+designation, establishment address and registration number, the DA/allowance and
+PF/ESI/other splits — are stored as null, listed in `absent_fields`, and printed
+as "not recorded". Nothing is invented to fill a statutory box.
+
+The Form IX attendance-cum-muster roll is built only from engagements whose shift
+was confirmed as worked: `GET /api/v1/records/muster-roll?month=2027-03` (JSON) or
+`…/muster-roll/print` (printable HTML).
 
 ### Why `npm test` fails on Git Bash (and `npm run test:direct`)
 

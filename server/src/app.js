@@ -17,6 +17,8 @@ import ratingRoutes from "./routes/ratings.js";
 import publicRoutes from "./routes/public.js";
 import requestRoutes from "./routes/requests.js";
 import engagementRoutes from "./routes/engagements.js";
+import wageSlipRoutes from "./routes/wageSlips.js";
+import recordRoutes from "./routes/records.js";
 
 /**
  * The Express app, separated from bootstrap (DB connect + listen) so the
@@ -58,6 +60,8 @@ app.use("/api/v1/ratings", ratingRoutes);
 app.use("/api/v1/public", publicRoutes);
 app.use("/api/v1/requests", requestRoutes);
 app.use("/api/v1/engagements", engagementRoutes);
+app.use("/api/v1/wage-slips", wageSlipRoutes);
+app.use("/api/v1/records", recordRoutes);
 
 // 404 for unknown API routes
 app.use("/api", (req, res) => res.status(404).json({ detail: "Not found" }));
