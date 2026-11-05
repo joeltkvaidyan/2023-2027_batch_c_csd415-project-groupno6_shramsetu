@@ -14,10 +14,6 @@
     "worker": "শ্রমিক",
     "employer": "নিয়োগকর্তা",
     "government": "সরকার",
-    "insurance": "বীমা প্রদানকারী",
-    "comingSoonTitle": "শীঘ্রই আসছে",
-    "comingSoonDesc": "এই পোর্টালটি তৈরি করা হচ্ছে এবং শীঘ্রই উপলব্ধ হবে। পরে আবার দেখুন।",
-    "backToRoles": "ভূমিকা নির্বাচনে ফিরে যান",
     "citizen": "গৃহস্থ"
   },
   "auth": {
@@ -110,11 +106,11 @@
     "settings": "সেটিংস",
     "qrCode": "কিউআর কোড",
     "grievances": "খাতা",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "সুপ্রভাত,",
+    "greetingAfternoon": "শুভ অপরাহ্ন,",
+    "greetingEvening": "শুভ সন্ধ্যা,",
+    "copyWorkerId": "ওয়ার্কার আইডি কপি করুন",
+    "recentGrievances": "সাম্প্রতিক অভিযোগ",
     "jobMatches": "কাজের মিল",
     "employers": "নিয়োগকর্তা",
     "unpaid": "বাকি",
@@ -134,10 +130,10 @@
     "uploading": "আপলোড হচ্ছে...",
     "uploadSuccess": "নথি সফলভাবে আপলোড হয়েছে",
     "displayName": "নথির নাম",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "পিন-সুরক্ষিত",
+    "renameTitle": "নথির নাম বদলান",
+    "deleteTitle": "নথি মুছুন",
+    "deleteMessage": "এই নথিটি আপনার ওয়ালেট থেকে স্থায়ীভাবে মুছে যাবে।"
   },
   "chat": {
     "title": "এআই কল্যাণ সহায়ক",
@@ -162,7 +158,7 @@
     "historyLoadError": "আপনার চ্যাট ইতিহাস লোড করা যায়নি।",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "askPlaceholderVoice": "আপনার প্রশ্ন লিখুন বা বলুন",
     "heatPrefillQuestion": "প্রচণ্ড গরমে নিরাপদ থাকতে আমার কী করা উচিত?"
   },
   "settings": {
@@ -240,7 +236,7 @@
     "allCategories": "সব বিভাগ",
     "due": "নির্ধারিত তারিখ",
     "loadError": "আপনার অভিযোগ লোড করা যায়নি।",
-    "empty": "No complaints yet"
+    "empty": "এখনও কোনো অভিযোগ নেই"
   },
   "common": {
     "save": "সংরক্ষণ করুন",
@@ -327,10 +323,10 @@
     "aiUnavailable": "AI সহকারী এই মুহূর্তে উপলব্ধ নয়। আপনার প্রশ্নের উত্তর দেওয়া যায়নি — অনুগ্রহ করে পরে আবার চেষ্টা করুন।"
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "প্রতারণার ঝুঁকি যাচাই"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "যাচাইকৃত সেবা নির্দেশিকা"
   },
   "jobs": {
     "title": "কাজের মিল",

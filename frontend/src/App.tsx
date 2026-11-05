@@ -9,7 +9,6 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 // is synchronous and there is no loading display between routes.
 import LanguageSelectPage from "./pages/LanguageSelectPage";
 import StakeholderSelectPage from "./pages/StakeholderSelectPage";
-import ComingSoonPage from "./pages/ComingSoonPage";
 import WorkerLoginPage from "./pages/WorkerLoginPage";
 import WorkerRegisterPage from "./pages/WorkerRegisterPage";
 import WorkerDashboardPage from "./pages/WorkerDashboardPage";
@@ -49,7 +48,6 @@ export default function App() {
       <Route path="/" element={<LanguageSelectPage />} />
       <Route path="/language" element={<LanguageSelectPage />} />
       <Route path="/roles" element={<StakeholderSelectPage />} />
-      <Route path="/roles/:role" element={<ComingSoonPage />} />
 
       {/* Worker routes */}
       <Route path="/worker/login" element={<WorkerLoginPage />} />

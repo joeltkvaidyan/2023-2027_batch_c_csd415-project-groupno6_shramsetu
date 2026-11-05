@@ -14,10 +14,6 @@
     "worker": "தொழிலாளி",
     "employer": "முதலாளி",
     "government": "அரசு",
-    "insurance": "காப்பீட்டு வழங்குநர்",
-    "comingSoonTitle": "விரைவில் வருகிறது",
-    "comingSoonDesc": "இந்த போர்டல் உருவாக்கப்பட்டு வருகிறது, விரைவில் கிடைக்கும். பின்னர் மீண்டும் பார்க்கவும்.",
-    "backToRoles": "பாத்திரத் தேர்வுக்குத் திரும்பு",
     "citizen": "குடும்பம்"
   },
   "auth": {
@@ -110,11 +106,11 @@
     "settings": "அமைப்புகள்",
     "qrCode": "QR குறியீடு",
     "grievances": "കශ්0යല്",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "காலை வணக்கம்,",
+    "greetingAfternoon": "மதிய வணக்கம்,",
+    "greetingEvening": "மாலை வணக்கம்,",
+    "copyWorkerId": "பணியாளர் ஐடியை நகலெடு",
+    "recentGrievances": "சமீபத்திய புகார்கள்",
     "jobMatches": "வேலை பொருத்தங்கள்",
     "employers": "முதலாளிகள்",
     "unpaid": "நிலுவை",
@@ -134,10 +130,10 @@
     "uploading": "பதிவேற்றுகிறது...",
     "uploadSuccess": "ஆவணம் வெற்றிகரமாக பதிவேற்றப்பட்டது",
     "displayName": "ஆவணத்தின் பெயர்",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "பின்-பாதுகாப்பு",
+    "renameTitle": "ஆவணத்தின் பெயரை மாற்று",
+    "deleteTitle": "ஆவணத்தை நீக்கு",
+    "deleteMessage": "இந்த ஆவணம் உங்கள் பணப்பையிலிருந்து நிரந்தரமாக நீக்கப்படும்."
   },
   "chat": {
     "title": "AI நலன் உதவியாளர்",
@@ -162,7 +158,7 @@
     "historyLoadError": "உங்கள் அரட்டை வரலாற்றை ஏற்ற முடியவில்லை.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "askPlaceholderVoice": "உங்கள் கேள்வியை தட்டச்சு செய்யுங்கள் அல்லது பேசுங்கள்",
     "heatPrefillQuestion": "அதிக வெப்பத்தில் பாதுகாப்பாக இருக்க என்ன செய்ய வேண்டும்?"
   },
   "settings": {
@@ -240,7 +236,7 @@
     "allCategories": "அனைத்து வகைகள்",
     "due": "நிலுவைத் தேதி",
     "loadError": "உங்கள் புகார்களை ஏற்ற முடியவில்லை.",
-    "empty": "No complaints yet"
+    "empty": "இன்னும் புகார்கள் இல்லை"
   },
   "common": {
     "save": "சேமி",
@@ -327,10 +323,10 @@
     "aiUnavailable": "AI உதவியாளர் இப்போது கிடைக்கவில்லை. உங்கள் கேள்விக்கு பதில் அளிக்கப்படவில்லை — பின்னர் மீண்டும் முயற்சிக்கவும்."
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "மோசடி ஆபத்து சரிபார்ப்பு"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "சரிபார்க்கப்பட்ட சேவை அடைவு"
   },
   "jobs": {
     "title": "வேலை பொருத்தங்கள்",

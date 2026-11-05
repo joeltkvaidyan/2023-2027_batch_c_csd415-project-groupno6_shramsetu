@@ -14,10 +14,6 @@
     "worker": "Worker",
     "employer": "Employer",
     "government": "Government",
-    "insurance": "Insurance Provider",
-    "comingSoonTitle": "Coming Soon",
-    "comingSoonDesc": "This portal is being built and will be available soon. Please check back later.",
-    "backToRoles": "Back to role selection",
     "citizen": "Household"
   },
   "auth": {

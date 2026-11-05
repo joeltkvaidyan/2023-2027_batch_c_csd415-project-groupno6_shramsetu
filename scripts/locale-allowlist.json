@@ -1,0 +1,4 @@
+{
+  "$comment": "Strings that are legitimately identical in every language. Append-only via review; see scripts/check-locales.mjs.",
+  "entries": []
+}

@@ -14,10 +14,6 @@
     "worker": "തൊഴിലാളി",
     "employer": "തൊഴിലുടമ",
     "government": "സർക്കാർ",
-    "insurance": "ഇൻഷുറൻസ് ദാതാവ്",
-    "comingSoonTitle": "ഉടൻ വരുന്നു",
-    "comingSoonDesc": "ഈ പോർട്ടൽ നിർമ്മിച്ചുകൊണ്ടിരിക്കുന്നു, ഉടൻ ലഭ്യമാകും. ദയവായി പിന്നീട് പരിശോധിക്കുക.",
-    "backToRoles": "റോൾ തിരഞ്ഞെടുപ്പിലേക്ക് മടങ്ങുക",
     "citizen": "ഗൃഹസ്ഥൻ"
   },
   "auth": {
@@ -110,11 +106,11 @@
     "settings": "സെറ്റിംഗ്സ്",
     "qrCode": "ക്യുആർ കോഡ്",
     "grievances": "പരാതികൾ",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "സുപ്രഭാതം,",
+    "greetingAfternoon": "ശുഭ മധ്യാഹ്നം,",
+    "greetingEvening": "ശുഭ സായാഹ്നം,",
+    "copyWorkerId": "വർക്കർ ഐഡി പകർത്തുക",
+    "recentGrievances": "സമീപകാല പരാതികൾ",
     "jobMatches": "ജോലി പൊരുത്തങ്ങൾ",
     "employers": "തൊഴിലുടമകൾ",
     "unpaid": "ബാക്കി",
@@ -134,10 +130,10 @@
     "uploading": "അപ്‌ലോഡ് ചെയ്യുന്നു...",
     "uploadSuccess": "ഡോക്യുമെന്റ് വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു",
     "displayName": "ഡോക്യുമെന്റിന്റെ പേര്",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "പിൻ-സംരക്ഷിതം",
+    "renameTitle": "രേഖയുടെ പേര് മാറ്റുക",
+    "deleteTitle": "രേഖ ഇല്ലാതാക്കുക",
+    "deleteMessage": "ഈ രേഖ നിങ്ങളുടെ വാലറ്റിൽ നിന്ന് സ്ഥിരമായി നീക്കം ചെയ്യപ്പെടും."
   },
   "chat": {
     "title": "AI ക്ഷേമ സഹായി",
@@ -162,7 +158,7 @@
     "historyLoadError": "നിങ്ങളുടെ ചാറ്റ് ചരിത്രം ലോഡ് ചെയ്യാനായില്ല.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "askPlaceholderVoice": "നിങ്ങളുടെ ചോദ്യം ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സംസാരിക്കുക",
     "heatPrefillQuestion": "തീവ്രമായ ചൂടിൽ സുരക്ഷിതമായിരിക്കാൻ ഞാൻ എന്ത് ചെയ്യണം?"
   },
   "settings": {
@@ -240,7 +236,7 @@
     "allCategories": "എല്ലാ വിഭാഗങ്ങളും",
     "due": "അവസാന തീയതി",
     "loadError": "നിങ്ങളുടെ പരാതികൾ ലോഡ് ചെയ്യാനായില്ല.",
-    "empty": "No complaints yet"
+    "empty": "ഇതുവരെ പരാതികളില്ല"
   },
   "common": {
     "save": "സേവ് ചെയ്യുക",
@@ -327,10 +323,10 @@
     "aiUnavailable": "AI സഹായി ഇപ്പോൾ ലഭ്യമല്ല. നിങ്ങളുടെ ചോദ്യത്തിന് ഉത്തരം നൽകാനായില്ല — ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക."
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "തട്ടിപ്പ് അപകട പരിശോധന"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "സ്ഥിരീകരിച്ച സേവന ഡയറക്ടറി"
   },
   "jobs": {
     "title": "ജോലി പൊരുത്തങ്ങൾ",

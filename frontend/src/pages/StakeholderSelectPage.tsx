@@ -6,8 +6,7 @@ const ROLES = [
   { key: "worker", icon: "👷", gradient: "from-amber-400 to-orange-500", path: "/worker/login" },
   { key: "employer", icon: "🏢", gradient: "from-sky-400 to-blue-600", path: "/employer/login" },
   { key: "citizen", icon: "🏠", gradient: "from-rose-400 to-pink-600", path: "/citizen/login" },
-  { key: "government", icon: "🏛️", gradient: "from-blue-500 to-indigo-600", path: "/government/dashboard" },
-  { key: "insurance", icon: "🛡️", gradient: "from-emerald-400 to-teal-600", path: "/roles/insurance" },
+  { key: "government", icon: "🏛️", gradient: "from-blue-500 to-indigo-600", path: "/government/login" },
 ] as const;
 
 export default function StakeholderSelectPage() {

@@ -14,10 +14,6 @@
     "worker": "కార్మికుడు",
     "employer": "యజమాని",
     "government": "ప్రభుత్వం",
-    "insurance": "బీమా ప్రదాత",
-    "comingSoonTitle": "త్వరలో వస్తుంది",
-    "comingSoonDesc": "ఈ పోర్టల్ నిర్మించబడుతోంది మరియు త్వరలో అందుబాటులో ఉంటుంది. దయచేసి తర్వాత చూడండి.",
-    "backToRoles": "పాత్ర ఎంపికకు తిరిగి వెళ్ళండి",
     "citizen": "గృహస్థుడు"
   },
   "auth": {
@@ -110,11 +106,11 @@
     "settings": "సెట్టింగ్‌లు",
     "qrCode": "క్యూఆర్ కోడ్",
     "grievances": "ఖాతాలు",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "శుభోదయం,",
+    "greetingAfternoon": "శుభ మధ్యాహ్నం,",
+    "greetingEvening": "శుభ సాయంత్రం,",
+    "copyWorkerId": "వర్కర్ ఐడిని కాపీ చేయండి",
+    "recentGrievances": "ఇటీవలి ఫిర్యాదులు",
     "jobMatches": "ఉద్యోగ సరిపోలికలు",
     "employers": "యజమానులు",
     "unpaid": "బకాయి",
@@ -134,10 +130,10 @@
     "uploading": "అప్‌లోడ్ అవుతోంది...",
     "uploadSuccess": "డాక్యుమెంట్ విజయవంతంగా అప్‌లోడ్ చేయబడింది",
     "displayName": "డాక్యుమెంట్ పేరు",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "పిన్-రక్షితం",
+    "renameTitle": "పత్రం పేరు మార్చండి",
+    "deleteTitle": "పత్రాన్ని తొలగించండి",
+    "deleteMessage": "ఈ పత్రం మీ వాలెట్ నుండి శాశ్వతంగా తొలగించబడుతుంది."
   },
   "chat": {
     "title": "AI సంక్షేమ సహాయకుడు",
@@ -162,7 +158,7 @@
     "historyLoadError": "మీ చాట్ చరిత్రను లోడ్ చేయలేకపోయాము.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "askPlaceholderVoice": "మీ ప్రశ్నను టైప్ చేయండి లేదా మాట్లాడండి",
     "heatPrefillQuestion": "తీవ్ర వేడి నుండి సురక్షితంగా ఉండటానికి నేను ఏమి చేయాలి?"
   },
   "settings": {
@@ -240,7 +236,7 @@
     "allCategories": "అన్ని వర్గాలు",
     "due": "గడువు తేదీ",
     "loadError": "మీ ఫిర్యాదులను లోడ్ చేయలేకపోయాము.",
-    "empty": "No complaints yet"
+    "empty": "ఇంకా ఫిర్యాదులు లేవు"
   },
   "common": {
     "save": "సేవ్ చేయండి",
@@ -327,10 +323,10 @@
     "aiUnavailable": "AI సహాయకుడు ప్రస్తుతం అందుబాటులో లేరు. మీ ప్రశ్నకు సమాధానం ఇవ్వబడలేదు — దయచేసి తర్వాత మళ్లీ ప్రయత్నించండి."
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "మోసం ప్రమాద తనిఖీ"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "ధృవీకరించిన సేవల డైరెక్టరీ"
   },
   "jobs": {
     "title": "ఉద్యోగ సరిపోలికలు",

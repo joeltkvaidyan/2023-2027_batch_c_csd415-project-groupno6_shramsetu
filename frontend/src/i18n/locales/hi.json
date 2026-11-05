@@ -14,10 +14,6 @@
     "worker": "श्रमिक",
     "employer": "नियोक्ता",
     "government": "सरकार",
-    "insurance": "बीमा प्रदाता",
-    "comingSoonTitle": "जल्द आ रहा है",
-    "comingSoonDesc": "यह पोर्टल तैयार किया जा रहा है और जल्द ही उपलब्ध होगा। कृपया बाद में देखें।",
-    "backToRoles": "भूमिका चयन पर वापस जाएं",
     "citizen": "परिवार"
   },
   "auth": {
@@ -110,11 +106,11 @@
     "grievances": "शिकायतें",
     "settings": "सेटिंग्स",
     "qrCode": "क्यूआर कोड",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "सुप्रभात,",
+    "greetingAfternoon": "शुभ दोपहर,",
+    "greetingEvening": "शुभ संध्या,",
+    "copyWorkerId": "कार्यकर्ता आईडी कॉपी करें",
+    "recentGrievances": "हाल की शिकायतें",
     "jobMatches": "नौकरी मिलान",
     "employers": "नियोक्ता",
     "unpaid": "बकाया",
@@ -134,10 +130,10 @@
     "uploading": "अपलोड हो रहा है...",
     "uploadSuccess": "दस्तावेज़ सफलतापूर्वक अपलोड किया गया",
     "displayName": "दस्तावेज़ का नाम",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "पिन-सुरक्षित",
+    "renameTitle": "दस्तावेज़ का नाम बदलें",
+    "deleteTitle": "दस्तावेज़ हटाएं",
+    "deleteMessage": "यह दस्तावेज़ आपके वॉलेट से हमेशा के लिए हटा दिया जाएगा।"
   },
   "chat": {
     "title": "एआई कल्याण सहायक",
@@ -162,7 +158,7 @@
     "historyLoadError": "आपका चैट इतिहास लोड नहीं हो सका।",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "askPlaceholderVoice": "अपना सवाल लिखें या बोलें",
     "heatPrefillQuestion": "भीषण गर्मी में सुरक्षित रहने के लिए मुझे क्या करना चाहिए?"
   },
   "settings": {
@@ -240,7 +236,7 @@
     "allCategories": "सभी श्रेणियाँ",
     "due": "नियत तारीख",
     "loadError": "आपकी शिकायतें लोड नहीं हो सकीं।",
-    "empty": "No complaints yet"
+    "empty": "अभी कोई शिकायत नहीं"
   },
   "common": {
     "save": "सहेजें",
@@ -327,10 +323,10 @@
     "aiUnavailable": "AI सहायक अभी उपलब्ध नहीं है। आपका प्रश्न का उत्तर नहीं दिया जा सका — कृपया बाद में पुनः प्रयास करें।"
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "ठगी जोखिम जाँच"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "सत्यापित सेवा निर्देशिका"
   },
   "jobs": {
     "title": "नौकरी मिलान",
