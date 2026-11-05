@@ -1,21 +1,22 @@
-TITLE: PM Kisan Samman Nidhi (PM-KISAN) — Income Support for Farmers
+TITLE: Pradhan Mantri Kisan Samman Nidhi (PM-KISAN) — Income Support for Farmers
 DEPARTMENT: Ministry of Agriculture and Farmers Welfare, Government of India
-LAST_UPDATED: 2026-11-03
+LAST_UPDATED: 2026-11-05
 SOURCE_URL: https://pmkisan.gov.in
 LAST_VERIFIED: 2026-11-03
 AUTHORITY: Ministry of Agriculture and Farmers Welfare, Government of India
 STATUS: current
 ---
-PM Kisan Samman Nidhi (PM-KISAN) — Income Support for Farmers
-
 PM-KISAN provides direct income support of Rs 6,000 per year to all landholding farmer
 families (the small-and-marginal-only cap was removed in 2019), paid in three equal
-instalments of Rs 2,000 each.
+instalments of Rs 2,000 each. This scheme is relevant for migrant workers who are also
+farmers or who come from agricultural families.
 
 Key Features:
 - Rs 6,000 per year transferred directly to farmer's bank account
 - Three instalments: Rs 2,000 each in April-July, August-November, December-March
 - Money transferred directly via Direct Benefit Transfer (DBT)
+- The benefit is per farmer FAMILY, not per individual: spouses in the same household are
+  one family (state land-record rules decide what counts as a separate family).
 - Enrolment totals are updated on the official portal (roughly 11 crore families as of
   late 2025).
 
@@ -26,17 +27,28 @@ Eligibility:
 - Subject to certain exclusions
 
 Excluded Categories:
-- Institutional landholders
+- Institutional landholders (companies, trusts, societies)
 - Former and current constitutional post holders
 - All serving and retired government employees.
 - Income taxpayers and professionals paying income tax
-- Professionals registered with professional bodies
+- Professionals registered with professional bodies (doctors, engineers, lawyers, chartered
+  accountants)
+- Landless households are NOT eligible — the benefit follows land ownership, not residence
+  or work.
+
+For migrant workers:
+- A migrant who owns cultivable land in the home state can register from anywhere; the
+  benefit follows the land, not the work state, and is not location-dependent.
+- Aadhaar and the bank account must be linked for the instalment to be credited.
+- A landless migrant worker should be pointed to the schemes that do not require land
+  ownership instead of PM-KISAN.
 
 Registration Process:
 1. Visit nearest CSC (Common Service Centre) with land records
-2. Or register online at https://pmkisan.gov.in
+2. Or register online at https://pmkisan.gov.in ("New Farmer Registration")
 3. Provide Aadhaar number, bank account details, land records
 4. After verification, instalments are credited automatically
+5. Land records can be updated through the "Updation of Land Records" section on the portal
 
 Documents Required:
 - Aadhaar card
@@ -50,7 +62,9 @@ Checking Status:
 3. Enter Aadhaar number or bank account number
 4. View instalment status
 
-Helpline:
-- Toll-free: 1800-115-526 (Kisan Call Centre)
-- Website: https://pmkisan.gov.in
-- PM-KISAN Helpline: 011-23382401
+Grievance redressal and helplines:
+- PM-KISAN helpline: 155261 (toll-free)
+- Kisan Call Centre: 1800-115-526 (toll-free)
+- PM-KISAN office line: 011-23382401
+- File complaints on the PM-KISAN portal under the "Grievance" section
+- Approach the District Agriculture Officer for local issues

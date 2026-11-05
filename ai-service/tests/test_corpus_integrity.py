@@ -4,12 +4,23 @@ are marked superseded, and the current-Code documents exist and cite PIB.
 These tests are the automation behind the Phase 3 rule "don't invent facts —
 cite an official source". They run offline over rag/sample_docs/*.txt.
 """
+import re
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parent.parent / "rag" / "sample_docs"
 
+# Retired on purpose: each of these was the near-duplicate half of a topic that
+# now has exactly one document (see test_deduped_topics_are_single_sourced).
+# Keeping the merge honest is the job of that test, not of a second document.
+DEDUPED_AWAY = {
+    "construction-osh-code-2020.txt": "osh-code-2020.txt",
+    "minimum-wages-act.txt": "code-on-wages-2019.txt",
+    "pm-kisan.txt": "pm-kisan-samman-nidhi.txt",
+}
+
+LANGUAGE_SUFFIX = re.compile(r"-(hindi|bengali|tamil|telugu|malayalam)\.txt$")
+
 REPEALED_ACT_DOCS = {
-    "minimum-wages-act.txt",
     "minimum-wages-hindi.txt",
     "payment-of-wages-act.txt",
     "equal-remuneration-act.txt",
@@ -25,13 +36,22 @@ REPEALED_ACT_DOCS = {
 CURRENT_CODE_DOCS = [
     "code-on-wages-2019.txt",
     "code-on-social-security-2020.txt",
-    "construction-osh-code-2020.txt",
+    "osh-code-2020.txt",
     "industrial-relations-code-2020.txt",
 ]
 
 
 def _header(text: str) -> str:
     return text.partition("---")[0]
+
+
+def _body(path: Path) -> str:
+    return path.read_text(encoding="utf-8").partition("---")[2]
+
+
+def _shingles(text: str, width: int = 5) -> set[str]:
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    return {" ".join(tokens[i : i + width]) for i in range(max(0, len(tokens) - width + 1))}
 
 
 def test_all_docs_have_status_header():
@@ -87,3 +107,43 @@ def test_current_code_docs_exist_and_cite_pib():
         assert "STATUS: current" in header, f"{name} must be current"
         assert "21 November 2025" in text, f"{name} must state the commencement date"
         assert "pib.gov.in" in text, f"{name} must cite the PIB source"
+
+
+def test_deduped_topics_are_single_sourced():
+    """One topic, one document. The merge must not lose the facts that made the
+    second copy worth having, so each successor is checked for them."""
+    merged_facts = {
+        "osh-code-2020.txt": ["Welfare Board", "cess", "passbook", "21 November 2025"],
+        "code-on-wages-2019.txt": ["floor wage", "overtime", "14400", "Minimum Wages Act, 1948"],
+        "pm-kisan-samman-nidhi.txt": ["landholding", "DBT", "155261", "landless"],
+    }
+    for removed, survivor in DEDUPED_AWAY.items():
+        assert not (DOCS / removed).exists(), f"{removed} came back — merge it into {survivor}"
+        assert (DOCS / survivor).exists(), f"{survivor} is missing"
+        text = (DOCS / survivor).read_text(encoding="utf-8").lower()
+        for fact in merged_facts[survivor]:
+            assert fact.lower() in text, f"{survivor} lost '{fact}' when {removed} was merged in"
+
+
+def test_no_near_duplicate_documents():
+    """Two English documents that say the same thing split retrieval and let the
+    model answer from the wrong (often repealed) one. 5-word shingle Jaccard.
+
+    Language variants are excluded: they are translations, so they deliberately
+    repeat the English content."""
+    docs = {p.name: _shingles(_body(p)) for p in sorted(DOCS.glob("*.txt")) if not LANGUAGE_SUFFIX.search(p.name)}
+    worst = (0.0, "", "")
+    offenders = []
+    names = sorted(docs)
+    for i, a in enumerate(names):
+        for b in names[i + 1 :]:
+            union = docs[a] | docs[b]
+            if not union:
+                continue
+            score = len(docs[a] & docs[b]) / len(union)
+            if score > worst[0]:
+                worst = (score, a, b)
+            if score >= 0.5:
+                offenders.append(f"{a} ~ {b} ({score:.2f})")
+    assert not offenders, "near-duplicate corpus documents: " + "; ".join(offenders)
+    print(f"closest English pair: {worst[1]} ~ {worst[2]} = {worst[0]:.2f}")

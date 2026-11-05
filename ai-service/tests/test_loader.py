@@ -14,7 +14,7 @@ def test_parse_document_file_reads_new_headers():
 
 
 def test_parse_superseded_doc_keeps_status():
-    doc = parse_document_file(DOCS / "minimum-wages-act.txt")
+    doc = parse_document_file(DOCS / "payment-of-wages-act.txt")
     assert doc.status == "superseded"
     assert doc.last_verified == "2026-10-01"
 
@@ -31,14 +31,18 @@ def test_load_all_documents_skips_superseded():
     # Nothing loads that is not a source document.
     assert loaded_names <= {p.name for p in all_txt}
     # Repealed Acts (marked superseded) never load.
+    assert "payment-of-wages-act.txt" not in loaded_names
+    # Deduped topics: only the surviving document may load.
     assert "minimum-wages-act.txt" not in loaded_names
+    assert "construction-osh-code-2020.txt" not in loaded_names
+    assert "pm-kisan.txt" not in loaded_names
     # Phase-2 curation cleared the 'needs review' flag; the doc loads via its
     # verified labour.gov.in source URL now.
     assert "health-and-safety-workers.txt" in loaded_names
     # Current-law docs load — gated through verified-sources.json.
     assert "code-on-wages-2019.txt" in loaded_names
     assert "code-on-social-security-2020.txt" in loaded_names
-    assert "construction-osh-code-2020.txt" in loaded_names
+    assert "osh-code-2020.txt" in loaded_names
     assert "industrial-relations-code-2020.txt" in loaded_names
     assert "heat-stress-advisory.txt" in loaded_names
 
