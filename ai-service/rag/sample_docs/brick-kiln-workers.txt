@@ -1,8 +1,9 @@
 TITLE: Rights and Welfare of Brick Kiln Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: 2026-10-01
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2256186&reg=3&lang=1
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 Brick kiln workers are among the most vulnerable sections of the unorganised workforce in India. They work in extreme conditions and often face exploitation. This document covers the rights, legal protections, and welfare schemes available to brick kiln workers.
@@ -13,26 +14,27 @@ KEY RIGHTS:
 3. Safe Working Conditions: Employers must provide safe working environment including proper ventilation, drinking water, and rest areas.
 4. PPE: Employers must provide personal protective equipment including masks, gloves, and safety shoes.
 5. Medical Facilities: First aid and medical facilities must be available at the workplace.
-6. Housing: Workers must be provided with proper housing facilities near the kiln.
+6. Housing: no verified current-law entitlement — confirm any living-arrangement support
+   through the employer or the local labour office.
 7. Children's Education: Children of brick kiln workers must be provided free education under RTE Act.
 8. Maternity Benefit: Women workers are entitled to maternity benefits under the Code on Social Security, 2020 (which replaced the Maternity Benefit Act, 1961).
 
 SOCIAL SECURITY:
 1. e-Shram Registration: Brick kiln workers can register on e-Shram portal
-2. PM-SYM: Rs 3,000/month pension after age 60
-3. PM-SBY: Rs 2 lakh accident insurance
-4. Ayushman Bharat: Rs 5 lakh health insurance
-5. Construction Workers' Welfare Fund (formerly the BOCW Welfare Fund, now governed by the OSH Code, 2020): Benefits
+2. PM-SYM: Rs 3,000/month pension after 60 (entry age 18-40, monthly income up to Rs 15,000)
+3. PM-SBY: Rs 2 lakh accident insurance (separate enrolment via a savings bank account)
+4. Ayushman Bharat (PM-JAY): Rs 5 lakh hospital cover for eligible families
+5. State labour departments run separate schemes in some states — the construction
+   workers' boards do not administer brick-kiln work by default.
 
 MIGRANT BRICK KILN WORKERS:
 - Migrant workers form the majority of brick kiln workforce
 - They are protected under the Occupational Safety, Health and Working Conditions Code, 2020, which replaced the Inter-State Migrant Workmen Act, 1979
-- Employers must provide:
-  - Journey allowance to and from the workplace
-  - Residential accommodation at the workplace
-  - Medical facilities
-  - Children's education
-  - Registration of all migrant workers
+Protections in the Code-era framework: portal registration and safety obligations apply;
+the old 1979 Act's journey/accommodation/displacement claims have NO verified successor —
+confirm current provisions with the labour department. Heat guidance: the 28 April 2026
+nationwide heatwave advisory asked States/UTs to give special attention to brick-kiln,
+construction and daily-wage workers (advisory only, not a benefit).
 
 REGULATION OF BRICK KILNS:
 - Brick kilns must be registered with the local authority
@@ -41,10 +43,11 @@ REGULATION OF BRICK KILNS:
 - Bonded labour is prohibited under the Bonded Labour System (Abolition) Act
 
 WELFARE SCHEMES:
-1. Construction Workers' Welfare Fund (formerly the BOCW Welfare Fund, now governed by the OSH Code, 2020): Financial assistance for construction workers including brick kiln workers
+1. State labour departments: some states run welfare schemes for kiln workers — ask locally
 2. PM-SVANidhi: For workers who are also street vendors
-3. PM-Garib Kalyan Yojana: Free food grains for BPL families
+3. PM Garib Kalyan Yojana: free foodgrains for NFSA beneficiaries under PMGKAY (since
+   1 January 2024)
 4. Skill India/PMKVY: Free skill training for career advancement
 
-HELPLINE: 14434 (e-Shram) | Childline 1098 (for child workers)
+HELPLINE: e-Shram 14434; child-protection reports go to the district Child Protection Unit
 WEBSITE: eshram.gov.in | labour.gov.in

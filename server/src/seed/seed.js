@@ -1,9 +1,37 @@
 import { User } from "../models/User.js";
 import { Grievance } from "../models/Grievance.js";
+import { JobPosting } from "../models/JobPosting.js";
 import { PushNotification, WorkerNotification } from "../models/Notification.js";
 import { hashPassword } from "../utils/crypto.js";
 
 export const DEMO_WORKER_PW = "Worker@123";
+
+/**
+ * The hiring side of the demo — the account that signs in, searches workers
+ * and calls them directly from the employer dashboard.
+ *   Employer: 9000000021 / Employer@123
+ *   Household: 9000000022 / Household@123
+ * Both are created already labour-office accepted, so the dashboard opens
+ * with posting and rating unlocked instead of a review banner.
+ */
+export const DEMO_EMPLOYER = {
+  mobile: "9000000021",
+  password: "Employer@123",
+  full_name: "Ravi Menon",
+  business_name: "SK Constructions",
+  state: "Kerala",
+  district: "Ernakulam",
+  city: "Kakkanad",
+};
+
+export const DEMO_CITIZEN = {
+  mobile: "9000000022",
+  password: "Household@123",
+  full_name: "Valsa Thomas",
+  state: "Kerala",
+  district: "Ernakulam",
+  city: "Kakkanad",
+};
 
 /**
  * Scoped government officials for the demo (create-only, never overwritten).
@@ -91,10 +119,84 @@ const daysAgo = (n) => new Date(Date.now() - n * 86400000);
 
 const SLA_DAYS = { urgent: 7, high: 14, medium: 30, low: 45 };
 
+async function seedDirectoryAccounts() {
+  const employer = await User.findOne({ role: "employer", mobile_number: DEMO_EMPLOYER.mobile });
+  if (!employer) {
+    await User.create({
+      role: "employer",
+      full_name: DEMO_EMPLOYER.full_name,
+      business_name: DEMO_EMPLOYER.business_name,
+      mobile_number: DEMO_EMPLOYER.mobile,
+      password_hash: await hashPassword(DEMO_EMPLOYER.password),
+      current_village_or_city: DEMO_EMPLOYER.city,
+      current_state: DEMO_EMPLOYER.state,
+      current_district: DEMO_EMPLOYER.district,
+      is_phone_verified: true,
+      is_active: true,
+      gov_approve_status: "accepted",
+      gov_approve_at: new Date(),
+    });
+    console.log(`[seed] employer created: ${DEMO_EMPLOYER.mobile}`);
+  } else if (employer.gov_approve_status !== "accepted" || !employer.is_phone_verified) {
+    employer.gov_approve_status = "accepted";
+    employer.gov_approve_at = employer.gov_approve_at ?? new Date();
+    employer.is_phone_verified = true;
+    await employer.save();
+  }
+
+  const citizen = await User.findOne({ role: "citizen", mobile_number: DEMO_CITIZEN.mobile });
+  if (!citizen) {
+    await User.create({
+      role: "citizen",
+      full_name: DEMO_CITIZEN.full_name,
+      mobile_number: DEMO_CITIZEN.mobile,
+      password_hash: await hashPassword(DEMO_CITIZEN.password),
+      current_village_or_city: DEMO_CITIZEN.city,
+      current_state: DEMO_CITIZEN.state,
+      current_district: DEMO_CITIZEN.district,
+      is_phone_verified: true,
+      is_active: true,
+      gov_approve_status: "accepted",
+    });
+    console.log(`[seed] household account created: ${DEMO_CITIZEN.mobile}`);
+  } else if (!citizen.is_phone_verified) {
+    citizen.is_phone_verified = true;
+    await citizen.save();
+  }
+
+  // One open listing so the demo employer dashboard has live content.
+  const owner = await User.findOne({ role: "employer", mobile_number: DEMO_EMPLOYER.mobile });
+  if (owner && (await JobPosting.countDocuments({ posted_by: owner._id })) === 0) {
+    await JobPosting.create({
+      title: "Mason helper needed at Kakkanad site",
+      description:
+        "Six-storey apartment site in Kakkanad. Help the mason with block work and mixing. Wages paid every Friday; safety helmet and gloves provided.",
+      employer_name: DEMO_EMPLOYER.business_name,
+      occupation: "construction",
+      state: DEMO_EMPLOYER.state,
+      district: DEMO_EMPLOYER.district,
+      work_location: "Kakkanad, Kochi",
+      wage_min: 700,
+      wage_max: 850,
+      wage_period: "day",
+      work_type: "daily",
+      openings: 4,
+      contact_phone: DEMO_EMPLOYER.mobile,
+      status: "open",
+      posted_by: owner._id,
+      posted_by_role: "employer",
+      employer_id: owner._id,
+      employer_accepted: true,
+    });
+    console.log("[seed] demo employer listing created");
+  }
+}
+
 export async function seedDemoData() {
   // Officials first (they are also the senders of the welcome broadcast),
   // then the worker/grievance corpus unless it already exists.
   await seedOfficials();
+  await seedDirectoryAccounts();
 
   // Create-only PER WORKER: a partial corpus (say 9 of 10 after a stray
   // deletion) must neither re-create the others — duplicating accounts —
@@ -157,7 +259,7 @@ export async function seedDemoData() {
   // Grievances + welcome broadcast ride along with the corpus: seed them
   // only when none exist, so a re-run with partial workers can't duplicate
   // complaint history or re-broadcast to inboxes that already have it.
-  if (await Grievance.countDocuments({}) > 0) {
+  if ((await Grievance.countDocuments({})) > 0) {
     console.log("[seed] grievance corpus already present — skipping.");
     return;
   }

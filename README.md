@@ -16,8 +16,10 @@ ratings). Accepted employers can self-post job listings that carry an honest
 "labour-office accepted" poster signal (never a listing certification), and
 **households (the general public) get their own account**: they post area-
 scoped work requests, workers see them ranked by the same explainable matcher,
-and phone numbers pass between the two sides **only after the worker accepts**
-— `tel:`/`sms:` buttons appear on both dashboards, nothing is shown publicly.
+and both the employer and household dashboards list the contact number of
+labour-office accepted workers with `tel:`/`sms:` buttons. Contact numbers are
+never public — `/public/workers` omits them and the open directory is gone;
+only a signed-in employer or household account can read them.
 The RAG corpus further answers the questions the 2026 evidence showed are
 actually failing on the ground: the 8-May-2026 final Labour-Code grievance
 path (GRC at 20+ workers; contract-labour grievance → principal-employer

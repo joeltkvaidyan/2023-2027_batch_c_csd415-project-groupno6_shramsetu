@@ -1,8 +1,9 @@
 TITLE: Comprehensive Rights of Women Workers in India
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-01
-SOURCE_URL: needs review
-LAST_VERIFIED: 2026-10-01
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment / Ministry of Women and Child Development, Government of India
 STATUS: current
 ---
 Women workers in India are protected under a comprehensive framework of labour laws and social security schemes. This document provides an overview of the key rights and protections available to women workers, including migrant women workers.
@@ -35,8 +36,10 @@ SOCIAL SECURITY SCHEMES:
 - PM-SBY: Rs 2 lakh accident insurance for Rs 20/year.
 - PM-JJBY: Rs 2 lakh life insurance for Rs 436/year.
 - Ayushman Bharat: Rs 5 lakh health insurance.
-- PM-MATRU VANDANA YOJANA: Rs 5,000 cash incentive for first child.
-- PM-UDAN: For safe transportation during pregnancy.
+- PM-Matru Vandana Yojana: Rs 5,000 cash incentive for the first living child —
+  instalment structure has been revised since 2025 notifications; confirm the current
+  terms with the state Women & Child Development department.
+
 
 HELPLINE: Women Helpline 181 | Police 100 | NCW 7827-170-170
 WEBSITE: wcd.nic.in | labour.gov.in | eshram.gov.in

@@ -1,8 +1,9 @@
 TITLE: Rights and Protections for Power Sector Workers
 DEPARTMENT: Ministry of Power, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192802
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Power / Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 This document covers the rights and protections available to workers in the power sector including thermal power plants, hydroelectric projects, renewable energy installations, and electrical distribution systems.
@@ -16,16 +17,16 @@ KEY RIGHTS:
 
 SOCIAL SECURITY:
 - EPF and ESIC coverage for all workers
-- PM-SYM for contractual and temporary workers
+- PM-SYM for contract/temporary workers (entry 18-40, monthly income up to Rs 15,000;
+  enrol via CSC)
 - PM-SBY accident insurance
 - Gratuity for workers who have completed 5 years of service
-- Bonus payment under Payment of Bonus Act
+- Bonus payment (the Payment of Bonus Act is now consolidated in the Code on Wages, 2019).
 
 MIGRANT WORKERS:
 - Migrant workers in power plants are entitled to same protections as local workers
-- Hostel and accommodation facilities must be provided
-- Canteen facilities during shift hours
-- Transport facilities for shift workers
+- Accommodation/canteen/transport provisions follow the establishment's own conditions
+  under the OSH Code-era framework — confirm per establishment.
 - Their children are entitled to education under RTE Act
 
 TRAINING AND SKILL DEVELOPMENT:
@@ -34,5 +35,5 @@ TRAINING AND SKILL DEVELOPMENT:
 - On-the-job training for new recruits
 - Safety training as mandatory requirement
 
-HELPLINE: 14434 (e-Shram) | 1912 (National Power Helpline)
-WEBSITE: power.gov.in | eshram.gov.in
+HELPLINE: e-Shram 14434; grievances via samadhan.labour.gov.in
+WEBSITE: powermin.gov.in | eshram.gov.in

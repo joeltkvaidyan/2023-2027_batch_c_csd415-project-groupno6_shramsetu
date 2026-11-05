@@ -267,8 +267,10 @@ Honesty rules enforced in code and UI:
   state with its explanatory copy until an official posts a listing.
 - **Matching uses stored profile fields only** (trade, district, state). It does
   not consider wage history, availability or travel distance.
-- **AI service tests were not run** (missing heavy ML dependencies), so RAG
-  retrieval/refusal behaviour is unchanged and unverified in this environment.
+- ~~**AI service tests were not run** (missing heavy ML dependencies)~~
+  **RESOLVED 2026-11-05:** with the venv provisioned, the AI-service suite runs
+  — 103/103 passing (loader gate, corpus integrity, retrieval/refusal, PII,
+  injection, cold start). See §8 addendum.
 - **No end-to-end browser test** was executed. The API flow *was* exercised
   end-to-end against a running server (§2), and the screens are covered by
   jsdom tests, but nobody has clicked through the review queue in a real
@@ -280,7 +282,8 @@ Honesty rules enforced in code and UI:
 ## 7. Reproducing the verification
 
 ```bash
-cd server   && npx vitest run           # 82 passed (4 files)
+cd server   && npx vitest run tests     # 206 passed (10 files)
+cd ai-service && venv\Scripts\python -m pytest tests -q   # 103 passed
 cd frontend && npx tsc --noEmit         # clean
 cd frontend && npx vitest run           # 61 passed (6 files)
 cd frontend && npm run build            # tsc -b && vite build succeeds
@@ -292,3 +295,35 @@ cd server && MONGODB_URI=memory node src/index.js
 For the UI, the Vite dev server proxies `/api` to `localhost:8000`, so with both
 processes running the government dashboard's **Job Listings** tab exercises the
 real review flow (sign in as `EKM001` / `Ernakulam@123`).
+
+---
+
+## 8. Addendum — full verification after phase 2 (2026-11-05)
+
+This report was originally written in an environment that could not run the
+AI-service suite or the full server suite. With the venv provisioned and the
+phase-2 knowledge-base curation merged, every suite runs and passes:
+
+| Suite | Result (2026-11-05) |
+|---|---|
+| `cd server && npx vitest run tests` | **206/206** |
+| `cd ai-service && venv\Scripts\python -m pytest tests -q` | **103/103** |
+| `cd frontend && npm run typecheck` | clean |
+| `cd frontend && npm test` | **61/61** |
+| `cd frontend && npm run build` | succeeds |
+
+KB state at close: 76 docs in `ai-service/rag/sample_docs/` — 65 active
+(66 FAISS vectors) + 11 superseded (skipped by the loader); zero "needs
+review" markers; every non-superseded doc grounded in
+`docs/verified-sources.json` (80 entries, `generated_at` 2026-11-03).
+Retrieval re-measured in retrieval-only mode: hit@1 **45/49 (92%)**, hit@3
+**47/49 (96%)**, off-topic + injection refusals **12/13** —
+`ai-service/eval/RESULTS.md` (threshold unchanged at 0.45). The fact-level
+changes and the standing review cadence are in
+`RESEARCH_AND_GAP_REPORT.md` §6–7.
+
+Rectified during this close-out: the Mongoose "duplicate schema index on
+{\"worker_id\":1}" warning — `server/src/models/User.js` now declares the
+worker-code index exactly once, as `unique` +
+`partialFilterExpression { role: "worker", worker_id: { $gt: null } }`, and
+the server suite re-verified green.

@@ -9,7 +9,7 @@ const { Schema } = mongoose;
  */
 const UserSchema = new Schema(
   {
-    worker_id: { type: String, index: true }, // SS-XXXXXX (workers only)
+    worker_id: { type: String }, // SS-XXXXXX (workers only; unique partial index below)
     employee_id: { type: String }, // officials only; unique sparse index below
     role: { type: String, enum: ["worker", "government", "employer", "citizen"], required: true, index: true },
 
@@ -92,9 +92,13 @@ UserSchema.index({ employee_id: 1 }, { unique: true, sparse: true });
 // Worker codes (SS-XXXXXX) must be globally unique: they are printed on
 // IDs, quoted in audits, and are the lookup key for account recovery — a
 // collision would let one worker's recovery key target another's account.
-// Partial (workers only) so officials/employers without a code never
-// collide with each other.
-UserSchema.index({ worker_id: 1 }, { unique: true, partialFilterExpression: { role: "worker" } });
+// Partial (workers WITH a code only): officials/employers never get a code,
+// and a worker row without a code yet (e.g. fixtures) must not collide on
+// null. $gt null excludes both explicit nulls and missing fields.
+UserSchema.index(
+  { worker_id: 1 },
+  { unique: true, partialFilterExpression: { role: "worker", worker_id: { $gt: null } } }
+);
 
 /** Public worker shape (what the frontend Worker type expects). */
 UserSchema.methods.toWorkerJSON = function () {

@@ -1,8 +1,9 @@
 TITLE: Bonded Labour System (Abolition) Act, 1976
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-01-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://nhrc.nic.in/assets/uploads/publication/Bonded%20Labour.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Bonded Labour System (Abolition) Act, 1976 abolishes the bonded labour system and provides for the liberation and rehabilitation of bonded labourers. Bonded labour is a form of forced labour where a person works to repay a debt under conditions that are exploitative.
@@ -11,13 +12,16 @@ KEY PROVISIONS:
 - Abolition: The bonded labour system is abolished. Every bond or agreement giving rise to the bonded labour system is void.
 - Definition of bonded labour: A person who has entered into a bond under the bondage system to render work or service or payment of debt or for a period of service for a debt.
 - Prohibition: No person shall make any advance under the bondage system, or compel any person to enter into any bond, or accept any forced labour.
-- Penalties: Imprisonment up to 3 years or fine up to Rs 2,000 or both for whoever compels a person to enter into a bond or advances money under the bondage system.
+- Penalties: whoever compels a person into bonded labour, or advances bonds, is liable
+  to imprisonment up to 3 years and to a fine (read the Act text for the exact wording).
 - State vigilance committees: Each State shall constitute a Vigilance Committee to monitor abolition of bonded labour.
 - District Magistrate: Has power to identify bonded labourers, order their release, and ensure rehabilitation.
 
 REHABILITATION:
 - Released bonded labourers are entitled to rehabilitation assistance.
-- Rehabilitation includes: land grant, housing, skill training, education for children, and financial assistance.
+- Rehabilitation runs through central/state schemes (skill training, education support,
+  housing and cash assistance); scheme names and amounts change — confirm the current
+  package with the district administration.
 - National Fund for Bonded Labour provides resources for rehabilitation.
 - State Governments have created State-level funds for rehabilitation.
 
@@ -30,7 +34,9 @@ MIGRANT WORKERS:
 COMPLAINTS:
 - Any person can file a complaint with the District Magistrate or the Sub-Divisional Magistrate.
 - Complaints are treated as cognizable offences.
-- Childline 1098 can be contacted to report bonded child labour.
+- Bonded child labour can be reported to the district administrative machinery and the
+  police.
 
-HELPLINE: Childline 1098 | National Human Rights Commission 14433
+HELPLINE: women can use 181 (Women Helpline) or NCW 7827-170-170; complaints also via
+pgportal.gov.in (CPGRAMS)
 WEBSITE: nhrc.nic.in | labour.gov.in

@@ -41,9 +41,11 @@ h1, h2, h3 {
   .orb {
     @apply absolute rounded-full pointer-events-none;
   }
-  /* Frosted glass surface (headers, nav dock, overlays) */
+  /* Frosted glass surface (headers, nav dock, overlays). Nearly opaque on
+     purpose: the floating bottom dock sits over scrolling cards, and at 80%
+     the text underneath showed through and read as overlapping text. */
   .glass {
-    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl;
+    @apply bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl;
   }
 }
 

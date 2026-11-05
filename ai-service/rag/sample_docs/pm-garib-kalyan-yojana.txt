@@ -1,37 +1,40 @@
 TITLE: Pradhan Mantri Garib Kalyan Yojana (PMGKY) — Food Security for Migrant Workers
-DEPARTMENT: Ministry of Finance / Ministry of Consumer Affairs, Government of India
-LAST_UPDATED: 2025-03-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+DEPARTMENT: Department of Food and Public Distribution, Ministry of Consumer Affairs, Food and Public Distribution, Government of India
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://dfpd.gov.in/pradhan-mantri-garib-kalyan-anna-yojana/en
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Department of Food and Public Distribution, Ministry of Consumer Affairs, Government of India
 STATUS: current
 ---
-The Pradhan Mantri Garib Kalyan Yojana was launched to provide food security to migrant workers 
-and other vulnerable populations, especially during economic disruptions. It operates through the 
-public distribution system (PDS) and provides free foodgrains to those in need.
+The Pradhan Mantri Garib Kalyan Anna Yojana (PMGKAY) delivers FREE foodgrains through the
+public distribution system (PDS) to NFSA beneficiaries: 5 kg per person per month (35 kg per
+family for AAY households) for five years from 1 January 2024, covering about 81.35 crore
+beneficiaries.
 
 Key provisions for migrant workers:
-- Free foodgrains: 5 kg of wheat per person per month and 1 kg of chana (chickpea) per person 
-  per month, over and above the regular NFSA entitlement.
-- Coverage: All migrants who are not covered under NFSA or state schemes (including those without 
-  a ration card) are eligible through the "One Nation One Ration Card" system.
-- Duration: Extended periodically by the government; currently operational through March 2025 
-  with possible extensions.
+- Free foodgrains: 5 kg per person per month to ALL NFSA beneficiaries (AAY families: 35 kg
+  per family). The COVID-era extras (e.g. extra chana/daal) were time-bound and ended.
+- Coverage: current PMGKAY covers existing NFSA beneficiary lists; new ration cards are
+  issued through the state NFSA process, not automatically via ONORC.
+- Duration: the current five-year PMGKAY phase began 1 January 2024; further extensions are
+  announced by government decisions (check dfpd.gov.in).
 
 How migrant workers benefit:
-- Migrant workers who do not have a ration card can still access foodgrains at any FPS using 
-  their Aadhaar card, through the ONORC facility.
+- Migrant workers WITHOUT a ration card cannot draw NFSA foodgrains from the work state:
+  they must hold a ration card (apply at the local ration office; a 2023 Supreme Court order
+  directs states to extend cards to eligible non-cardholders).
 - Those with ration cards from other states can draw their entitled quantity at any FPS in the 
   state where they are currently working.
-- The additional free foodgrains under PMGKY are available to all NFSA beneficiaries regardless 
-  of their location.
+- The free-of-cost regular quota is available to all NFSA beneficiaries wherever they live
+  (portability via ONORC when drawing in another state).
 
 Registration requirements:
-- Aadhaar card linked to a bank account and mobile number.
+- Aadhaar is used to authenticate the ration drawal at the FPS ePoS device.
 - Ration card (if available) from the home state.
-- If no ration card: visit any FPS with Aadhaar and register through the ePoS device.
+- If no ration card: apply at the local ration office; ePoS registration happens only after
+  the state issues a card.
 
 Grievance redressal:
 - Call the toll-free PDS helpline 1967.
 - File complaints on the state Food and Civil Supplies portal.
-- Use the Mera Ration app (available on Google Play Store) to locate nearby FPS shops and 
-  check entitlements.
+- State PDS portals list FPS locations; use the 1967 (PDS) / 14457 (Anna Sahayata) helplines.

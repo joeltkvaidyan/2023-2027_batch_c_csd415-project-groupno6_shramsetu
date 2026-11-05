@@ -1,8 +1,9 @@
 TITLE: Health and Safety of Workers at Workplace
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
+SOURCE_URL: https://www.labour.gov.in/static/uploads/2026/01/fb8c6466d0d6a7ed581bcb2bee34694c.pdf
 LAST_VERIFIED: 2026-10-01
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 Health and safety of workers is a fundamental right under Indian law. The Occupational Safety, Health and Working Conditions Code, 2020 (OSH Code) consolidates and amends the laws regulating the occupational safety, health, and working conditions of persons employed in establishments.
@@ -22,7 +23,8 @@ KEY PROVISIONS:
 
 HEALTH PROVISIONS:
 - Health examination: Workers engaged in hazardous occupations must undergo periodic health examinations.
-- Medical facilities: Factories with 50+ workers must have an dispensary with a qualified doctor.
+- Medical facilities: dispensary obligations follow the Code and its rules for covered
+  establishments — confirm the current threshold.
 - Sickness benefit: Workers covered under ESIC are entitled to sickness benefit (70% of daily wages) for up to 91 days in two consecutive benefit periods.
 - Disablement benefit: Workers who suffer employment injury are entitled to disablement benefit.
 - Maternity benefit: Women workers are entitled to maternity benefit under the Code on Social Security, 2020 (which replaced the Maternity Benefit Act, 1961).

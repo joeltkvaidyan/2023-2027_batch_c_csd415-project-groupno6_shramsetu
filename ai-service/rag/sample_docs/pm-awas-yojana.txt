@@ -1,13 +1,16 @@
 TITLE: Pradhan Mantri Awas Yojana (PMAY) — Housing for All
 DEPARTMENT: Ministry of Housing and Urban Affairs / Ministry of Rural Development, Government of India
-LAST_UPDATED: needs review
-SOURCE_URL: https://pmayg.nic.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2113748&reg=3&lang=2
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Housing and Urban Affairs / Ministry of Rural Development, Government of India
 STATUS: current
 ---
 Pradhan Mantri Awas Yojana (PMAY) — Housing for All
 
-PMAY aims to provide pucca houses with basic amenities to all eligible families by 2024 (extended). It has two components: PMAY-Urban and PMAY-Gramin.
+PMAY aims to provide pucca houses with basic amenities to eligible families. It has two
+components: PMAY-Urban and PMAY-Gramin (phase targets and dates follow the official scheme
+guidelines; check pmaymis.gov.in / pmayg.nic.in for the current phase).
 
 Key Features:
 - Financial assistance for constructing or buying a house
@@ -22,23 +25,27 @@ PMAY-Gramin (Rural):
 - Material assistance: cement, steel, bricks provided
 
 PMAY-Urban:
-- Interest subsidy: 3-6.5% on home loans up to Rs 6 lakh
-- Credit Linked Subsidy Scheme for EWS/LIG/MIG
+- Interest-subsidy bands under the Credit Linked Subsidy Scheme have changed since 2024;
+  verify the current sub-scheme and amounts at pmaymis.gov.in before advising a borrower.
 - Construction support and beneficiary-led construction
 
 Eligibility:
-- Families without a pucca house (EWS: income up to Rs 3 lakh, LIG: Rs 3-6 lakh, MIG-I: Rs 6-12 lakh, MIG-II: Rs 12-18 lakh)
-- BPL families identified by SECC data
-- Migrant workers registered on e-Shram portal
-- Women heads of household (priority)
-- SC/ST, disabled persons, minorities (priority)
+- Families without a pucca house, per the scheme's notified guidelines (income-category
+  definitions have been revised; confirm current categories on pmaymis.gov.in/
+  pmayg.nic.in).
+- Selection runs through the state housing survey / permanent wait lists (Awas+ for
+  PMAY-G), not through e-Shram registration.
+- Migrant workers usually apply in their HOME state through the survey/wait-list process;
+  an e-Shram card helps identification but is not a PMAY entry route by itself.
+- Women heads of household, SC/ST, persons with disabilities and minorities get priority
+  per the scheme guidelines.
 
 How to Apply:
-1. Visit https://pmaymis.gov.in (Urban) or https://aajeevika.gov.in (Rural)
+1. Visit https://pmaymis.gov.in (Urban) or https://pmayg.nic.in (Rural)
 2. Or visit nearest CSC with required documents
 3. Fill application form with family and income details
 4. Submit Aadhaar, income certificate, bank details
-5. Wait for BPL verification and approval
+5. Wait for verification against the survey/wait-list and approval
 6. Once approved, construction can begin
 
 Documents Required:
@@ -50,6 +57,5 @@ Documents Required:
 - Affidavit that family does not own a pucca house
 
 Helpline:
-- PMAY-G: 1800-11-6446
-- PMAY-U: 011-23061867
-- Website: https://pmaymis.gov.in
+- Portals: pmaymis.gov.in (urban) and pmayg.nic.in (rural); confirm the current helpline
+  numbers on the official sites before quoting them.

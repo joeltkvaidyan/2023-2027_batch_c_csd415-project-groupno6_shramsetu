@@ -80,7 +80,7 @@ export default function WorkerDashboardPage() {
     new Date().getHours() < 12 ? "dashboard.greetingMorning" : new Date().getHours() < 17 ? "dashboard.greetingAfternoon" : "dashboard.greetingEvening";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-32">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-36">
       {/* Header — brand gradient with real avatar + greeting */}
       <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-12 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
         {/* Subtle decorative glow */}
@@ -116,7 +116,7 @@ export default function WorkerDashboardPage() {
               <p className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}>
                 {govStatus === "rejected"
                   ? "A labour-office official did not verify this registration. Please visit your nearest labour office."
-                  : "A labour-office official must accept your registration before you can apply to jobs or appear in the public worker directory."}
+                  : "A labour-office official must accept your registration before you can apply to jobs or appear in the directory employers use to call workers."}
               </p>
             </div>
           </div>

@@ -1,8 +1,9 @@
 TITLE: Rights and Welfare of Fishermen and Fisheries Workers
 DEPARTMENT: Ministry of Fisheries, Animal Husbandry and Dairying, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Fisheries, Animal Husbandry and Dairying / Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 Fishermen and fisheries workers form a significant part of India's unorganised workforce. This document covers the rights, legal protections, and welfare schemes available to fishermen and fisheries workers.
@@ -12,22 +13,25 @@ KEY RIGHTS:
 2. Safe Working Conditions: Employers must provide safe boats, equipment, and safety gear.
 3. Insurance: Life and accident insurance for fishermen at sea.
 4. Medical Facilities: Access to medical facilities at fishing harbours and landing centres.
-5. Housing: Housing schemes for fishermen families.
+5. Housing: state fishermen housing schemes exist in several states — check the local
+   fisheries/welfare department.
 6. Education: Free education for fishermen's children under RTE Act.
 
 SOCIAL SECURITY SCHEMES:
 1. National Fisheries Development Board (NFDB) schemes
-2. PM-SYM: Rs 3,000/month pension after age 60
+2. PM-SYM: Rs 3,000/month pension after 60 (entry age 18-40, monthly income up to Rs 15,000)
 3. PM-SBY: Rs 2 lakh accident insurance
 4. PM-JJBY: Rs 2 lakh life insurance
-5. Ayushman Bharat: Rs 5 lakh health insurance
+5. Ayushman Bharat (PM-JAY): Rs 5 lakh hospital cover for eligible families
 6. e-Shram Registration: For social security benefits
 
 MIGRANT FISHERMEN:
 - Migrant fishermen working in other states have the same rights as local fishermen
-- Employers must provide safe accommodation and food during fishing season
+- Safety and living conditions on board vessels follow fishing-vessel rules — confirm
+  with the state fisheries department.
 - Insurance coverage applies regardless of where the work is performed
-- Benefits are portable across states through e-Shram registration
+- e-Shram registration helps access schemes anywhere; each scheme's portability follows
+  its own rules.
 
 FISHING VESSEL REGISTRATION:
 - All fishing vessels must be registered with the relevant authorities
@@ -35,5 +39,5 @@ FISHING VESSEL REGISTRATION:
 - Crew members must be trained in safety procedures
 - Emergency communication equipment must be available
 
-HELPLINE: 14434 (e-Shram) | 1800-180-1551 (NFDB)
+HELPLINE: e-Shram 14434; NFDB queries via nfdb.gov.in
 WEBSITE: nfdb.gov.in | eshram.gov.in

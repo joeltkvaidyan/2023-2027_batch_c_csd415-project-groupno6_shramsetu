@@ -10,7 +10,7 @@ def test_parse_document_file_reads_new_headers():
     assert doc.title.startswith("Code on Wages, 2019")
     assert doc.status == "current"
     assert doc.source_url.startswith("https://www.pib.gov.in/")
-    assert doc.last_verified == "2026-10-01"
+    assert doc.last_verified == "2026-11-03"
 
 
 def test_parse_superseded_doc_keeps_status():
@@ -32,8 +32,9 @@ def test_load_all_documents_skips_superseded():
     assert loaded_names <= {p.name for p in all_txt}
     # Repealed Acts (marked superseded) never load.
     assert "minimum-wages-act.txt" not in loaded_names
-    # 'needs review' metadata stays quarantined (KB-curation debt, gap report).
-    assert "health-and-safety-workers.txt" not in loaded_names
+    # Phase-2 curation cleared the 'needs review' flag; the doc loads via its
+    # verified labour.gov.in source URL now.
+    assert "health-and-safety-workers.txt" in loaded_names
     # Current-law docs load — gated through verified-sources.json.
     assert "code-on-wages-2019.txt" in loaded_names
     assert "code-on-social-security-2020.txt" in loaded_names

@@ -1,8 +1,9 @@
 TITLE: Rights and Social Security for Unorganised Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-03-01
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 Unorganised workers constitute over 90% of India's workforce. This document provides comprehensive information about the rights, social security schemes, and protections available to unorganised workers including migrant workers, gig workers, and platform workers.
@@ -15,7 +16,8 @@ KEY RIGHTS:
 1. Minimum Wages: Unorganised workers are entitled to minimum wages as fixed by State Governments.
 2. Timely Payment: Wages must be paid on time without arbitrary deductions.
 3. Safe Working Conditions: Employers must provide safe working environment.
-4. Social Security: Access to PM-SYM, PM-SBY, PM-JJBY, and Ayushman Bharat.
+4. Social Security: access to PM-SYM (enrol via CSC), PMJJBY/PMSBY (via a savings bank
+   account) and Ayushman Bharat (PM-JAY eligibility is assessment-based, not automatic).
 5. Skill Development: Access to PMKVY and other skill development programmes.
 6. Credit Support: Access to MUDRA loans and PM-SVANidhi for vendors.
 7. Housing: Access to PM Awas Yojana.
@@ -24,10 +26,10 @@ KEY RIGHTS:
 
 SOCIAL SECURITY SCHEMES:
 1. e-Shram Portal: Registration for all unorganised workers
-2. PM-SYM: Rs 3,000/month pension after age 60
+2. PM-SYM: Rs 3,000/month pension after 60 (entry age 18-40, monthly income up to Rs 15,000)
 3. PM-SBY: Rs 2 lakh accident insurance
 4. PM-JJBY: Rs 2 lakh life insurance
-5. Ayushman Bharat: Rs 5 lakh health insurance
+5. Ayushman Bharat (PM-JAY): Rs 5 lakh hospital cover for eligible families
 6. PM-SVANidhi: Collateral-free loans for street vendors
 7. PM-KISAN: Rs 6,000/year for farmers
 
@@ -50,5 +52,5 @@ CREDIT AND FINANCIAL SUPPORT:
 - Stand-Up India: Loans for women and SC/ST entrepreneurs
 - PMEGP: Credit-linked subsidy for micro-enterprises
 
-HELPLINE: 14434 (e-Shram) | 1800-180-1551 (PM-SYM) | 1800-11-0001 (PM-JJBY)
+HELPLINE: e-Shram 14434; enrolments via CSC/bank; scheme details on the official portals
 WEBSITE: eshram.gov.in | labour.gov.in

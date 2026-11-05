@@ -1,17 +1,21 @@
 TITLE: Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) — Health Insurance
 DEPARTMENT: Ministry of Health and Family Welfare, Government of India
-LAST_UPDATED: needs review
-SOURCE_URL: https://pmjay.gov.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://www.pib.gov.in/PressReleaseDetail.aspx?PRID=2330009
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Health and Family Welfare, Government of India
 STATUS: current
 ---
 Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) — Health Insurance
 
-Ayushman Bharat PM-JAY is the world's largest government-funded health insurance scheme providing coverage up to Rs 5 lakh per family per year for secondary and tertiary hospitalisation.
+Ayushman Bharat PM-JAY provides coverage up to Rs 5 lakh per family per year for secondary
+and tertiary hospitalisation. Since 29 October 2024, ALL citizens aged 70 and above are
+covered regardless of income (Ayushman Vay Vandana).
 
 Key Features:
 - Covers hospitalisation expenses including pre and post-hospitalisation for up to 15 days
-- Covers 1,929 medical and surgical packages including surgery, day care, ICU
+- Claimable procedures follow the official benefit catalogue (revised periodically) —
+  confirm the current package list at pmjay.gov.in
 - Cashless and paperless access at empanelled public and private hospitals
 - Portable across India — get treated at any empanelled hospital in any state
 - No restriction on family size, age, or gender
@@ -19,10 +23,13 @@ Key Features:
 Eligibility:
 - Based on Socio-Economic Caste Census (SECC) 2011 data
 - Families identified as deprived (D1-D7) and occupational categories
-- Rural: families without adult male member (16-59 years), disabled members, landless labourers, manual scavengers
+- Rural: households on the SECC rural deprivation lists (e.g. households without a
+  working-age adult male, per the SECC compendium), plus notified occupational categories
 - Urban: street vendors, domestic workers, shop employees, tailors, rickshaw pullers
-- Families with monthly income up to Rs 10,000
-- Migrant workers are eligible if their family is in the SECC database
+- Other inclusion/exclusion criteria apply per the scheme's current notification — check
+  mera.pmjay.gov.in
+- A migrant worker is eligible if their FAMILY meets the current eligibility criteria —
+  eligibility follows the family/household, not the work state
 
 How to Check Eligibility:
 1. Visit https://mera.pmjay.gov.in
@@ -37,7 +44,8 @@ How to Use the Benefit:
 4. No upfront payment needed — insurance covers the bill
 
 Empanelled Hospitals:
-- Over 29,000 hospitals across India including government and private
+- Empanelled hospital networks are updated continuously — search the official portal for
+  the nearest empanelled hospital
 - Find nearest hospital at https://hospitals.pmjay.gov.in
 - Toll-free helpline: 14555 / 1800-111-565
 

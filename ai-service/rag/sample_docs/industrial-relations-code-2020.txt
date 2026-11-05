@@ -3,13 +3,13 @@ DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2026-10-01
 AUTHORITY: Ministry of Labour and Employment, Government of India
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463
-LAST_VERIFIED: 2026-10-01
+LAST_VERIFIED: 2026-11-03
 STATUS: current
 ---
 The Industrial Relations Code, 2020 came into force on 21 November 2025 as one of the four
 Labour Codes. It consolidated central laws on industrial relations — including the Trade
 Unions Act, 1926, the Industrial Employment (Standing Orders) Act, 1946 and the Industrial
-Disputes Act, 1947 (complete list: needs review) — and it works alongside the Occupational
+Disputes Act, 1947 — and it works alongside the Occupational
 Safety, Health and Working Conditions Code, 2020, which now covers the working conditions of
 contract labour that were earlier regulated by the Contract Labour (Regulation and Abolition)
 Act, 1970. (Source: PIB press release PRID 2192463.)
@@ -29,6 +29,6 @@ If your rights are violated:
 - Approach the Labour Court or Industrial Tribunal for disputes under the Code.
 - Call the labour helpline for guidance, or visit the nearest Common Service Centre.
 
-Note: threshold numbers of employees for certain provisions under the Code are specific and
-have been amended by notification — check the current text on labour.gov.in (needs review for
-exact thresholds).
+Note: threshold numbers of employees for certain provisions under the Code are specific
+and have been amended by notification — check the current text on labour.gov.in before
+quoting a threshold.

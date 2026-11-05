@@ -1,29 +1,34 @@
 TITLE: PM Kisan Samman Nidhi (PM-KISAN) — Income Support for Farmers
 DEPARTMENT: Ministry of Agriculture and Farmers Welfare, Government of India
-LAST_UPDATED: needs review
+LAST_UPDATED: 2026-11-03
 SOURCE_URL: https://pmkisan.gov.in
-LAST_VERIFIED: needs review
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Agriculture and Farmers Welfare, Government of India
 STATUS: current
 ---
 PM Kisan Samman Nidhi (PM-KISAN) — Income Support for Farmers
 
-PM-KISAN provides direct income support of Rs 6,000 per year to small and marginal farmer families, paid in three equal instalments of Rs 2,000 each.
+PM-KISAN provides direct income support of Rs 6,000 per year to all landholding farmer
+families (the small-and-marginal-only cap was removed in 2019), paid in three equal
+instalments of Rs 2,000 each.
 
 Key Features:
 - Rs 6,000 per year transferred directly to farmer's bank account
 - Three instalments: Rs 2,000 each in April-July, August-November, December-March
 - Money transferred directly via Direct Benefit Transfer (DBT)
-- Over 11 crore farmer families enrolled
+- Enrolment totals are updated on the official portal (roughly 11 crore families as of
+  late 2025).
 
 Eligibility:
 - All farmer families with cultivable land holding
-- Small and marginal farmer families (combined land holding up to 2 hectares)
+- The 2019 change opened the scheme to ALL landholding farmer families (the original
+  small-and-marginal-only limit no longer applies).
 - Subject to certain exclusions
 
 Excluded Categories:
 - Institutional landholders
 - Former and current constitutional post holders
-- Government employees and pensioners (monthly pension Rs 10,000+)
+- All serving and retired government employees.
 - Income taxpayers and professionals paying income tax
 - Professionals registered with professional bodies
 

@@ -1,11 +1,16 @@
 TITLE: Social Security for Gig Workers and Platform Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.hindustantimes.com/india-news/budget-2025-id-cards-health-care-for-gig-workers-announces-nirmala-sitharaman-101738398697412.html
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Code on Social Security, 2020 provides for social security measures for gig workers and platform workers for the first time in India. Gig workers are persons who perform work outside the traditional employer-employee relationship, and platform workers are gig workers registered with an aggregator.
+
+Budget 2025-26 (announced 1 February 2025) adds: identity cards, e-Shram registration
+and PM-JAY healthcare for gig/platform workers plus a dedicated social-security scheme —
+implementation details are still rolling out; check labour.gov.in before promising delivery.
 
 KEY PROVISIONS:
 - Registration: Gig workers and platform workers shall be registered on the e-Shram portal. The aggregator shall provide the necessary information to the portal.
@@ -21,10 +26,14 @@ MIGRANT GIG WORKERS:
 - Platform work (like food delivery, ride-sharing) is available in all cities, making migrant workers particularly relevant beneficiaries.
 
 SPECIFIC SCHEMES:
-- PM Suraksha Bima Yojana: Rs 2 lakh accident insurance for Rs 20/year premium.
-- PM Jeevan Jyoti Bima Yojana: Rs 2 lakh life insurance for Rs 436/year premium.
-- PM-SYM Pension: Rs 3,000/month pension after age 60.
-- Ayushman Bharat: Rs 5 lakh health insurance for hospitalisation.
+- PM Suraksha Bima Yojana: Rs 2 lakh accident cover, Rs 20/year premium (separate
+  enrolment through a savings bank account).
+- PM Jeevan Jyoti Bima Yojana: Rs 2 lakh life insurance, Rs 436/year premium (separate
+  enrolment; premium auto-debited from a savings bank account).
+- PM-SYM pension: Rs 3,000/month after 60 (entry age 18-40, monthly income up to
+  Rs 15,000).
+- Ayushman Bharat (PM-JAY): Rs 5 lakh hospital cover for eligible families; the
+  Budget-2025 health access for gig workers is being implemented — check labour.gov.in/NHA.
 
 RIGHTS OF GIG WORKERS:
 - Right to be registered on e-Shram portal.

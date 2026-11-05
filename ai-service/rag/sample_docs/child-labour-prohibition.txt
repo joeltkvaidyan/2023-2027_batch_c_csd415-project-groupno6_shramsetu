@@ -1,8 +1,9 @@
 TITLE: Child Labour (Prohibition and Regulation) Act, 1986 (as amended 2016)
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-01-20
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://pencil.gov.in/THE%20CHILD%20LABOUR%20(PROHIBITION%20AND%20REGULATION)%20AMENDMENT%20ACT,%202016(1).pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Child Labour (Prohibition and Regulation) Act, 1986 prohibits employment of children below 14 years in all occupations and processes, with certain exceptions. The 2016 amendment strengthened the law by making employment of children below 14 a cognizable offence.
@@ -12,13 +13,17 @@ KEY PROVISIONS:
 - Adolescents (14-18 years): Adolescents are prohibited from working in hazardous occupations and processes as listed in the Schedule of the Act.
 - Hazardous occupations include: mining, excavation, construction work, factories, processing units handling hazardous substances, etc.
 - Penalties: Employing a child below 14 years: imprisonment between 6 months to 2 years and fine between Rs 20,000 to Rs 50,000 for first offence. Imprisonment between 1 year to 3 years for second offence.
-- Penalties for employing adolescents in hazardous work: imprisonment between 6 months to 2 years and fine between Rs 10,000 to Rs 20,000.
-- Cognizable and non-bailable: Offences are cognizable and non-bailable under the 2016 amendment.
+- Penalties for employing adolescents in hazardous work differ from the child penalties
+  — read the amended Act text (PENCIL portal) before quoting figures.
+- Offences are cognizable under the 2016 amendment (bail follows the ordinary
+  criminal-law process — do not label the offence 'non-bailable' without checking).
 - No child to be harmed: No child shall be subjected to physical punishment, mental harassment, or abuse.
-- Rehabilitation: Central Government will formulate a Child Labour Rehabilitation and Welfare Fund for rehabilitation of rescued children.
+- Rehabilitation: the Child and Adolescent Labour Rehabilitation Fund is in the amended
+  Act and supports rescued children.
 
 MIGRANT CHILDREN:
-- Migrant children working with their parents in family-based occupations may be exempted from the prohibition between 7 PM and 7 AM provided the work does not involve hazardous processes.
+- Family-work exception: a child may help in a family enterprise (or as a child artist)
+  only after school hours, in NON-hazardous work, and not between 7 PM and 7 AM.
 - The exemption for family work applies only after school hours and does not apply to children below 14 years working in hazardous conditions.
 - Government provides free education and mid-day meals for all children of migrant workers under the Right to Education Act.
 
@@ -27,5 +32,6 @@ RESCUE AND REHABILITATION:
 - Rescued children are provided education, vocational training, and rehabilitation.
 - District Child Protection Units monitor welfare of rescued children.
 
-HELPLINE: Childline 1098 (toll-free, 24x7)
+HELPLINE: report to the district Child Protection Unit and the police; complaints can
+also be filed via pgportal.gov.in (CPGRAMS)
 WEBSITE: childlineindia.org.in | labour.gov.in

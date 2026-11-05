@@ -72,7 +72,7 @@ flowchart TD
 The 0.45 gate is the refusal mechanism: an off-topic or prompt-injected question
 never reaches the LLM with context attached. BM25 reranks only chunks that
 already passed the gate, so it can reorder but never admit a below-threshold
-chunk. Measured on the 70-question suite: hit@1 94%, hit@3 98%, retrieval
+chunk. Measured on the 70-question suite: hit@1 92%, hit@3 96%, retrieval
 refusals 12/13 — see [eval/ANALYSIS.md](../ai-service/eval/ANALYSIS.md).
 
 ## Grievance flow

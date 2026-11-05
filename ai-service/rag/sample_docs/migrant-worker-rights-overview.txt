@@ -1,8 +1,9 @@
 TITLE: Comprehensive Guide to Migrant Worker Rights in India
 DEPARTMENT: Ministry of Labour and Employment / Various Ministries, Government of India
-LAST_UPDATED: 2025-07-01
-SOURCE_URL: needs review
-LAST_VERIFIED: 2026-10-01
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 India has an estimated 100 million internal migrant workers who move from rural areas to urban 
@@ -14,15 +15,19 @@ Fundamental rights of migrant workers:
 1. Right to equal wages: Migrant workers are entitled to the same minimum wages as local 
    workers for the same type of work. The Code on Wages, 2019 (which replaced the Equal Remuneration Act, 1976) prohibits discrimination 
    in wages based on gender, and the Code on Wages, 2019 fixes minimum wages and ensures equal pay for equal work.
-2. Right to safe working conditions: All workers, regardless of their origin, have the right to 
-   work in safe and healthy conditions. The Factories Act, 1948 and the Mines Act, 1952 mandate 
-   safety standards.
+2. Right to safe working conditions: All workers, regardless of their origin, have the right
+   to work in safe and healthy conditions. The Occupational Safety, Health and Working
+   Conditions Code, 2020 — in force since 21 November 2025; it replaced 13 older laws
+   including the Factories Act, the Mines Act and the Inter-State Migrant Workmen Act,
+   1979 — mandates safety standards, working hours and welfare provisions.
 3. Right to social security: Migrant workers are entitled to social security benefits including 
    EPF, ESI, and pension schemes, if they are employed in covered establishments.
 4. Right to food security: Through the One Nation One Ration Card scheme, migrant workers can 
    access their food grain entitlements from any Fair Price Shop across India.
-5. Right to housing: The OSH Code, 2020 (which replaced the Inter-State Migrant Workmen Act) mandates that employers provide 
-   suitable residential accommodation for migrant workers during their employment.
+5. Documented protections for inter-state migrant workers: the OSH Code framework applies to
+   covered establishments; the precise successor rules for the old 1979 Act's obligations
+   (accommodation, journey allowance) are set by the Code, its rules and state implementation —
+   confirm with the labour department rather than assuming them.
 6. Right to education: The Right to Education Act ensures free and compulsory education for 
    children aged 6-14 years, regardless of their parents' employment or migration status.
 
@@ -30,10 +35,11 @@ Key government schemes for migrant workers:
 - e-Shram Portal: National database for unorganised workers, provides UAN card and access to 
   welfare schemes.
 - One Nation One Ration Card: Portable food security across states.
-- PM Garib Kalyan Yojana: Free foodgrains for vulnerable populations.
+- PM Garib Kalyan Yojana: NFSA rations are delivered FREE under PMGKAY since 1 January 2024.
 - PM Suraksha Bima Yojana: Accident insurance at Rs 20 per year.
-- PM Jeevan Jyoti Bima Yojana: Life insurance at Rs 432 per year.
-- Atal Pension Yojana: Pension scheme for unorganised sector workers.
+- PM Jeevan Jyoti Bima Yojana: Life insurance at Rs 436 per year.
+- Atal Pension Yojana: Pension of Rs 1,000-5,000 per month from age 60; the government
+  co-contribution applies only to subscribers who joined before 31 March 2016.
 - PM Kisan Samman Nidhi: Income support for farmer families.
 - PM SVANidhi: Credit support for street vendors.
 - BOCW Welfare Board: Benefits for registered construction workers.
@@ -42,22 +48,22 @@ Key government schemes for migrant workers:
 Legal protections:
 - The Inter-State Migrant Workmen Act (now subsumed into the OSH Code, 2020) provides 
   specific protections for workers recruited across state lines.
-- The Contract Labour Act regulates the employment of contract workers, including migrants.
-- The Unorganised Workers' Social Security Act provides a framework for social security 
-  benefits.
-- The Building and Other Construction Workers Act provides benefits for construction workers.
+- The Contract Labour regime now sits inside the OSH Code, 2020 (in force since 21 November 2025).
+- The Unorganised Workers' Social Security Act, 2008 has been subsumed into the Code on
+  Social Security, 2020.
+- Construction workers' welfare boards continue under the OSH Code, 2020.
 
 How to access welfare services:
 - Register on the e-Shram portal (eshram.gov.in) to get a UAN card.
 - Link Aadhaar with bank account, mobile number, and ration card.
 - Visit Common Service Centres (CSCs) for assistance with registration and documentation.
-- Call toll-free helplines: 14434 (e-Shram), 1967 (PDS), 14400 (Labour).
-- Download the Mera Ration app for locating nearby FPS shops.
+- Call toll-free helplines: 14434 (e-Shram), 1967 (PDS/rations), 1514 (NCS job search).
+
 - Use the e-Shram mobile app for accessing welfare schemes.
 
 Grievance redressal:
 - File complaints through the e-Shram portal.
 - Approach the District Labour Officer in the area where you are working.
 - Contact the State Labour Commissioner.
-- Call the national labour helpline 14400.
+- The state food department portal lists ration services; labour queries go through CPGRAMS.
 - Use the Central Government's PG Portal (pgportal.gov.in) for grievances.

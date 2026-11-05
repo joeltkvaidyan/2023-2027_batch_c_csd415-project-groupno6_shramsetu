@@ -29,11 +29,11 @@ import JobsPage from "./pages/JobsPage";
 import EmployersPage from "./pages/EmployersPage";
 import AccountRecoveryPage from "./pages/AccountRecoveryPage";
 import EmployerLoginPage from "./pages/EmployerLoginPage";
+import EmployerRegisterPage from "./pages/EmployerRegisterPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import CitizenLoginPage from "./pages/CitizenLoginPage";
 import CitizenDashboardPage from "./pages/CitizenDashboardPage";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
-import FindWorkersPage from "./pages/FindWorkersPage";
 
 function GovernmentRoute({ children }: { children: React.ReactNode }) {
   const token = getGovToken();
@@ -116,14 +116,17 @@ export default function App() {
           The dashboard itself redirects to /employer/login without a token and
           refreshes its labour-office acceptance state from the server. */}
       <Route path="/employer/login" element={<EmployerLoginPage />} />
+      <Route path="/employer/register" element={<EmployerRegisterPage />} />
       <Route path="/employer/dashboard" element={<EmployerDashboardPage />} />
 
       {/* Citizen (household) routes — separate token store */}
       <Route path="/citizen/login" element={<CitizenLoginPage />} />
       <Route path="/citizen/dashboard" element={<CitizenDashboardPage />} />
 
-      {/* Public directory — no login, for people outside the platform */}
-      <Route path="/find-workers" element={<FindWorkersPage />} />
+      {/* The open directory is gone: worker contact numbers are shown only
+          to a signed-in employer/household account. Old links land on the
+          role picker, where those accounts can sign in. */}
+      <Route path="/find-workers" element={<Navigate to="/roles" replace />} />
 
       {/* Government routes — completely separate */}
       <Route path="/government/login" element={<GovernmentLoginPage />} />

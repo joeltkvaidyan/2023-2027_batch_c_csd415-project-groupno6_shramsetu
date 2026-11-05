@@ -2,7 +2,8 @@ TITLE: Occupational Safety, Health and Working Conditions Code, 2020 — Modern 
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-06-15
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463
-LAST_VERIFIED: needs review
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Occupational Safety, Health and Working Conditions (OSH) Code, 2020 consolidates and 
@@ -16,10 +17,9 @@ Key provisions for migrant workers:
    - Registration of the establishment with the relevant authority.
    - A passbook for each inter-state migrant worker containing details of identity, wages, 
      and working conditions.
-   - Journey allowance for travel from the home state to the workplace.
-   - Suitable residential accommodation during the period of employment.
-   - Medical facilities at the workplace.
-   - Displacement allowance at the time of recruitment.
+   - (The 1979 Act's journey/accommodation/displacement entitlement set has no verified
+     successor under the Code-era rules — confirm current provisions with the labour
+     department.)
 2. Equal wages: Inter-state migrant workers must be paid the same wages as other workers doing 
    the same or similar work in the establishment.
 3. Working hours: The code limits working hours to 8 hours per day and 48 hours per week, 
@@ -34,8 +34,8 @@ Key provisions for migrant workers:
    annual health examinations at the employer's cost.
 
 Registration and documentation:
-- Every inter-state migrant worker must be registered by the principal employer within 30 days 
-  of employment.
+- Inter-state migrant workers register through the official portal process (see
+  shramsuvidha.gov.in); confirm the current timeline under the Code's rules.
 - The employer must issue a passbook to each worker containing:
   - Name and address of the worker.
   - Name and address of the employer.
@@ -45,13 +45,12 @@ Registration and documentation:
 - The passbook must be returned to the worker upon termination of employment.
 
 Penalties for violations:
-- Failure to register inter-state migrant workers: Fine up to Rs 3 lakh.
-- Non-payment of displacement allowance: Fine up to Rs 1 lakh.
-- Non-provision of residential accommodation: Fine up to Rs 2 lakh.
-- Violation of safety standards: Fine up to Rs 5 lakh and/or imprisonment up to 2 years.
+- The Code's penalty amounts depend on the specific contravention (and several apply per
+  contravention, with higher amounts for repeated failures) — do not quote a penalty
+  without checking the current text of the Code and rules on labour.gov.in.
 
 How to enforce rights:
 - File a complaint with the Inspector-cum-Facilitator.
 - Approach the Labour Court or Industrial Tribunal.
-- Call the labour helpline 14400 for guidance.
+- Labour grievances: samadhan.labour.gov.in and CPGRAMS (pgportal.gov.in).
 - Use the SHRAM Suvidha Portal (shramsuvidha.gov.in) for online registration and compliance.

@@ -1,8 +1,9 @@
 TITLE: Mahatma Gandhi National Rural Employment Guarantee Act (MGNREGA)
 DEPARTMENT: Ministry of Rural Development, Government of India
 LAST_UPDATED: 2025-03-01
-SOURCE_URL: https://nrega.nic.in
-LAST_VERIFIED: needs review
+SOURCE_URL: https://nregaplus.nic.in/Circular_Archive/archive/nrega_doc_FAQs.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Rural Development, Government of India
 STATUS: current
 ---
 MGNREGA is a flagship programme of the Government of India that provides legal guarantee for 100 days of wage employment in a financial year to every rural household whose adult members volunteer to do unskilled manual work. It is the world's largest public works programme.
@@ -20,7 +21,9 @@ KEY PROVISIONS:
 1. Legal Entitlement: Every rural household has a legal right to 100 days of employment per year.
 2. Work Within 15 Days: Employment must be provided within 15 days of application.
 3. Unemployment Allowance: If employment is not provided within 15 days, the applicant is entitled to unemployment allowance.
-4. Minimum Wages: Wages are paid at the state's minimum wage rate for agricultural labourers.
+4. Wages: the wage rate for each state is NOTIFIED by that state under the Act (it is
+   not a national 'minimum wage' number); equal wages apply for the same work on the
+   same site.
 5. Payment Through Bank: Wages are paid through bank/post office accounts, not in cash.
 6. Work Demand: Any member of a rural household can demand work by submitting a written application to the Gram Panchayat.
 7. Work Within 5 km: Work must be provided within 5 km of the applicant's residence. If not, 10% additional wages are paid.
@@ -44,7 +47,8 @@ WORK TYPES:
 MIGRANT WORKERS:
 - MGNREGA job card is linked to the worker's native village
 - Migrant workers can use their job card in their home state
-- Some states have extended MGNREGA to urban areas (AMRUT, Smart Cities)
+- A few STATES run their own urban employment-guarantee programmes; MGNREGA itself
+  covers rural areas.
 - If a migrant worker returns to their native village, they can resume MGNREGA work
 - MGNREGA wages are credited to the bank account, making them portable
 
@@ -61,5 +65,6 @@ GRIEVANCE REDRESSAL:
 - State-level monitoring committee
 - National-level monitoring by MGNREGA Commissioner
 
-HELPLINE: 1800-180-5678 (toll-free)
+HELPLINE: raise issues first at the Gram Panchayat; grievances via CPGRAMS
+(pgportal.gov.in) and samadhan.labour.gov.in
 WEBSITE: nrega.nic.in | mgnrega.nic.in

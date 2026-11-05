@@ -1,8 +1,9 @@
 TITLE: National Career Service (NCS) — Employment Exchange
 DEPARTMENT: Ministry of Labour and Employment, Government of India
-LAST_UPDATED: needs review
-SOURCE_URL: https://www.ncs.gov.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://ncs.gov.in/faq
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 National Career Service (NCS) — Employment Exchange
@@ -55,6 +56,6 @@ Employer Registration:
 - Schedule interviews through the portal
 
 Helpline:
-- NCS Helpline: 1800-425-1025
+- NCS helpline: 1514 (toll-free)
 - Website: https://www.ncs.gov.in
-- Email: support@ncs.gov.in
+- For grievances: pgportal.gov.in (CPGRAMS)

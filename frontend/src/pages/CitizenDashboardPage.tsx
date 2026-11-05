@@ -98,7 +98,9 @@ export default function CitizenDashboardPage() {
       setProfile(me.data);
       const mine = await citizenApi.get("/requests/mine");
       setRequests((mine.data.requests ?? []) as MyRequest[]);
-      const dir = await citizenApi.get<PublicWorkersResponse>("/public/workers", {
+      // Signed-in listing: carries the worker's contact number so the
+      // household can call about the work directly.
+      const dir = await citizenApi.get<PublicWorkersResponse>("/directory/workers", {
         params: { place: me.data.current_district || me.data.current_state || "" },
       });
       setWorkers(dir.data.workers);
@@ -111,7 +113,7 @@ export default function CitizenDashboardPage() {
       setRequests([]);
     }
     try {
-      const occ = await citizenApi.get("/public/occupations");
+      const occ = await citizenApi.get("/directory/occupations");
       setOccupations(occ.data.occupations ?? []);
     } catch {
       /* the trade list is non-critical */
@@ -470,15 +472,30 @@ export default function CitizenDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <Clock className="h-4 w-4 text-gray-300 shrink-0" aria-hidden="true" />
+                  {w.phone ? (
+                    <a
+                      href={`tel:+91${w.phone}`}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 transition active:scale-95"
+                      aria-label={`Call ${w.full_name}`}
+                    >
+                      <Phone className="h-4 w-4" aria-hidden="true" /> {t("citizen.call", "Call")}
+                    </a>
+                  ) : (
+                    <Clock className="h-4 w-4 text-gray-300 shrink-0" aria-hidden="true" />
+                  )}
                 </div>
+                {w.phone && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                    <Phone className="h-3 w-3" aria-hidden="true" /> +91 {w.phone}
+                  </p>
+                )}
               </Card>
             ))
           )}
           <p className="text-xs text-gray-400">
             {t(
               "citizen.directoryNote",
-              "ShramSetu never shows phone numbers in this directory. To reach a worker, post a request — if they accept, you and the worker get each other's numbers.",
+              "Numbers are shown to your signed-in household account so you can call about work. Use them only for that — posting a request still gets the worker to call you back.",
             )}
           </p>
         </section>

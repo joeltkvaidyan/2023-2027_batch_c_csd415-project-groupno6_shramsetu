@@ -481,7 +481,7 @@
   "citizen": {
     "title": "Household",
     "heading": "ShramSetu Household",
-    "tagline": "Find a verified worker near you — they call you, never public numbers",
+    "tagline": "Find a verified worker near you — sign in to see their number and call",
     "tabRegister": "Create account",
     "tabPassword": "Password",
     "tabOtp": "OTP login",
@@ -506,7 +506,7 @@
     "verifyFailed": "Verification failed.",
     "invalidLogin": "Invalid mobile number or password.",
     "otpFailed": "Could not send OTP.",
-    "privacyNote": "This is not a worker account: no labour-office approval is needed. Phone numbers pass between you and a worker only after that worker accepts your request.",
+    "privacyNote": "This is not a worker account: no labour-office approval is needed. Signing in shows you nearby workers' contact numbers; posting a request still lets a worker call you back.",
     "dashboardTitle": "Household",
     "motto": "Reach verified workers safely",
     "signOut": "Sign out",
@@ -537,7 +537,7 @@
     "noWorkers": "No listed workers here yet",
     "noWorkersHint": "Only government-accepted workers are listed in the directory. You can still post a request above.",
     "govAccepted": "gov accepted",
-    "directoryNote": "ShramSetu never shows phone numbers in this directory. To reach a worker, post a request — if they accept, you and the worker get each other's numbers.",
+    "directoryNote": "Contact numbers are shown to your signed-in household account so you can call about work. Use them only for that.",
     "status": {
       "open": "Open",
       "accepted": "Accepted",

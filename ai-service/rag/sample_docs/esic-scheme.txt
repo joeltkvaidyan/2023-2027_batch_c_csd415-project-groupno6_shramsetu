@@ -1,8 +1,9 @@
 TITLE: Employees' State Insurance Corporation (ESIC) — Social Security for Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-20
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://esic.gov.in/contribution
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Employees' State Insurance Corporation, Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Employees' State Insurance (ESI) scheme provides comprehensive social security benefits to 

@@ -1,8 +1,9 @@
 TITLE: National Social Assistance Programme (NSAP)
 DEPARTMENT: Ministry of Rural Development, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2187327
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Rural Development, Government of India
 STATUS: current
 ---
 The National Social Assistance Programme (NSAP) is a Centrally Sponsored Scheme providing social assistance to poor households in the case of old age, death of the breadwinner, and maternity. It is a flagship programme of the Ministry of Rural Development.
@@ -46,5 +47,5 @@ APPLICATION PROCESS:
 4. The application is verified and approved by the Panchayat.
 5. Benefits are credited to the bank account.
 
-HELPLINE: 1800-180-5678 (toll-free)
+HELPLINE: NSAP queries through the state/block welfare office; grievances via CPGRAMS (pgportal.gov.in)
 WEBSITE: nsap.nic.in | rural.nic.in

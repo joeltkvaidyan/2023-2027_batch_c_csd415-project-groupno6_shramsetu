@@ -3,7 +3,7 @@ DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2026-10-01
 AUTHORITY: Ministry of Labour and Employment, Government of India
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2193095
-LAST_VERIFIED: 2026-10-01
+LAST_VERIFIED: 2026-11-03
 STATUS: current
 ---
 The Code on Wages, 2019 (No. 29 of 2019) is now the single central law governing wages and bonus
@@ -37,6 +37,6 @@ If you are not paid your wages:
 - Call the labour helpline or the e-Shram helpline 14434 for guidance, or visit the nearest
   Common Service Centre.
 
-Note: exact minimum wage amounts differ by state and employment and are revised periodically.
-Check the current notification of your State Labour Department for the applicable rates
-(this detail is state-specific — needs review at the time of answering).
+Note: exact minimum wage amounts differ by state and employment and are revised
+periodically. Check the current notification of your State Labour Department (for Kerala,
+the Labour Commissionerate rate list) for the applicable rates before quoting a figure.

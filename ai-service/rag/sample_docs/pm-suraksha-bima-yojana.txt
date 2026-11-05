@@ -1,8 +1,9 @@
 TITLE: Pradhan Mantri Suraksha Bima Yojana (PMSBY) — Accident Insurance
 DEPARTMENT: Ministry of Finance (Department of Financial Services), Government of India
 LAST_UPDATED: 2025-01-10
-SOURCE_URL: https://jansuraksha.gov.in
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=1823754
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Department of Financial Services, Ministry of Finance, Government of India
 STATUS: current
 ---
 PMSBY is a government-backed accident insurance scheme open to any Indian resident, including migrant

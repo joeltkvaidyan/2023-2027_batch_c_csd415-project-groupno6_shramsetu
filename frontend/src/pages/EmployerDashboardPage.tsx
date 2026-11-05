@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
-  ArrowRight,
   Briefcase,
   ClipboardList,
   Clock,
   LogOut,
+  MessageSquare,
+  Phone,
   Plus,
   Search,
   Star,
@@ -103,7 +104,7 @@ export default function EmployerDashboardPage() {
       .then((res) => {
         setProfile(res.data);
         localStorage.setItem("employer_user", JSON.stringify(res.data));
-        return employerApi.get("/public/occupations");
+        return employerApi.get("/directory/occupations");
       })
       .then((res) => setOccupations(res?.data?.occupations ?? []))
       .catch((err) => {
@@ -118,7 +119,7 @@ export default function EmployerDashboardPage() {
         if (cached) {
           try {
             setProfile(JSON.parse(cached));
-            void employerApi.get("/public/occupations").then((r) => setOccupations(r?.data?.occupations ?? []));
+            void employerApi.get("/directory/occupations").then((r) => setOccupations(r?.data?.occupations ?? []));
           } catch {
             /* ignore malformed cache */
           }
@@ -129,7 +130,9 @@ export default function EmployerDashboardPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const res = await employerApi.get<PublicWorkersResponse>("/public/workers", {
+      // Signed-in listing: unlike /public/workers this one carries the
+      // worker's contact number so the employer can call them directly.
+      const res = await employerApi.get<PublicWorkersResponse>("/directory/workers", {
         params: Object.fromEntries(
           Object.entries({ name: search, place, occupation }).filter(([, v]) => v)
         ),
@@ -314,10 +317,10 @@ export default function EmployerDashboardPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Find workers</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Browse government-accepted workers in your area and hire directly.
+                Browse government-accepted workers in your area, see their number and call them.
               </p>
             </div>
-            <Badge tone="success">Government-verified directory</Badge>
+            <Badge tone="success">Contact numbers for signed-in employers</Badge>
           </div>
 
           <StatGrid>
@@ -589,19 +592,28 @@ export default function EmployerDashboardPage() {
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
                 Trade / occupation
               </label>
-              <input
+              <select
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                placeholder="e.g. carpenter, electrician…"
                 value={occupation}
                 onChange={(e) => setOccupation(e.target.value)}
-              />
+                aria-label="Filter by trade"
+              >
+                <option value="">Any trade</option>
+                {occupations.map((o) => (
+                  <option key={o} value={o}>
+                    {o.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
             </div>
             <Button onClick={() => void load()} className="px-5 py-2.5">
               <Search className="h-4 w-4" aria-hidden="true" /> Search
             </Button>
           </div>
           <p className="text-xs text-gray-400 mt-3">
-            Only government-accepted workers appear. Phone numbers and addresses are never shown here — approach workers directly through the directory.
+            Only government-accepted workers appear. Their mobile number is shown to your signed-in
+            account so you can call about work — use it for nothing else. Street addresses and
+            documents are never shown.
           </p>
         </Card>
 
@@ -638,14 +650,7 @@ export default function EmployerDashboardPage() {
             {filteredWorkers.map((w) => {
               const isRating = ratingWorker?.id === w.id;
               return (
-                <Card
-                  key={w.id}
-                  interactive
-                  className="group cursor-pointer"
-                  onClick={() => {
-                    if (!isRating) navigate(`/worker/grievances/new`);
-                  }}
-                >
+                <Card key={w.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">
                       <Avatar name={w.full_name} size="md" />
@@ -703,11 +708,39 @@ export default function EmployerDashboardPage() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-gray-400 mb-3">
-                    Approach this worker directly for work. ShramSetu does not share phone numbers here — contact them through the directory or at the worksite.
-                  </p>
+                  {w.phone ? (
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/50 px-3 py-2.5">
+                      <p className="text-sm font-semibold text-brand-800 dark:text-brand-300 flex items-center gap-2">
+                        <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <a href={`tel:+91${w.phone}`} className="hover:underline">
+                          +91 {w.phone}
+                        </a>
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`tel:+91${w.phone}`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 transition active:scale-95"
+                        >
+                          <Phone className="h-4 w-4" aria-hidden="true" /> Call
+                        </a>
+                        <a
+                          href={`sms:+91${w.phone}`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-gray-800 border border-brand-200 dark:border-brand-800/60 text-brand-700 dark:text-brand-300 text-sm font-medium px-3.5 py-2 transition active:scale-95"
+                        >
+                          <MessageSquare className="h-4 w-4" aria-hidden="true" /> SMS
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 mb-3">
+                      No verified number on this account yet — use a job listing to reach them.
+                    </p>
+                  )}
 
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <p className="text-xs text-gray-400">
+                      Contact only about work. ShramSetu does not verify that this number is still in use.
+                    </p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -716,9 +749,6 @@ export default function EmployerDashboardPage() {
                       title={accepted ? undefined : "Locked until labour-office acceptance"}
                     >
                       <Star className="h-4 w-4" aria-hidden="true" /> Rate worker
-                    </Button>
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/worker/grievances/new`)}>
-                      File grievance <ArrowRight className="h-3 w-3 ml-1" aria-hidden="true" />
                     </Button>
                   </div>
                 </Card>

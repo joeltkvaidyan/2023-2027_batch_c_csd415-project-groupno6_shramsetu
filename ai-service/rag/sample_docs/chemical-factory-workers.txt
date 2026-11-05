@@ -1,8 +1,9 @@
 TITLE: Rights and Safety of Chemical Factory Workers
 DEPARTMENT: Ministry of Labour and Employment / Ministry of Chemicals and Fertilizers, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: 2026-10-01
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192802
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment / Ministry of Chemicals and Fertilizers, Government of India
 STATUS: current
 ---
 This document covers the rights, safety measures, and protections available to workers in chemical factories, pharmaceutical plants, and hazardous material handling facilities.
@@ -56,7 +57,8 @@ MIGRANT CHEMICAL WORKERS:
 COMPLAINTS:
 - Workers can file complaints with the Inspector-cum-Facilitator
 - Complaints can be filed anonymously
-- Penalties for non-compliance: Imprisonment up to 2 years or fine up to Rs 5 lakh
+- Penalties: the Code's penalty amounts depend on the specific contravention (higher on
+  repeated failures) — check the current text instead of quoting a figure.
 
-HELPLINE: 14434 (e-Shram) | 1070 (Fertilizer helpline)
-WEBSITE: chemicals.gov.in | labour.gov.in
+HELPLINE: e-Shram 14434; grievances via samadhan.labour.gov.in or CPGRAMS (pgportal.gov.in)
+WEBSITE: labour.gov.in

@@ -3,14 +3,15 @@ DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2026-10-01
 AUTHORITY: Ministry of Labour and Employment, Government of India
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463
-LAST_VERIFIED: 2026-10-01
+LAST_VERIFIED: 2026-11-03
 STATUS: current
 ---
 The Code on Social Security, 2020 came into force on 21 November 2025 as one of the four Labour
 Codes and is now the central law on social security for all workers, including migrant and
 unorganised-sector workers. It consolidated several earlier social security laws — among them
-the Employees' Compensation Act, 1923, the Maternity Benefit Act, 1961 and the Unorganised
-Workers' Social Security Act, 2008 (the complete list of subsumed laws: needs review).
+the Employees' Compensation Act, 1923, the Maternity Benefit Act, 1961, the Unorganised
+Workers' Social Security Act, 2008 and the other laws listed in the Code itself
+(labour.gov.in publishes the full repeal list).
 (Source: PIB press release PRID 2192463; PIB Year End Review 2025, PRID 2209767.)
 
 Key protections that continue under the Code:

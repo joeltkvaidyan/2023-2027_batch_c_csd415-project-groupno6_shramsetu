@@ -1,8 +1,9 @@
 TITLE: Skill India — Pradhan Mantri Kaushal Vikas Yojana (PMKVY)
 DEPARTMENT: Ministry of Skill Development and Entrepreneurship, Government of India
 LAST_UPDATED: 2025-04-15
-SOURCE_URL: https://www.pmkvyofficial.org
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.msde.gov.in/static/uploads/2024/02/PMKVY-4.0-Guidelines_final-copy.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Skill Development and Entrepreneurship, Government of India
 STATUS: current
 ---
 Skill India — Pradhan Mantri Kaushal Vikas Yojana (PMKVY)
@@ -13,7 +14,8 @@ Key Features:
 - Free skill training (30-600 hours) in over 400 job roles
 - Training at Skill India Centres and empanelled training partners
 - Government pays full training cost — no fee for candidates
-- Stipend of Rs 8-10 per hour during training
+- Structured training is free; stipends apply only under specific rounds/programmes —
+  check the current PMKVY 4.0 guidelines
 - Certification by National Skill Development Corporation (NSDC)
 - Recognition of Prior Learning (RPL) for experienced workers
 
@@ -22,7 +24,7 @@ Eligibility:
 - School/college dropouts and unemployed youth
 - Migrant workers seeking to upgrade skills
 - Workers with informal training seeking formal certification
-- Preference to BPL (Below Poverty Line) candidates
+
 
 Job Roles Available:
 - Construction: Mason, Carpenter, Plumber, Electrician, Welder
@@ -47,6 +49,6 @@ Benefits After Training:
 - Credit for Prior Learning (RPL) certification
 
 Helpline:
-- Skill India Helpline: 1800-123-9626
+- Details and grievance filing: Skill India Digital portal (skillindiadigital.gov.in)
 - Website: https://www.pmkvyofficial.org
 - CSC: Visit nearest Common Service Centre

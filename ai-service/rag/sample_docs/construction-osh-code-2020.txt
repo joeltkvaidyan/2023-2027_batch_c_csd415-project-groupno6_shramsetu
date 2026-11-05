@@ -3,7 +3,7 @@ DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2026-10-01
 AUTHORITY: Ministry of Labour and Employment, Government of India
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463
-LAST_VERIFIED: 2026-10-01
+LAST_VERIFIED: 2026-11-03
 STATUS: current
 ---
 Construction workers, including migrant construction workers, are now governed by the
@@ -17,8 +17,8 @@ What continues for construction workers under the new framework:
 - State Building and Other Construction Workers' Welfare Boards continue to operate, funded by
   a cess on construction cost, and provide welfare benefits to registered construction workers:
   medical assistance, maternity benefit for women workers, education assistance for children,
-  pension, assistance for tools, accident and death benefits. (Exact scheme list varies by state
-  — needs review for your state.)
+  pension, assistance for tools, accident and death benefits. The exact scheme list varies
+  by state — check your state Welfare Board's current scheme list.
 - Registration: a construction worker who has completed the prescribed number of working days
   in the preceding year can register with the Welfare Board of the state where they are working.
   Registration is not restricted to the worker's home state, so a migrant construction worker

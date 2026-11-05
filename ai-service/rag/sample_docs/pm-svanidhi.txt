@@ -1,33 +1,37 @@
 TITLE: PM Street Vendor's AtmaNirbhar Nidhi (PM SVANidhi) — Credit Support for Street Vendors
 DEPARTMENT: Ministry of Housing and Urban Affairs, Government of India
-LAST_UPDATED: 2025-05-01
-SOURCE_URL: https://pmsvanidhi.mohua.gov.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://www.businesstoday.in/latest/economy/story/cabinet-extends-pm-svanidhi-scheme-till-2030-approves-rs-7332-crore-outlay-491294-2025-08-27
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Housing and Urban Affairs, Government of India
 STATUS: current
 ---
-PM SVANidhi is a central sector scheme launched on June 1, 2020, to provide affordable working 
-capital credit to street vendors who have been adversely affected by COVID-19 and other economic 
-disruptions. Many migrant workers who become street vendors in cities benefit from this scheme.
+PM SVANidhi is a working-capital credit scheme for urban street vendors (launched 1 June
+2020). Under PM SVANidhi 2.0 (Cabinet approval, 27 August 2025) the scheme runs to 31 March
+2030 with a total outlay of Rs 7,332 crore and about 1.15 crore beneficiaries, roughly 50
+lakh of them new. Many migrant workers who become street vendors in cities benefit from
+this scheme.
 
 Eligibility:
 - Street vendors, hawkers, and footpath vendors who are selling goods from fixed or mobile 
   structures in urban areas.
 - Vendors who possess a Certificate of Registration/Identity Card issued by the Urban Local 
   Body (ULB) or Town Vending Committee (TVC).
-- Both existing vendors and new vendors who have been vending since before March 24, 2020.
+- Existing beneficiaries plus new vendors under the 2.0 expansion (about 50 lakh new
+  beneficiaries planned per the August 2025 Cabinet decision).
 
 Loan details:
-- First loan: Up to Rs 10,000 as working capital loan, repayable within 12 months.
-- Second loan: Up to Rs 20,000, repayable within 12 months, available after repaying the 
-  first loan on time.
-- Third loan: Up to Rs 50,000, repayable within 12 months, available after repaying the 
-  second loan on time.
+- First loan: up to Rs 15,000 (raised from Rs 10,000 under PM SVANidhi 2.0), repayable
+  within about a year.
+- Second loan: up to Rs 25,000 (was Rs 20,000), available after repaying the first loan
+  on time.
+- Third loan: up to Rs 50,000, available after repaying the second loan on time.
 - Subsidy: 7% per annum interest subsidy is credited directly to the vendor's bank account 
   after repayment of the loan.
 
 Digital transactions incentive:
-- Vendors who make digital payments through UPI/digital modes during the loan period receive 
-  up to Rs 100 per month as cashback, capped at Rs 1,200 per year.
+- Digital payments: an incentive is given for digital transactions during the loan period;
+  incentive terms have changed over time — confirm the current rates on the official portal.
 
 How to apply:
 - Visit the PM SVANidhi portal: https://pmsvanidhi.mohua.gov.in
