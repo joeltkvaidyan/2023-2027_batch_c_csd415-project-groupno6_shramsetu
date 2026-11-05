@@ -67,6 +67,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Locale parity (all 6 languages, no silent English fallbacks)
+        run: npm run i18n:check
       - name: Typecheck (covers src/**/*.test.tsx too)
         run: npx tsc -b
       - name: Unit + component tests (vitest + jsdom)
