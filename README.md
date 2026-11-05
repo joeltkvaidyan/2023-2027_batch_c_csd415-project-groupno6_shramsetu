@@ -144,13 +144,15 @@ demo workers/grievances if the users collection is empty.
 
 ## Demo credentials (development only)
 
-| Role | Where | Credentials |
-|---|---|---|
-| Superadmin | `/government/login` | `ADMIN001` / `Admin@123` (sees everything + audit logs) |
-| State official (Kerala) | `/government/login` | `KL001` / `Kerala@123` (sees all Kerala) |
-| District official (Ernakulam) | `/government/login` | `EKM001` / `Ernakulam@123` (sees only Ernakulam) |
-| Worker (password) | `/worker/login` → 🔑 tab | `9555500101` … `9555500110`, password `Worker@123` |
-| Worker (OTP) | `/worker/login` → 📱 tab | any seeded mobile → OTP appears **only in the server terminal** |
+The seeded accounts are fixtures created by `SEED_DEMO_DATA=true`, and their
+logins are listed in the `DEV SEED ACCOUNTS` block at the end of
+[`server/.env.example`](server/.env.example). They are deliberately not repeated
+here: a credential table in a README is the first thing a scraper finds, and the
+same table invites carrying a demo password into a real deployment.
+
+The server refuses to boot in production with `SEED_DEMO_DATA=true` or the
+default `BOOTSTRAP_ADMIN_PASSWORD`, so these accounts cannot exist in a
+production database created by this code.
 
 ## Tests and verification
 
@@ -275,10 +277,11 @@ Still needed for a real deployment:
 - Push notifications (FCM) and persistent media for chat/attachments.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
-[docs/SECURITY.md](docs/SECURITY.md) (threat model + known limitations),
-[DEMO.md](DEMO.md) (timed demo script, credentials, troubleshooting) and
-[VIVA_QA.md](VIVA_QA.md) (likely examiner questions with defensible answers).
-[WORKFLOW.md](WORKFLOW.md) is the code walkthrough for the viva.
+[docs/SECURITY.md](docs/SECURITY.md) (threat model + known limitations) and
+[DEMO.md](DEMO.md) (timed demo script, troubleshooting).
+[WORKFLOW.md](WORKFLOW.md) is the code walkthrough, and
+[academic/](academic/) holds the presentation deck, viva question bank and the
+superseded FastAPI-era documents — none of it is part of the shipped product.
 
 ## Deploy (production)
 

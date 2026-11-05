@@ -4,7 +4,7 @@
 repository. Every file path below exists — open it live in your viva.*
 
 > Earlier documents that describe the old FastAPI/SQLite version live in
-> [docs/archive/](docs/archive/) with a banner. This file describes the
+> [academic/archive/](academic/archive/) with a banner. This file describes the
 > Node.js/Express + MongoDB codebase as it is today.
 
 ---

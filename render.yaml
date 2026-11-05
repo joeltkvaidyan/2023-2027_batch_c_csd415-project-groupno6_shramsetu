@@ -62,10 +62,11 @@ services:
           property: host
       - key: MONGO_USER
         value: root
-      # Same demo credentials as docker-compose.yml — change both together
-      # before exposing anything beyond a demo.
+      # Never a literal here: render.yaml is committed. Set MONGO_PASSWORD in
+      # the Render dashboard (Environment → Secret Files/Env Vars) and give the
+      # database below the same value. It must match MONGO_INITDB_ROOT_PASSWORD.
       - key: MONGO_PASSWORD
-        value: shramsetu123
+        sync: false
       - key: MONGO_DB
         value: shramsetu
       # Production boot guard (server/src/config.js assertProductionSafe).
@@ -149,4 +150,4 @@ services:
       - key: MONGO_INITDB_ROOT_USERNAME
         value: root
       - key: MONGO_INITDB_ROOT_PASSWORD
-        value: shramsetu123
+        sync: false

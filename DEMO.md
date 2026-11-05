@@ -48,19 +48,20 @@ dev database is fresh on every boot.
 
 ## 1. Credentials
 
-| Role | Where | Credentials |
-|---|---|---|
-| Superadmin | `/government/login` | `ADMIN001` / `Admin@123` |
-| State official (Kerala) | `/government/login` | `KL001` / `Kerala@123` |
-| District official (Ernakulam) | `/government/login` | `EKM001` / `Ernakulam@123` |
-| Worker (password) | `/worker/login` → 🔑 tab | `9555500101`–`9555500110` · password `Worker@123` |
-| Worker (OTP) | `/worker/login` → 📱 tab | any seeded mobile; OTP prints **only in the server terminal** |
-| Employer | `/employer/login` | `9000000021` / `Employer@123` (accepted, has one listing) |
-| Household | `/citizen/login` → Password | `9000000022` / `Household@123` |
+Read them out of the `DEV SEED ACCOUNTS` block at the end of
+[`server/.env.example`](server/.env.example) — one list, in one file that is
+never shipped. They are seeded fixtures, not accounts that can exist in a
+production database (see the boot guard in `server/src/config.js`).
+
+The roles you will switch between: **superadmin** (sees everything + audit
+logs), **state official** (sees one state), **district official** (sees one
+district), **worker** (password tab, or the OTP tab where the code prints only
+in the server terminal), **employer** (accepted, has one listing) and
+**household**.
 
 Both hiring-side accounts are signed-in surfaces for the same worker list:
 search by name, place or trade, read the worker's mobile number, then **Call**
-or **SMS** with the buttons on the card. `9000000021` can also post listings;
+or **SMS** with the buttons on the card. The seeded employer can also post listings;
 a newly self-registered employer starts pending and can browse/call but not
 post or rate until a labour office accepts it.
 
@@ -144,10 +145,11 @@ flowchart TD
    encrypted at rest with per-file keys wrapped under `DOC_MASTER_KEY`.
    *The PIN is a convenience screen-lock, not encryption* — say this if asked.
 
-7. **Jurisdiction scoping** — log in as `EKM001 / Ernakulam@123` → worker list
-   shows **only the 3 Ernakulam workers**; open a Coimbatore grievance → **not
-   found**. Then `ADMIN001 / Admin@123` → Overview shows **all 10 workers / 11
-   grievances** with category and state charts (Mongo aggregation pipelines).
+7. **Jurisdiction scoping** — log in as the **Ernakulam district official** →
+   worker list shows **only the 3 Ernakulam workers**; open a Coimbatore
+   grievance → **not found**. Then log in as the **superadmin** → Overview shows
+   **all 10 workers / 11 grievances** with category and state charts (Mongo
+   aggregation pipelines).
 
 8. **Targeted notification** — target `occupation: construction` → **only the 2
    construction workers** receive it. A non-superadmin cannot target "all
