@@ -1,8 +1,8 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Building2, CheckCircle, Loader2, Lock, Phone, User } from "lucide-react";
+import { AlertCircle, Building2, CheckCircle, Lock, Phone, User } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setEmployerToken } from "../api/client";
+import { api, setEmployerToken, apiErrorDetail, httpStatus } from "../api/client";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 
@@ -76,15 +76,15 @@ export default function EmployerRegisterPage() {
         // Number already registered but never verified — a fresh OTP went out.
         setPhase("otp");
       }
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
+    } catch (err) {
+      const status = httpStatus(err);
+      const detail = apiErrorDetail(err);
       setError(
         typeof detail === "string"
           ? detail
           : status === 409
             ? "This mobile number already has an account. Log in instead."
-            : "Registration failed. Please try again."
+            : "Registration failed. Please try again.",
       );
     } finally {
       setBusy(false);
@@ -103,8 +103,8 @@ export default function EmployerRegisterPage() {
       setEmployerToken(res.data.access_token);
       localStorage.setItem("employer_user", JSON.stringify(res.data.employer));
       navigate("/employer/dashboard", { replace: true });
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail;
+    } catch (err) {
+      const detail = apiErrorDetail(err);
       setError(typeof detail === "string" ? detail : "Verification failed.");
     } finally {
       setBusy(false);
@@ -128,7 +128,9 @@ export default function EmployerRegisterPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center shadow-lg shadow-brand-600/25 mb-4">
             <Building2 className="h-7 w-7 text-white" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create an employer account</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Create an employer account
+          </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Post work, find labour-office accepted workers and call them directly.
           </p>
@@ -138,7 +140,10 @@ export default function EmployerRegisterPage() {
           <Card className="p-6">
             <form onSubmit={submitRegister} className="space-y-4">
               <div>
-                <label htmlFor="emp-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="emp-name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Owner / contact name
                 </label>
                 <input
@@ -153,8 +158,12 @@ export default function EmployerRegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="emp-business" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Business name <span className="text-gray-400 font-normal">(shown on listings)</span>
+                <label
+                  htmlFor="emp-business"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Business name{" "}
+                  <span className="text-gray-400 font-normal">(shown on listings)</span>
                 </label>
                 <input
                   id="emp-business"
@@ -194,11 +203,16 @@ export default function EmployerRegisterPage() {
               </p>
 
               <div>
-                <label htmlFor="emp-mobile" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="emp-mobile"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Mobile number
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">+91</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    +91
+                  </span>
                   <input
                     id="emp-mobile"
                     type="text"
@@ -215,11 +229,17 @@ export default function EmployerRegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="emp-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="emp-password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" aria-hidden="true" />
+                  <Lock
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4"
+                    aria-hidden="true"
+                  />
                   <input
                     id="emp-password"
                     type="password"
@@ -236,8 +256,9 @@ export default function EmployerRegisterPage() {
 
               <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-3">
                 <p className="text-xs text-amber-700 dark:text-amber-400">
-                  ⚖️ A new employer account starts <b>pending</b>. You can browse and call workers right away;
-                  posting listings and rating workers unlock once a labour office accepts the account.
+                  ⚖️ A new employer account starts <b>pending</b>. You can browse and call workers
+                  right away; posting listings and rating workers unlock once a labour office
+                  accepts the account.
                 </p>
               </div>
 
@@ -259,7 +280,10 @@ export default function EmployerRegisterPage() {
         {phase === "recovery" && (
           <Card className="p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <AlertCircle
+                className="h-5 w-5 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
               <h3 className="font-bold text-gray-900 dark:text-gray-100">Save your recovery key</h3>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -268,7 +292,11 @@ export default function EmployerRegisterPage() {
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4 font-mono text-lg font-bold tracking-widest text-gray-900 dark:text-brand-300 select-all break-all">
               {recoveryKey}
             </div>
-            <button type="button" onClick={copyKey} className="w-full text-sm font-medium text-brand-600 dark:text-brand-400 underline">
+            <button
+              type="button"
+              onClick={copyKey}
+              className="w-full text-sm font-medium text-brand-600 dark:text-brand-400 underline"
+            >
               {copied ? "Copied ✓" : "Copy the key"}
             </button>
             <Button onClick={() => setPhase("otp")} className="w-full">
@@ -284,7 +312,8 @@ export default function EmployerRegisterPage() {
               <h3 className="font-bold text-gray-900 dark:text-gray-100">Verify your mobile</h3>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              OTP sent to <span className="font-medium text-gray-900 dark:text-gray-100">+91 {mobile}</span>.
+              OTP sent to{" "}
+              <span className="font-medium text-gray-900 dark:text-gray-100">+91 {mobile}</span>.
             </p>
             <form onSubmit={verifyOtp} className="space-y-4">
               <input

@@ -41,9 +41,13 @@ export default function SettingsPage() {
           <div className="card flex items-center gap-4 mb-6 animate-fade-up">
             <Avatar name={worker.full_name} size="lg" />
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{worker.full_name}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {worker.full_name}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{worker.mobile_number}</p>
-              <p className="text-xs font-mono text-brand-600 dark:text-brand-400 mt-0.5">{worker.worker_id}</p>
+              <p className="text-xs font-mono text-brand-600 dark:text-brand-400 mt-0.5">
+                {worker.worker_id}
+              </p>
             </div>
           </div>
         )}
@@ -74,7 +78,9 @@ export default function SettingsPage() {
           <button
             onClick={() => setTheme("light")}
             className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
-              theme === "light" ? "bg-brand-600 text-white shadow-glow-brand" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+              theme === "light"
+                ? "bg-brand-600 text-white shadow-glow-brand"
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
             }`}
           >
             <Sun className="h-4 w-4" aria-hidden="true" /> {t("settings.light")}
@@ -82,7 +88,9 @@ export default function SettingsPage() {
           <button
             onClick={() => setTheme("dark")}
             className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
-              theme === "dark" ? "bg-brand-600 text-white shadow-glow-brand" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+              theme === "dark"
+                ? "bg-brand-600 text-white shadow-glow-brand"
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
             }`}
           >
             <Moon className="h-4 w-4" aria-hidden="true" /> {t("settings.dark")}

@@ -3,8 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { VoiceRecorder } from "../components/VoiceRecorder";
-import { api } from "../api/client";
-import { cacheGrievanceDraft, getCachedGrievanceDraft, deleteCachedGrievanceDraft } from "../services/offlineStorage";
+import { api, apiErrorDetail, httpStatus } from "../api/client";
+import {
+  cacheGrievanceDraft,
+  getCachedGrievanceDraft,
+  deleteCachedGrievanceDraft,
+} from "../services/offlineStorage";
 import type { GrievanceCategory } from "../types";
 
 const CATEGORIES: GrievanceCategory[] = [
@@ -27,18 +31,16 @@ export default function GrievanceFormPage() {
   // Diary's complaint buttons land here with the category, subject,
   // description, the worker's logged work date and the employer already
   // filled in.
-  const state = useLocation().state as
-    | {
-        category?: string;
-        subject?: string;
-        description?: string;
-        incident_date?: string;
-        employer_name?: string;
-        // Platform records cited by the draft (wage slips / confirmed
-        // engagements) — attached through the same attachments array.
-        evidence?: { kind: string; ref_id: string; label?: string }[];
-      }
-    | null;
+  const state = useLocation().state as {
+    category?: string;
+    subject?: string;
+    description?: string;
+    incident_date?: string;
+    employer_name?: string;
+    // Platform records cited by the draft (wage slips / confirmed
+    // engagements) — attached through the same attachments array.
+    evidence?: { kind: string; ref_id: string; label?: string }[];
+  } | null;
   const prefillCategory = CATEGORIES.includes(state?.category as GrievanceCategory)
     ? (state?.category as GrievanceCategory)
     : "unpaid_wages";
@@ -52,7 +54,6 @@ export default function GrievanceFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ subject?: string; description?: string }>({});
   const [submitting, setSubmitting] = useState(false);
-  const [draftSaved, setDraftSaved] = useState(false);
 
   useEffect(() => {
     // Load draft if no prefill state
@@ -80,9 +81,7 @@ export default function GrievanceFormPage() {
           employer_name: employerName,
           incident_location: incidentLocation,
           incident_date: incidentDate,
-        } as any);
-        setDraftSaved(true);
-        setTimeout(() => setDraftSaved(false), 2000);
+        });
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -108,22 +107,20 @@ export default function GrievanceFormPage() {
         description,
         employer_name: employerName || undefined,
         incident_location: incidentLocation || undefined,
-        incident_date: incidentDate
-          ? new Date(incidentDate).toISOString()
-          : undefined,
+        incident_date: incidentDate ? new Date(incidentDate).toISOString() : undefined,
         // Server re-checks every reference against the worker and drops any
         // that is not theirs; a stale id never blocks the filing.
         evidence: state?.evidence?.length ? state.evidence : undefined,
       });
       await deleteCachedGrievanceDraft();
       navigate(`/worker/grievances/${res.data.id}`, { replace: true });
-    } catch (err: any) {
+    } catch (err) {
       // Surface FastAPI/Pydantic 422 field errors inline near the actual
       // field instead of only a generic banner — falls back to the banner
       // for anything that isn't a recognized field-level error (network
       // failure, 500, etc.).
-      const detail = err?.response?.data?.detail;
-      if (err?.response?.status === 422 && Array.isArray(detail)) {
+      const detail = apiErrorDetail(err);
+      if (httpStatus(err) === 422 && Array.isArray(detail)) {
         const next: { subject?: string; description?: string } = {};
         let unmapped = false;
         for (const item of detail) {
@@ -156,7 +153,10 @@ export default function GrievanceFormPage() {
     <Screen title={t("grievance.fileNew")} onBack={true}>
       <form onSubmit={handleSubmit} noValidate className="space-y-4 mt-4 pb-10">
         <div>
-          <label htmlFor="grievance-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-category"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.category")}
           </label>
           <select
@@ -174,7 +174,10 @@ export default function GrievanceFormPage() {
         </div>
 
         <div>
-          <label htmlFor="grievance-subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-subject"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.subject")}
           </label>
           <div className="flex items-center gap-2">
@@ -191,10 +194,7 @@ export default function GrievanceFormPage() {
                 if (fieldErrors.subject) setFieldErrors((f) => ({ ...f, subject: undefined }));
               }}
             />
-            <VoiceRecorder
-              language={i18n.language}
-              onTranscript={handleVoiceSubject}
-            />
+            <VoiceRecorder language={i18n.language} onTranscript={handleVoiceSubject} />
           </div>
           {fieldErrors.subject && (
             <p id="subject-error" role="alert" className="field-error">
@@ -204,7 +204,10 @@ export default function GrievanceFormPage() {
         </div>
 
         <div>
-          <label htmlFor="grievance-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-description"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.description")}
           </label>
           <textarea
@@ -217,7 +220,8 @@ export default function GrievanceFormPage() {
             value={description}
             onChange={(e) => {
               setDescription(e.target.value);
-              if (fieldErrors.description) setFieldErrors((f) => ({ ...f, description: undefined }));
+              if (fieldErrors.description)
+                setFieldErrors((f) => ({ ...f, description: undefined }));
             }}
           />
           {fieldErrors.description && (
@@ -226,15 +230,15 @@ export default function GrievanceFormPage() {
             </p>
           )}
           <div className="flex justify-end mt-1">
-            <VoiceRecorder
-              language={i18n.language}
-              onTranscript={handleVoiceDescription}
-            />
+            <VoiceRecorder language={i18n.language} onTranscript={handleVoiceDescription} />
           </div>
         </div>
 
         <div>
-          <label htmlFor="grievance-employer-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-employer-name"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.employerNameOptional")}
           </label>
           <input
@@ -246,7 +250,10 @@ export default function GrievanceFormPage() {
         </div>
 
         <div>
-          <label htmlFor="grievance-incident-location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-incident-location"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.incidentLocationOptional")}
           </label>
           <input
@@ -258,7 +265,10 @@ export default function GrievanceFormPage() {
         </div>
 
         <div>
-          <label htmlFor="grievance-incident-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="grievance-incident-date"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t("grievance.incidentDateOptional")}
           </label>
           <input

@@ -5,7 +5,7 @@ import { FileWarning } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
-import { api, apiErrorMessage } from "../api/client";
+import { api, apiErrorMessage, apiErrorCode } from "../api/client";
 import type { WageEntry, WageSummary } from "../types";
 
 function currentMonth(): string {
@@ -78,7 +78,14 @@ export default function WageLogPage() {
     setSavedOk(false);
     const agreed = Number(agreedAmount);
     const paid = paidAmount.trim() === "" ? 0 : Number(paidAmount);
-    if (!workDate || !Number.isFinite(agreed) || agreed < 0 || !Number.isFinite(paid) || paid < 0 || paid > agreed) {
+    if (
+      !workDate ||
+      !Number.isFinite(agreed) ||
+      agreed < 0 ||
+      !Number.isFinite(paid) ||
+      paid < 0 ||
+      paid > agreed
+    ) {
       setFormError(t("wages.invalidAmounts"));
       return;
     }
@@ -103,8 +110,12 @@ export default function WageLogPage() {
       await load();
     } catch (err) {
       // Server-side paid-day lock (409) — localized message, not the API's English detail.
-      const code = (err as any)?.response?.data?.code;
-      setFormError(code === "wage_paid_locked" ? t("wages.paidLocked") : apiErrorMessage(err, t("common.error")));
+      const code = apiErrorCode(err);
+      setFormError(
+        code === "wage_paid_locked"
+          ? t("wages.paidLocked")
+          : apiErrorMessage(err, t("common.error")),
+      );
     } finally {
       setSaving(false);
     }
@@ -181,10 +192,26 @@ export default function WageLogPage() {
 
   const summaryCards = summary
     ? [
-        { label: t("wages.summaryDays"), value: String(summary.days_logged), tone: "text-gray-900 dark:text-gray-100" },
-        { label: t("wages.summaryAgreed"), value: rupees(summary.total_agreed), tone: "text-gray-900 dark:text-gray-100" },
-        { label: t("wages.summaryPaid"), value: rupees(summary.total_paid), tone: "text-green-700 dark:text-green-400" },
-        { label: t("wages.summaryUnpaid"), value: rupees(summary.total_unpaid), tone: "text-red-700 dark:text-red-400" },
+        {
+          label: t("wages.summaryDays"),
+          value: String(summary.days_logged),
+          tone: "text-gray-900 dark:text-gray-100",
+        },
+        {
+          label: t("wages.summaryAgreed"),
+          value: rupees(summary.total_agreed),
+          tone: "text-gray-900 dark:text-gray-100",
+        },
+        {
+          label: t("wages.summaryPaid"),
+          value: rupees(summary.total_paid),
+          tone: "text-green-700 dark:text-green-400",
+        },
+        {
+          label: t("wages.summaryUnpaid"),
+          value: rupees(summary.total_unpaid),
+          tone: "text-red-700 dark:text-red-400",
+        },
       ]
     : [];
 
@@ -210,7 +237,10 @@ export default function WageLogPage() {
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
               {summaryCards.map((c) => (
-                <div key={c.label} className="rounded-xl bg-gray-50 dark:bg-gray-900/60 px-3 py-2.5">
+                <div
+                  key={c.label}
+                  className="rounded-xl bg-gray-50 dark:bg-gray-900/60 px-3 py-2.5"
+                >
                   <p className={`text-lg font-bold tabular-nums ${c.tone}`}>{c.value}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{c.label}</p>
                 </div>
@@ -220,7 +250,12 @@ export default function WageLogPage() {
           {summary && (
             <div className="flex gap-2 mt-3">
               {summary.total_unpaid > 0 && (
-                <Button variant="secondary" size="sm" className="flex-1" onClick={fileUnpaidGrievance}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                  onClick={fileUnpaidGrievance}
+                >
                   <FileWarning className="h-4 w-4" aria-hidden="true" />
                   {t("wages.fileGrievance")}
                 </Button>
@@ -230,7 +265,14 @@ export default function WageLogPage() {
                 size="sm"
                 className={summary.total_unpaid > 0 ? "flex-1" : "w-full"}
                 onClick={() => {
-                  const headers = ["work_date", "employer_name", "agreed_amount", "paid_amount", "payment_status", "balance"];
+                  const headers = [
+                    "work_date",
+                    "employer_name",
+                    "agreed_amount",
+                    "paid_amount",
+                    "payment_status",
+                    "balance",
+                  ];
                   const rows = (entries ?? []).map((e) => [
                     day(e.work_date),
                     e.employer_name || "",
@@ -239,7 +281,12 @@ export default function WageLogPage() {
                     e.payment_status,
                     String(Math.max(0, e.agreed_amount - e.paid_amount)),
                   ]);
-                  const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+                  const csv = [
+                    headers.join(","),
+                    ...rows.map((r) =>
+                      r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
+                    ),
+                  ].join("\n");
                   const blob = new Blob([csv], { type: "text/csv" });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
@@ -262,7 +309,10 @@ export default function WageLogPage() {
           </h2>
           <form onSubmit={handleSubmit} noValidate className="space-y-3">
             <div>
-              <label htmlFor="wage-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="wage-date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t("wages.workDate")}
               </label>
               <input
@@ -275,7 +325,10 @@ export default function WageLogPage() {
               />
             </div>
             <div>
-              <label htmlFor="wage-employer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="wage-employer"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t("wages.employer")}
               </label>
               <input
@@ -288,7 +341,10 @@ export default function WageLogPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="wage-agreed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="wage-agreed"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   {t("wages.agreedAmount")}
                 </label>
                 <input
@@ -304,7 +360,10 @@ export default function WageLogPage() {
                 />
               </div>
               <div>
-                <label htmlFor="wage-paid" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="wage-paid"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   {t("wages.paidAmount")}
                 </label>
                 <input
@@ -359,10 +418,13 @@ export default function WageLogPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {day(w.work_date)}
-                        {w.employer_name ? <span className="text-gray-400"> · {w.employer_name}</span> : null}
+                        {w.employer_name ? (
+                          <span className="text-gray-400"> · {w.employer_name}</span>
+                        ) : null}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums">
-                        {t("wages.agreedAmountShort")} {rupees(w.agreed_amount)} · {t("wages.paidAmountShort")} {rupees(w.paid_amount)}
+                        {t("wages.agreedAmountShort")} {rupees(w.agreed_amount)} ·{" "}
+                        {t("wages.paidAmountShort")} {rupees(w.paid_amount)}
                       </p>
                       {w.agreed_amount > w.paid_amount && (
                         <button

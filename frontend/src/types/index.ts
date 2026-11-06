@@ -43,7 +43,14 @@ export interface PublicWorkersResponse {
 export interface RatingSummary {
   average: number | null;
   count: number;
-  latest: { id: string; rater_role: string; rater_display_name: string; stars: number; comment: string | null; created_at: string }[];
+  latest: {
+    id: string;
+    rater_role: string;
+    rater_display_name: string;
+    stars: number;
+    comment: string | null;
+    created_at: string;
+  }[];
 }
 
 export interface DocumentItem {

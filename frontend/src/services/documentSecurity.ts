@@ -49,7 +49,7 @@ function legacyHash(message: string): string {
     const byte = data[i];
     hash = ((hash << 5) - hash + byte) | 0;
     hash2 = ((hash2 << 7) + hash2 + byte * 31) | 0;
-    hash3 = ((hash3 << 11) ^ hash3 + byte * 17) | 0;
+    hash3 = ((hash3 << 11) ^ (hash3 + byte * 17)) | 0;
   }
   let h4 = 0;
   for (let i = 0; i < data.length; i++) {
@@ -65,12 +65,12 @@ async function pbkdf2Hash(pin: string, salt: Uint8Array, iterations: number): Pr
     new TextEncoder().encode(pin),
     "PBKDF2",
     false,
-    ["deriveBits"]
+    ["deriveBits"],
   );
   const bits = await crypto.subtle.deriveBits(
     { name: "PBKDF2", hash: "SHA-256", salt: salt as BufferSource, iterations },
     keyMaterial,
-    256
+    256,
   );
   return toBase64(new Uint8Array(bits));
 }
@@ -128,7 +128,9 @@ export async function verifyPin(pin: string): Promise<boolean> {
   if (lockoutUntil) {
     const until = parseInt(lockoutUntil, 10);
     if (Date.now() < until) {
-      throw new Error(`Locked out. Try again in ${Math.ceil((until - Date.now()) / 60000)} minutes.`);
+      throw new Error(
+        `Locked out. Try again in ${Math.ceil((until - Date.now()) / 60000)} minutes.`,
+      );
     }
     // Lockout expired
     localStorage.removeItem(LOCKOUT_KEY);

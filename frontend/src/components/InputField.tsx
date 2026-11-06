@@ -9,13 +9,17 @@ export interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 /** Labeled text input wrapping the global .input-field style. */
 export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function InputField(
   { label, error, hint, className = "", id, ...rest },
-  ref
+  ref,
 ) {
-  const inputId = id ?? (label ? `field-${String(label).replace(/\s+/g, "-").toLowerCase()}` : undefined);
+  const inputId =
+    id ?? (label ? `field-${String(label).replace(/\s+/g, "-").toLowerCase()}` : undefined);
   return (
     <div>
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor={inputId}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {label}
         </label>
       )}

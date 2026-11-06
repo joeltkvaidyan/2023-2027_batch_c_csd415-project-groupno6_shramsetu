@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
@@ -6,7 +6,17 @@ import { BottomNav } from "../components/BottomNav";
 import { VoiceRecorder } from "../components/VoiceRecorder";
 import { api, apiErrorMessage } from "../api/client";
 import { SkeletonList } from "../components/ui";
-import { Trash2, BookOpen, Sparkles, Volume2, Square, SendHorizontal, ShieldCheck, Info, FileText } from "lucide-react";
+import {
+  Trash2,
+  BookOpen,
+  Sparkles,
+  Volume2,
+  Square,
+  SendHorizontal,
+  ShieldCheck,
+  Info,
+  FileText,
+} from "lucide-react";
 import type { ChatAnswer, ChatHistoryItem } from "../types";
 
 interface DisplayMessage {
@@ -27,9 +37,21 @@ const SUGGESTIONS_BY_LANG: Record<string, string[]> = {
     "बकाया मजदूरी की शिकायत कैसे दर्ज करें?",
   ],
   bn: ["ই-শ্রমে কীভাবে নিবন্ধন করব?", "দুর্ঘটনা বীমা কত টাকা?", "বকেয়া মজুরির অভিযোগ কীভাবে করব?"],
-  te: ["ఈ-శ్రమ్‌లో ఎలా నమోదు చేసుకోవాలి?", "ప్రమాద భీమా ఎంత?", "చెల్లించని జీతం ఫిర్యాదు ఎలా చేయాలి?"],
-  ta: ["ஈ-ஸ்ரமத்தில் பதிவு செய்வது எப்படி?", "விபத்து காப்பீடு எவ்வளவு?", "நிலுவை கூலி புகாரு எப்படி?"],
-  ml: ["ഇ-ശ്രമിൽ രജിസ്റ്റർ ചെയ്യുന്നത് എങ്ങനെ?", "അപകട ഇൻഷുറൻസ് എത്ര?", "കിട്ടാത്ത കൂലി പരാതി എങ്ങനെ?"],
+  te: [
+    "ఈ-శ్రమ్‌లో ఎలా నమోదు చేసుకోవాలి?",
+    "ప్రమాద భీమా ఎంత?",
+    "చెల్లించని జీతం ఫిర్యాదు ఎలా చేయాలి?",
+  ],
+  ta: [
+    "ஈ-ஸ்ரமத்தில் பதிவு செய்வது எப்படி?",
+    "விபத்து காப்பீடு எவ்வளவு?",
+    "நிலுவை கூலி புகாரு எப்படி?",
+  ],
+  ml: [
+    "ഇ-ശ്രമിൽ രജിസ്റ്റർ ചെയ്യുന്നത് എങ്ങനെ?",
+    "അപകട ഇൻഷുറൻസ് എത്ര?",
+    "കിട്ടാത്ത കൂലി പരാതി എങ്ങനെ?",
+  ],
 };
 
 export default function ChatbotPage() {
@@ -48,7 +70,7 @@ export default function ChatbotPage() {
 
   const lang = i18n.language.split("-")[0];
 
-  const loadHistory = () => {
+  const loadHistory = useCallback(() => {
     setHistoryLoading(true);
     setHistoryError(false);
     api
@@ -71,12 +93,38 @@ export default function ChatbotPage() {
       })
       .catch(() => setHistoryError(true))
       .finally(() => setHistoryLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadHistory]);
+
+  const sendQuestion = useCallback(
+    async (question: string) => {
+      if (!question.trim() || asking) return;
+      setMessages((prev) => [...prev, { role: "user", text: question }]);
+      setInput("");
+      setAsking(true);
+      try {
+        const res = await api.post<ChatAnswer>("/chat/ask", { question, language: i18n.language });
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: res.data.answer, meta: res.data },
+        ]);
+        setAssistantUnavailable(Boolean(res.data.system_error));
+      } catch (err) {
+        // Localised friendly message: network outage, 429 rate limit, or the
+        // server's own detail — never a raw exception string.
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: apiErrorMessage(err, t("common.error")) },
+        ]);
+      } finally {
+        setAsking(false);
+      }
+    },
+    [asking, i18n.language, t],
+  );
 
   // Dashboard deep links (e.g. the Heat-safety tile) pre-seed a question via
   // navigation state. Send it once, AFTER history settles — loadHistory()
@@ -88,33 +136,11 @@ export default function ChatbotPage() {
     if (!initialQuestion || prefillSentRef.current || historyLoading) return;
     prefillSentRef.current = true;
     void sendQuestion(initialQuestion);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuestion, historyLoading]);
+  }, [initialQuestion, historyLoading, sendQuestion]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, asking]);
-
-  const sendQuestion = async (question: string) => {
-    if (!question.trim() || asking) return;
-    setMessages((prev) => [...prev, { role: "user", text: question }]);
-    setInput("");
-    setAsking(true);
-    try {
-      const res = await api.post<ChatAnswer>("/chat/ask", { question, language: i18n.language });
-      setMessages((prev) => [...prev, { role: "assistant", text: res.data.answer, meta: res.data }]);
-      setAssistantUnavailable(Boolean(res.data.system_error));
-    } catch (err) {
-      // Localised friendly message: network outage, 429 rate limit, or the
-      // server's own detail — never a raw exception string.
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: apiErrorMessage(err, t("common.error")) },
-      ]);
-    } finally {
-      setAsking(false);
-    }
-  };
 
   const handleVoiceResult = (text: string) => {
     setVoiceError(null);
@@ -164,7 +190,8 @@ export default function ChatbotPage() {
     if ("speechSynthesis" in window) {
       const voices = window.speechSynthesis.getVoices();
       const base = speechLocale.split("-")[0];
-      const voice = voices.find((v) => v.lang === speechLocale) || voices.find((v) => v.lang.startsWith(base));
+      const voice =
+        voices.find((v) => v.lang === speechLocale) || voices.find((v) => v.lang.startsWith(base));
 
       if (voice) {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -270,8 +297,12 @@ export default function ChatbotPage() {
                 <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20 mb-3">
                   <Sparkles className="h-7 w-7 text-white" aria-hidden="true" />
                 </div>
-                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">{t("chat.title")}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 px-6">{t("chat.emptyState")}</p>
+                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  {t("chat.title")}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 px-6">
+                  {t("chat.emptyState")}
+                </p>
               </div>
               {/* Suggested questions — instant engagement, zero typing */}
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
@@ -310,7 +341,11 @@ export default function ChatbotPage() {
         <div className="fixed bottom-24 left-0 right-0 bg-gray-50/90 dark:bg-gray-950/90 backdrop-blur-xl px-4 py-3 border-t border-gray-200/70 dark:border-gray-700/60">
           <div className="max-w-md mx-auto">
             {voiceError && (
-              <p className="text-red-500 text-xs mb-2 flex items-center gap-1" role="alert" aria-live="assertive">
+              <p
+                className="text-red-500 text-xs mb-2 flex items-center gap-1"
+                role="alert"
+                aria-live="assertive"
+              >
                 {voiceError}
               </p>
             )}
@@ -381,7 +416,9 @@ function ChatBubble({
             : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-md shadow-card"
         }`}
       >
-        <p className={isUser ? "" : "text-gray-900 dark:text-gray-100 whitespace-pre-wrap"}>{msg.text}</p>
+        <p className={isUser ? "" : "text-gray-900 dark:text-gray-100 whitespace-pre-wrap"}>
+          {msg.text}
+        </p>
         {!isUser && msg.meta && (
           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
             {msg.meta.system_error ? (
@@ -390,7 +427,9 @@ function ChatBubble({
               </p>
             ) : msg.meta.grounded ? (
               <>
-                <p className="text-xs text-gray-500 dark:text-gray-400 italic">{msg.meta.simple_explanation}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                  {msg.meta.simple_explanation}
+                </p>
 
                 {/* Source citations — the trust moment */}
                 {msg.meta.sources && msg.meta.sources.length > 0 && (
@@ -404,7 +443,10 @@ function ChatBubble({
                         <span
                           key={i}
                           className="inline-flex items-center gap-1.5 max-w-full overflow-hidden text-[11px] font-medium bg-gray-50 dark:bg-gray-900/60 rounded-full pl-1.5 pr-2.5 py-1 border border-gray-100 dark:border-gray-700"
-                          title={[s.department, s.last_updated && s.last_updated !== "Unknown" ? s.last_updated : null]
+                          title={[
+                            s.department,
+                            s.last_updated && s.last_updated !== "Unknown" ? s.last_updated : null,
+                          ]
                             .filter(Boolean)
                             .join(" • ")}
                         >
@@ -412,7 +454,9 @@ function ChatBubble({
                             {i + 1}
                           </span>
                           <FileText className="h-3 w-3 text-gray-400 shrink-0" aria-hidden="true" />
-                          <span className="truncate text-gray-700 dark:text-gray-300">{s.title ?? s.source_file}</span>
+                          <span className="truncate text-gray-700 dark:text-gray-300">
+                            {s.title ?? s.source_file}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -420,7 +464,8 @@ function ChatBubble({
                 )}
                 {!msg.meta.sources && msg.meta.source_document && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">{t("chat.sourceDocument")}:</span> {msg.meta.source_document}
+                    <span className="font-semibold">{t("chat.sourceDocument")}:</span>{" "}
+                    {msg.meta.source_document}
                     {msg.meta.government_department ? ` • ${msg.meta.government_department}` : ""}
                   </p>
                 )}
@@ -429,12 +474,16 @@ function ChatBubble({
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700 dark:text-green-400">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("chat.notVerified", "") === "" ? "Verified from government documents" : t("chat.groundedBadge", "Verified source")}
+                    {t("chat.notVerified", "") === ""
+                      ? "Verified from government documents"
+                      : t("chat.groundedBadge", "Verified source")}
                   </span>
                   <button
                     onClick={() => onSpeak(msg.text, idx)}
                     className={`inline-flex items-center gap-1.5 text-xs font-semibold transition ${
-                      isSpeaking ? "text-red-500" : "text-brand-600 dark:text-brand-400 hover:underline"
+                      isSpeaking
+                        ? "text-red-500"
+                        : "text-brand-600 dark:text-brand-400 hover:underline"
                     }`}
                   >
                     {isSpeaking ? (

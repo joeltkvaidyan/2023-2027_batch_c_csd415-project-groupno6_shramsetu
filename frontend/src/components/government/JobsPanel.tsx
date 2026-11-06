@@ -122,11 +122,12 @@ export default function JobsPanel({ token }: { token: string | null }) {
       setShowForm(false);
       await load();
     } catch (err) {
-      const status = (err as { response?: { status?: number; data?: { detail?: string } } })?.response;
+      const status = (err as { response?: { status?: number; data?: { detail?: string } } })
+        ?.response;
       setError(
         status?.status === 403
           ? t("jobs.review.outsideJurisdiction", "That listing is outside your jurisdiction.")
-          : status?.data?.detail || t("jobs.review.createError", "Could not create the listing.")
+          : status?.data?.detail || t("jobs.review.createError", "Could not create the listing."),
       );
     } finally {
       setSaving(false);
@@ -172,10 +173,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
       }));
       setCounts((prev) => {
         const current = prev[job.id] ?? { total: 0, shortlisted: 0 };
-        const shortlisted = Math.max(
-          0,
-          current.shortlisted + (updated.shortlisted ? 1 : -1)
-        );
+        const shortlisted = Math.max(0, current.shortlisted + (updated.shortlisted ? 1 : -1));
         return { ...prev, [job.id]: { total: current.total, shortlisted } };
       });
       setJobs((prev) =>
@@ -186,12 +184,12 @@ export default function JobsPanel({ token }: { token: string | null }) {
                     ...j,
                     shortlisted_count: Math.max(
                       0,
-                      (j.shortlisted_count ?? 0) + (updated.shortlisted ? 1 : -1)
+                      (j.shortlisted_count ?? 0) + (updated.shortlisted ? 1 : -1),
                     ),
                   }
-                : j
+                : j,
             )
-          : prev
+          : prev,
       );
     } catch {
       setError(t("jobs.review.reviewError", "Could not update the application."));
@@ -212,7 +210,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
           <p className="text-xs text-slate-400 mt-0.5">
             {t(
               "jobs.review.panelSubtitle",
-              "Publish work inside your jurisdiction, then review the workers who apply."
+              "Publish work inside your jurisdiction, then review the workers who apply.",
             )}
           </p>
         </div>
@@ -227,7 +225,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
       <p className="text-sm text-slate-400">
         {t(
           "jobs.review.unverifiedNote",
-          "Listings are scoped to your jurisdiction and marked unverified for workers: ShramSetu cannot confirm that an employer will honour the stated wage."
+          "Listings are scoped to your jurisdiction and marked unverified for workers: ShramSetu cannot confirm that an employer will honour the stated wage.",
         )}
       </p>
 
@@ -246,7 +244,10 @@ export default function JobsPanel({ token }: { token: string | null }) {
             <input
               id="job-title"
               className={field}
-              placeholder={t("jobs.review.titlePlaceholder", "e.g. Mason required for apartment site")}
+              placeholder={t(
+                "jobs.review.titlePlaceholder",
+                "e.g. Mason required for apartment site",
+              )}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
@@ -261,7 +262,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
               rows={3}
               placeholder={t(
                 "jobs.review.descriptionPlaceholder",
-                "Work, site, wage payment schedule, working hours"
+                "Work, site, wage payment schedule, working hours",
               )}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -371,7 +372,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
               inputMode="tel"
               placeholder={t(
                 "jobs.review.contactPlaceholder",
-                "Leave blank if unknown — workers will be told to apply through the portal"
+                "Leave blank if unknown — workers will be told to apply through the portal",
               )}
               value={form.contact_phone}
               onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
@@ -382,20 +383,26 @@ export default function JobsPanel({ token }: { token: string | null }) {
             disabled={saving}
             className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-sm font-semibold"
           >
-            {saving ? t("jobs.review.publishing", "Publishing…") : t("jobs.review.publish", "Publish listing")}
+            {saving
+              ? t("jobs.review.publishing", "Publishing…")
+              : t("jobs.review.publish", "Publish listing")}
           </button>
         </div>
       )}
 
       {jobs === null ? (
-        <p className="text-slate-500 text-center py-8">{t("jobs.review.loading", "Loading listings…")}</p>
+        <p className="text-slate-500 text-center py-8">
+          {t("jobs.review.loading", "Loading listings…")}
+        </p>
       ) : jobs.length === 0 ? (
         <div className="bg-slate-800/40 border border-slate-700 rounded-2xl p-8 text-center">
-          <p className="text-slate-300 font-medium">{t("jobs.review.noListings", "No listings posted yet.")}</p>
+          <p className="text-slate-300 font-medium">
+            {t("jobs.review.noListings", "No listings posted yet.")}
+          </p>
           <p className="text-sm text-slate-500 mt-1">
             {t(
               "jobs.review.noListingsHint",
-              "Create a listing to start receiving applications from workers in your district."
+              "Create a listing to start receiving applications from workers in your district.",
             )}
           </p>
         </div>
@@ -408,9 +415,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
               shortlisted: job.shortlisted_count ?? 0,
             };
             const visible =
-              filter === "shortlisted"
-                ? jobApplicants.filter((a) => a.shortlisted)
-                : jobApplicants;
+              filter === "shortlisted" ? jobApplicants.filter((a) => a.shortlisted) : jobApplicants;
 
             return (
               <div
@@ -438,7 +443,9 @@ export default function JobsPanel({ token }: { token: string | null }) {
                 </div>
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mt-2">
-                  <span>{t(occupationLabelKey(job.occupation), job.occupation.replace(/_/g, " "))}</span>
+                  <span>
+                    {t(occupationLabelKey(job.occupation), job.occupation.replace(/_/g, " "))}
+                  </span>
                   <span>
                     {job.openings} {t("jobs.review.openingsShort", "opening(s)")}
                   </span>
@@ -450,7 +457,10 @@ export default function JobsPanel({ token }: { token: string | null }) {
                   <span>
                     {jobCounts.total} {t("jobs.review.applicantCount", "applicant(s)")}
                     {jobCounts.shortlisted > 0 && (
-                      <span className="text-sky-300"> · {jobCounts.shortlisted} {t("jobs.shortlisted", "shortlisted")}</span>
+                      <span className="text-sky-300">
+                        {" "}
+                        · {jobCounts.shortlisted} {t("jobs.shortlisted", "shortlisted")}
+                      </span>
                     )}
                   </span>
                 </div>
@@ -479,7 +489,11 @@ export default function JobsPanel({ token }: { token: string | null }) {
                 {openReview === job.id && (
                   <div className="mt-4 border-t border-slate-700 pt-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex gap-1.5" role="tablist" aria-label={t("jobs.review.filterLabel", "Applicant filter")}>
+                      <div
+                        className="flex gap-1.5"
+                        role="tablist"
+                        aria-label={t("jobs.review.filterLabel", "Applicant filter")}
+                      >
                         {(["all", "shortlisted"] as const).map((value) => (
                           <button
                             key={value}
@@ -506,7 +520,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
                     <p className="text-[11px] text-slate-500 leading-relaxed">
                       {t(
                         "jobs.review.fitNote",
-                        "Fit compares only the trade, district and state the worker entered on their profile. It is not a rating of the worker — read the application before deciding."
+                        "Fit compares only the trade, district and state the worker entered on their profile. It is not a rating of the worker — read the application before deciding.",
                       )}
                     </p>
 
@@ -544,14 +558,15 @@ export default function JobsPanel({ token }: { token: string | null }) {
                                       a.worker.occupation
                                         ? t(
                                             occupationLabelKey(a.worker.occupation),
-                                            a.worker.occupation.replace(/_/g, " ")
+                                            a.worker.occupation.replace(/_/g, " "),
                                           )
                                         : null,
                                       a.worker.district,
                                       a.worker.state,
                                     ]
                                       .filter(Boolean)
-                                      .join(" · ") || t("jobs.review.noProfileDetail", "No profile details")}
+                                      .join(" · ") ||
+                                      t("jobs.review.noProfileDetail", "No profile details")}
                                   </p>
                                 </div>
                               </div>
@@ -561,7 +576,8 @@ export default function JobsPanel({ token }: { token: string | null }) {
                                   REVIEW_TONE[a.review.level] ?? REVIEW_TONE.possible
                                 }`}
                               >
-                                {t(`jobs.level.${a.review.level}`, a.review.level)} · {a.review.score}
+                                {t(`jobs.level.${a.review.level}`, a.review.level)} ·{" "}
+                                {a.review.score}
                               </span>
                             </div>
 
@@ -603,7 +619,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
                                 <span className="text-xs text-slate-500">
                                   {t(
                                     "jobs.review.phoneNotShared",
-                                    "Phone not shared — contact them through this office"
+                                    "Phone not shared — contact them through this office",
                                   )}
                                 </span>
                               )}
@@ -626,7 +642,7 @@ export default function JobsPanel({ token }: { token: string | null }) {
                             <p className="text-[10px] text-slate-500 mt-2">
                               {t(
                                 "jobs.review.shortlistNote",
-                                "Shortlisting only records that this office read the application. It is not an offer of work."
+                                "Shortlisting only records that this office read the application. It is not an offer of work.",
                               )}
                             </p>
                           </div>

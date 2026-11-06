@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import axios from "axios";
+import { apiErrorDetail } from "../../api/client";
 
 /**
  * Government EMPLOYER acceptance queue. A new employer account starts
@@ -39,35 +40,39 @@ export default function EmployerApprovalsPanel({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const authHeader = { Authorization: `Bearer ${token}` };
-
   const load = useCallback(
     async (whichStatus: string = status, whichSearch: string = search) => {
       setError(null);
       try {
         const params = new URLSearchParams({ status: whichStatus });
         if (whichSearch.trim()) params.set("search", whichSearch.trim());
-        const res = await axios.get<EmployerQueueResponse>(`${API_BASE}/government/employer-approvals`, {
-          headers: authHeader,
-          params,
-        });
+        const res = await axios.get<EmployerQueueResponse>(
+          `${API_BASE}/government/employer-approvals`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params,
+          },
+        );
         setData(res.data);
-      } catch (err: any) {
-        setError(err?.response?.data?.detail || "Could not load the employer acceptance queue.");
+      } catch (err) {
+        setError(apiErrorDetail(err) || "Could not load the employer acceptance queue.");
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [token, status]
+    [token, status, search],
   );
 
   const decide = async (label: string, id: string, next: "accepted" | "rejected") => {
     setBusyId(id);
     setError(null);
     try {
-      await axios.patch(`${API_BASE}/government/employers/${id}/approval`, { status: next }, { headers: authHeader });
+      await axios.patch(
+        `${API_BASE}/government/employers/${id}/approval`,
+        { status: next },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       await load(status, searchRef.current?.value ?? search);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not update the approval.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Could not update the approval.");
     } finally {
       setBusyId(null);
     }
@@ -110,12 +115,20 @@ export default function EmployerApprovalsPanel({ token }: { token: string }) {
         </button>
       </div>
 
-      {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">{error}</p>}
+      {error && (
+        <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+          {error}
+        </p>
+      )}
 
-      {!data && !error && <p className="text-slate-500 text-center py-8">Loading employer queue…</p>}
+      {!data && !error && (
+        <p className="text-slate-500 text-center py-8">Loading employer queue…</p>
+      )}
 
       {data && data.employers.length === 0 && (
-        <p className="text-slate-500 text-center py-8">No {status} employer accounts in your scope.</p>
+        <p className="text-slate-500 text-center py-8">
+          No {status} employer accounts in your scope.
+        </p>
       )}
 
       <div className="space-y-3">
@@ -126,19 +139,24 @@ export default function EmployerApprovalsPanel({ token }: { token: string }) {
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  e.gov_approve_status === "pending"
-                    ? "bg-amber-500/20 text-amber-400"
-                    : e.gov_approve_status === "accepted"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-red-500/20 text-red-400"
-                }`}>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    e.gov_approve_status === "pending"
+                      ? "bg-amber-500/20 text-amber-400"
+                      : e.gov_approve_status === "accepted"
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                  }`}
+                >
                   {e.gov_approve_status}
                 </span>
               </div>
-              <p className="font-medium text-white mt-0.5">{e.business_name || "(no business name)"}</p>
+              <p className="font-medium text-white mt-0.5">
+                {e.business_name || "(no business name)"}
+              </p>
               <p className="text-slate-400 text-xs mt-0.5">
-                owner {e.full_name} • {e.current_district || "-"}, {e.current_state || "-"} • mobile {e.mobile_number}
+                owner {e.full_name} • {e.current_district || "-"}, {e.current_state || "-"} • mobile{" "}
+                {e.mobile_number}
               </p>
             </div>
             <div className="flex gap-2">

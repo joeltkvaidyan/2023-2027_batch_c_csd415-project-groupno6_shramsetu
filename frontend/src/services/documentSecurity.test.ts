@@ -20,7 +20,6 @@ import {
 } from "./documentSecurity";
 
 const PIN_KEY = "shramsetu.doc_pin_hash";
-const VERIFIED_KEY = "shramsetu.doc_pin_verified";
 const ATTEMPTS_KEY = "shramsetu.doc_pin_attempts";
 const LOCKOUT_KEY = "shramsetu.doc_lockout_until";
 
@@ -110,7 +109,7 @@ describe("lockout after five failed attempts", () => {
       expect(await verifyPin("0000")).toBe(false);
     }
     await expect(verifyPin("0000")).rejects.toThrow(
-      "Too many failed attempts. Locked out for 5 minutes."
+      "Too many failed attempts. Locked out for 5 minutes.",
     );
     expect(localStorage.getItem(LOCKOUT_KEY)).not.toBeNull();
   });

@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import axios from "axios";
+import { apiErrorDetail } from "../../api/client";
 
 /**
  * Government worker-acceptance queue. Every NEW worker registration lands
@@ -39,8 +40,6 @@ export default function ApprovalsPanel({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const authHeader = { Authorization: `Bearer ${token}` };
-
   const load = useCallback(
     async (whichStatus: string = status, whichSearch: string = search) => {
       setError(null);
@@ -48,26 +47,29 @@ export default function ApprovalsPanel({ token }: { token: string }) {
         const params = new URLSearchParams({ status: whichStatus });
         if (whichSearch.trim()) params.set("search", whichSearch.trim());
         const res = await axios.get<QueueResponse>(`${API_BASE}/government/worker-approvals`, {
-          headers: authHeader,
+          headers: { Authorization: `Bearer ${token}` },
           params,
         });
         setData(res.data);
-      } catch (err: any) {
-        setError(err?.response?.data?.detail || "Could not load the acceptance queue.");
+      } catch (err) {
+        setError(apiErrorDetail(err) || "Could not load the acceptance queue.");
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [token, status]
+    [token, status, search],
   );
 
   const decide = async (workerId: string, id: string, next: "accepted" | "rejected") => {
     setBusyId(id);
     setError(null);
     try {
-      await axios.patch(`${API_BASE}/government/workers/${id}/approval`, { status: next }, { headers: authHeader });
+      await axios.patch(
+        `${API_BASE}/government/workers/${id}/approval`,
+        { status: next },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       await load(status, searchRef.current?.value ?? search);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not update the approval.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Could not update the approval.");
     } finally {
       setBusyId(null);
     }
@@ -110,12 +112,18 @@ export default function ApprovalsPanel({ token }: { token: string }) {
         </button>
       </div>
 
-      {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">{error}</p>}
+      {error && (
+        <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+          {error}
+        </p>
+      )}
 
       {!data && !error && <p className="text-slate-500 text-center py-8">Loading queue…</p>}
 
       {data && data.workers.length === 0 && (
-        <p className="text-slate-500 text-center py-8">No {status} registrations in your jurisdiction.</p>
+        <p className="text-slate-500 text-center py-8">
+          No {status} registrations in your jurisdiction.
+        </p>
       )}
 
       <div className="space-y-3">
@@ -127,19 +135,22 @@ export default function ApprovalsPanel({ token }: { token: string }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-blue-400 text-sm">{w.worker_id}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  w.gov_approve_status === "pending"
-                    ? "bg-amber-500/20 text-amber-400"
-                    : w.gov_approve_status === "accepted"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-red-500/20 text-red-400"
-                }`}>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    w.gov_approve_status === "pending"
+                      ? "bg-amber-500/20 text-amber-400"
+                      : w.gov_approve_status === "accepted"
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                  }`}
+                >
                   {w.gov_approve_status}
                 </span>
               </div>
               <p className="font-medium text-white mt-0.5">{w.full_name}</p>
               <p className="text-slate-400 text-xs mt-0.5">
-                {w.occupation?.replace(/_/g, " ") || "trade not recorded"} • {w.current_district || "-"}, {w.current_state || "-"} • mobile {w.mobile_number}
+                {w.occupation?.replace(/_/g, " ") || "trade not recorded"} •{" "}
+                {w.current_district || "-"}, {w.current_state || "-"} • mobile {w.mobile_number}
               </p>
             </div>
             <div className="flex gap-2">
@@ -168,9 +179,9 @@ export default function ApprovalsPanel({ token }: { token: string }) {
 
       {data && (
         <p className="text-xs text-slate-500">
-          Acceptance is what lets a worker apply to job listings and appear in
-          the public find-a-worker directory. Only workers inside your
-          jurisdiction can be seen or decided here.
+          Acceptance is what lets a worker apply to job listings and appear in the public
+          find-a-worker directory. Only workers inside your jurisdiction can be seen or decided
+          here.
         </p>
       )}
     </div>

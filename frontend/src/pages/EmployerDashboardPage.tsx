@@ -13,7 +13,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { employerApi, clearEmployerToken } from "../api/client";
+import { employerApi, clearEmployerToken, apiErrorDetail, httpStatus } from "../api/client";
 import { apiErrorMessage } from "../api/client";
 import type { PublicWorker, PublicWorkersResponse } from "../types";
 import { Button } from "../components/ui/Button";
@@ -108,7 +108,7 @@ export default function EmployerDashboardPage() {
       })
       .then((res) => setOccupations(res?.data?.occupations ?? []))
       .catch((err) => {
-        const status = err?.response?.status;
+        const status = httpStatus(err);
         if (status === 401 || status === 403) {
           clearEmployerToken();
           localStorage.removeItem("employer_user");
@@ -119,7 +119,9 @@ export default function EmployerDashboardPage() {
         if (cached) {
           try {
             setProfile(JSON.parse(cached));
-            void employerApi.get("/directory/occupations").then((r) => setOccupations(r?.data?.occupations ?? []));
+            void employerApi
+              .get("/directory/occupations")
+              .then((r) => setOccupations(r?.data?.occupations ?? []));
           } catch {
             /* ignore malformed cache */
           }
@@ -134,7 +136,7 @@ export default function EmployerDashboardPage() {
       // worker's contact number so the employer can call them directly.
       const res = await employerApi.get<PublicWorkersResponse>("/directory/workers", {
         params: Object.fromEntries(
-          Object.entries({ name: search, place, occupation }).filter(([, v]) => v)
+          Object.entries({ name: search, place, occupation }).filter(([, v]) => v),
         ),
       });
       setWorkers(res.data.workers);
@@ -182,11 +184,19 @@ export default function EmployerDashboardPage() {
         contact_phone: postForm.contact_phone.trim() || undefined,
       });
       setNote("✅ Listing posted. Workers can now find it in their matched jobs.");
-      setPostForm((f) => ({ ...f, title: "", description: "", work_location: "", wage_min: "", wage_max: "", contact_phone: "" }));
+      setPostForm((f) => ({
+        ...f,
+        title: "",
+        description: "",
+        work_location: "",
+        wage_min: "",
+        wage_max: "",
+        contact_phone: "",
+      }));
       setShowPostForm(false);
       void loadMyJobs();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not post the listing.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Could not post the listing.");
     } finally {
       setPostBusy(false);
     }
@@ -196,8 +206,8 @@ export default function EmployerDashboardPage() {
     try {
       await employerApi.patch(`/jobs/${job.id}/status`, { status });
       void loadMyJobs();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not update the listing.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Could not update the listing.");
     }
   };
 
@@ -221,8 +231,8 @@ export default function EmployerDashboardPage() {
       setNote(`Rated ${ratingWorker.full_name}: ${stars}★`);
       setRatingWorker(null);
       void load();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not save the rating.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Could not save the rating.");
     } finally {
       setRatingBusy(false);
     }
@@ -262,9 +272,13 @@ export default function EmployerDashboardPage() {
               <Users className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Employer Portal</h1>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                Employer Portal
+              </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {profile?.business_name || profile?.full_name || "Hire trusted, government-approved workers"}
+                {profile?.business_name ||
+                  profile?.full_name ||
+                  "Hire trusted, government-approved workers"}
               </p>
             </div>
           </div>
@@ -302,9 +316,10 @@ export default function EmployerDashboardPage() {
                 </p>
                 <p className="text-sm text-amber-700 dark:text-amber-400">
                   Your account is queued with the State/District Labour Office
-                  {profile.current_district ? ` (${profile.current_district})` : ""}. Until it is accepted you can
-                  browse the worker directory, but <b>posting a job listing</b> and <b>rating workers</b> stay locked —
-                  the same rule workers face before they can apply anywhere.
+                  {profile.current_district ? ` (${profile.current_district})` : ""}. Until it is
+                  accepted you can browse the worker directory, but <b>posting a job listing</b> and{" "}
+                  <b>rating workers</b> stay locked — the same rule workers face before they can
+                  apply anywhere.
                 </p>
               </div>
             </div>
@@ -324,7 +339,11 @@ export default function EmployerDashboardPage() {
           </div>
 
           <StatGrid>
-            <StatCard label="Workers found" value={stats.workersFound} icon={<Users className="h-5 w-5" />} />
+            <StatCard
+              label="Workers found"
+              value={stats.workersFound}
+              icon={<Users className="h-5 w-5" />}
+            />
             <StatCard
               label="Total ratings"
               value={stats.totalRatings}
@@ -372,7 +391,10 @@ export default function EmployerDashboardPage() {
                   accepted ? "bg-brand-100 dark:bg-brand-900/30" : "bg-gray-100 dark:bg-gray-800"
                 }`}
               >
-                <Briefcase className={`h-4.5 w-4.5 ${accepted ? "text-brand-600 dark:text-brand-400" : "text-gray-400"}`} aria-hidden="true" />
+                <Briefcase
+                  className={`h-4.5 w-4.5 ${accepted ? "text-brand-600 dark:text-brand-400" : "text-gray-400"}`}
+                  aria-hidden="true"
+                />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">Post a job listing</h3>
@@ -388,7 +410,8 @@ export default function EmployerDashboardPage() {
               disabled={!accepted}
               title={accepted ? undefined : "Pending labour-office review"}
             >
-              <Plus className="h-4 w-4" aria-hidden="true" /> {showPostForm ? "Hide form" : "New listing"}
+              <Plus className="h-4 w-4" aria-hidden="true" />{" "}
+              {showPostForm ? "Hide form" : "New listing"}
             </Button>
           </div>
 
@@ -510,7 +533,8 @@ export default function EmployerDashboardPage() {
               </div>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-gray-400">
-                  ShramSetu never certifies a listing. Workers see your account is gov-accepted, not that this post was vetted.
+                  ShramSetu never certifies a listing. Workers see your account is gov-accepted, not
+                  that this post was vetted.
                 </p>
                 <Button type="submit" loading={postBusy}>
                   Post listing
@@ -533,7 +557,9 @@ export default function EmployerDashboardPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{job.title}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {job.title}
+                      </h4>
                       <span
                         className={`text-xs font-semibold rounded-full px-2 py-0.5 border ${
                           job.status === "open"
@@ -545,15 +571,23 @@ export default function EmployerDashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {job.occupation.replace(/_/g, " ")} • {job.district ? `${job.district}, ` : ""}
+                      {job.occupation.replace(/_/g, " ")} •{" "}
+                      {job.district ? `${job.district}, ` : ""}
                       {job.state} • {job.openings} opening{job.openings === 1 ? "" : "s"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={job.applications_count > 0 ? "brand" : "neutral"}>
-                      {job.applications_count} applied{job.shortlisted_count ? ` · ${job.shortlisted_count} read` : ""}
+                      {job.applications_count} applied
+                      {job.shortlisted_count ? ` · ${job.shortlisted_count} read` : ""}
                     </Badge>
-                    <Button variant="ghost" size="sm" onClick={() => void setJobStatus(job, job.status === "open" ? "closed" : "open")}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        void setJobStatus(job, job.status === "open" ? "closed" : "open")
+                      }
+                    >
                       {job.status === "open" ? "Close" : "Reopen"}
                     </Button>
                   </div>
@@ -567,10 +601,14 @@ export default function EmployerDashboardPage() {
         <Card className="p-5">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="worker-search"
+                className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
                 Worker name
               </label>
               <input
+                id="worker-search"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="Search by name…"
                 value={search}
@@ -578,10 +616,14 @@ export default function EmployerDashboardPage() {
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="worker-place"
+                className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
                 Place / district
               </label>
               <input
+                id="worker-place"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 placeholder="District or town…"
                 value={place}
@@ -589,10 +631,14 @@ export default function EmployerDashboardPage() {
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+              <label
+                htmlFor="worker-trade"
+                className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
                 Trade / occupation
               </label>
               <select
+                id="worker-trade"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                 value={occupation}
                 onChange={(e) => setOccupation(e.target.value)}
@@ -635,12 +681,15 @@ export default function EmployerDashboardPage() {
                 : "There are no government-accepted workers in the directory yet."
             }
             action={
-              <Button variant="ghost" onClick={() => {
-                setSearch("");
-                setPlace("");
-                setOccupation("");
-                void load();
-              }}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearch("");
+                  setPlace("");
+                  setOccupation("");
+                  void load();
+                }}
+              >
                 Clear filters
               </Button>
             }
@@ -655,7 +704,9 @@ export default function EmployerDashboardPage() {
                     <div className="flex items-center gap-3">
                       <Avatar name={w.full_name} size="md" />
                       <div>
-                        <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{w.full_name}</h3>
+                        <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                          {w.full_name}
+                        </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                           {w.occupation?.replace(/_/g, " ") || "Trade not recorded"}
                           {w.years_of_experience != null ? ` • ${w.years_of_experience} yrs` : ""}
@@ -666,7 +717,9 @@ export default function EmployerDashboardPage() {
                             Gov approved
                           </span>
                           <div className="flex items-center gap-1 text-xs">
-                            <span className="text-amber-500" aria-hidden="true">★</span>
+                            <span className="text-amber-500" aria-hidden="true">
+                              ★
+                            </span>
                             <span className="text-gray-700 dark:text-gray-300">
                               {w.rating.average?.toFixed(1) ?? "—"}
                             </span>
@@ -676,9 +729,7 @@ export default function EmployerDashboardPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                          <Badge tone="brand">
-                            {w.worker_code}
-                          </Badge>
+                      <Badge tone="brand">{w.worker_code}</Badge>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -739,7 +790,8 @@ export default function EmployerDashboardPage() {
 
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
                     <p className="text-xs text-gray-400">
-                      Contact only about work. ShramSetu does not verify that this number is still in use.
+                      Contact only about work. ShramSetu does not verify that this number is still
+                      in use.
                     </p>
                     <Button
                       variant="ghost"
@@ -768,18 +820,28 @@ export default function EmployerDashboardPage() {
           <div className="flex items-center gap-3">
             <Avatar name={ratingWorker?.full_name || ""} size="sm" />
             <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">{ratingWorker?.full_name}</p>
+              <p className="font-medium text-gray-900 dark:text-gray-100">
+                {ratingWorker?.full_name}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {ratingWorker?.occupation?.replace(/_/g, " ")} • {ratingWorker?.place || "Location not recorded"}
+                {ratingWorker?.occupation?.replace(/_/g, " ")} •{" "}
+                {ratingWorker?.place || "Location not recorded"}
               </p>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <p
+              id="rating-group-label"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Your rating
-            </label>
-            <div className="flex items-center gap-1">
+            </p>
+            <div
+              className="flex items-center gap-1"
+              role="group"
+              aria-labelledby="rating-group-label"
+            >
               {[5, 4, 3, 2, 1].map((n) => (
                 <button
                   key={n}
@@ -794,10 +856,14 @@ export default function EmployerDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="rating-business"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Business / site name (optional)
             </label>
             <input
+              id="rating-business"
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 outline-none"
               placeholder="e.g. Ravi Constructions"
               value={employerName}
@@ -806,10 +872,14 @@ export default function EmployerDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="rating-comment"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Comment (optional)
             </label>
             <textarea
+              id="rating-comment"
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 outline-none"
               rows={3}
               placeholder="Share your experience hiring this worker…"

@@ -8,18 +8,28 @@ interface AnimatedCardProps {
   onClick?: () => void;
 }
 
-export function AnimatedCard({
-  children,
-  className = "",
-  onClick,
-}: AnimatedCardProps) {
+export function AnimatedCard({ children, className = "", onClick }: AnimatedCardProps) {
   const [hovered, setHovered] = useState(false);
 
+  // Only a clickable card becomes a button role: Enter/Space must do what a
+  // tap does, otherwise the card is a dead end for keyboard users.
   return (
     <div
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={`card ${onClick ? "cursor-pointer" : ""} transition-all duration-300 ${
         hovered ? "scale-[1.02] -translate-y-0.5 shadow-lg" : ""
       } ${className}`}

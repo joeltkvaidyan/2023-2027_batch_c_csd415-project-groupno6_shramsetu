@@ -52,7 +52,7 @@ export default function NotificationInboxPage() {
     try {
       await api.post(`/notifications/${notificationId}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
@@ -77,7 +77,10 @@ export default function NotificationInboxPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-32">
       {/* Header — brand gradient with decorative glow */}
       <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-10 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
-        <div className="absolute -top-16 -right-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none animate-aurora-shift" aria-hidden="true" />
+        <div
+          className="absolute -top-16 -right-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none animate-aurora-shift"
+          aria-hidden="true"
+        />
         <div className="flex items-center justify-between relative">
           <div className="flex items-center gap-3">
             <button
@@ -143,6 +146,15 @@ export default function NotificationInboxPage() {
               <div
                 key={notif.id}
                 onClick={() => !notif.is_read && markAsRead(notif.id)}
+                onKeyDown={(event) => {
+                  if ((event.key === "Enter" || event.key === " ") && !notif.is_read) {
+                    event.preventDefault();
+                    markAsRead(notif.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${notif.title}${notif.is_read ? "" : " (unread)"}`}
                 className={`rounded-2xl p-4 border transition cursor-pointer ${
                   notif.is_read
                     ? "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
@@ -155,19 +167,21 @@ export default function NotificationInboxPage() {
                       {!notif.is_read && (
                         <span className="w-2 h-2 bg-brand-500 rounded-full flex-shrink-0" />
                       )}
-                      <h3 className={`font-semibold text-sm ${
-                        notif.is_read
-                          ? "text-gray-600 dark:text-gray-400"
-                          : "text-gray-900 dark:text-white"
-                      }`}>
+                      <h3
+                        className={`font-semibold text-sm ${
+                          notif.is_read
+                            ? "text-gray-600 dark:text-gray-400"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
                         {notif.title}
                       </h3>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                      {notif.body}
-                    </p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{notif.body}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-500">
-                      <span>{t("notifications.from")}: {notif.sender_name}</span>
+                      <span>
+                        {t("notifications.from")}: {notif.sender_name}
+                      </span>
                       {notif.department && notif.department !== "general" && (
                         <>
                           <span>•</span>
@@ -176,22 +190,22 @@ export default function NotificationInboxPage() {
                       )}
                       <span>•</span>
                       <span>
-                        {notif.created_at
-                          ? new Date(notif.created_at).toLocaleDateString()
-                          : "-"}
+                        {notif.created_at ? new Date(notif.created_at).toLocaleDateString() : "-"}
                       </span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(
-                        notif.priority
+                        notif.priority,
                       )}`}
                     >
                       {notif.priority}
                     </span>
                     {notif.is_broadcast && (
-                      <span className="text-xs text-gray-400">📢 {t("notifications.broadcast")}</span>
+                      <span className="text-xs text-gray-400">
+                        📢 {t("notifications.broadcast")}
+                      </span>
                     )}
                   </div>
                 </div>

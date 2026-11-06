@@ -19,31 +19,20 @@ const BUNDLES: Record<string, Record<string, unknown>> = { en, hi, bn, te, ta, m
 
 describe("language registry", () => {
   it("lists exactly the six first-class languages", () => {
-    expect(SUPPORTED_LANGUAGES.map((l) => l.code)).toEqual([
-      "en",
-      "hi",
-      "bn",
-      "te",
-      "ta",
-      "ml",
-    ]);
+    expect(SUPPORTED_LANGUAGES.map((l) => l.code)).toEqual(["en", "hi", "bn", "te", "ta", "ml"]);
   });
 
   it("matches the languages the Node server and AI service accept", () => {
     // server/src/routes/chat.js LANGS and ai-service/main.py LANGS.
     const serverLangs = ["en", "hi", "bn", "te", "ta", "ml"];
-    expect(SUPPORTED_LANGUAGES.map((l) => l.code).sort()).toEqual(
-      [...serverLangs].sort(),
-    );
+    expect(SUPPORTED_LANGUAGES.map((l) => l.code).sort()).toEqual([...serverLangs].sort());
   });
 
   it("has a translation bundle for every registered language", () => {
     for (const lang of SUPPORTED_LANGUAGES) {
       expect(BUNDLES[lang.code], `missing bundle for ${lang.code}`).toBeDefined();
     }
-    expect(Object.keys(BUNDLES).sort()).toEqual(
-      SUPPORTED_LANGUAGES.map((l) => l.code).sort(),
-    );
+    expect(Object.keys(BUNDLES).sort()).toEqual(SUPPORTED_LANGUAGES.map((l) => l.code).sort());
   });
 
   it("ships a BCP-47 speech locale per language for the Web Speech API", () => {
@@ -60,9 +49,7 @@ describe("language registry", () => {
   });
 
   it("uses native scripts, not transliterated English", () => {
-    const nativeNames = Object.fromEntries(
-      SUPPORTED_LANGUAGES.map((l) => [l.code, l.nativeName]),
-    );
+    const nativeNames = Object.fromEntries(SUPPORTED_LANGUAGES.map((l) => [l.code, l.nativeName]));
     expect(nativeNames.hi).toBe("हिन्दी");
     expect(nativeNames.ta).toBe("தமிழ்");
     expect(nativeNames.ml).toBe("മലയാളം");
@@ -91,9 +78,7 @@ describe("translation bundles", () => {
       for (const status of statuses) {
         const label = grievance?.status?.[status];
         expect(label, `${code}.grievance.status.${status} missing`).toBeTruthy();
-        expect(label, `${code}.grievance.status.${status} untranslated`).not.toBe(
-          status,
-        );
+        expect(label, `${code}.grievance.status.${status} untranslated`).not.toBe(status);
       }
     }
   });

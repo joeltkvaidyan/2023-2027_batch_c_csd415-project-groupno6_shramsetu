@@ -6,7 +6,12 @@ const ROLES = [
   { key: "worker", icon: "👷", gradient: "from-amber-400 to-orange-500", path: "/worker/login" },
   { key: "employer", icon: "🏢", gradient: "from-sky-400 to-blue-600", path: "/employer/login" },
   { key: "citizen", icon: "🏠", gradient: "from-rose-400 to-pink-600", path: "/citizen/login" },
-  { key: "government", icon: "🏛️", gradient: "from-blue-500 to-indigo-600", path: "/government/login" },
+  {
+    key: "government",
+    icon: "🏛️",
+    gradient: "from-blue-500 to-indigo-600",
+    path: "/government/login",
+  },
 ] as const;
 
 export default function StakeholderSelectPage() {
@@ -16,9 +21,7 @@ export default function StakeholderSelectPage() {
   return (
     <Screen onBack={() => navigate("/")}>
       <div className="text-center mb-8 animate-fade-up">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {t("role.select")}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("role.select")}</h1>
         <p className="text-sm text-gray-400 mt-1">Choose how you want to continue</p>
       </div>
       <div className="grid grid-cols-1 gap-4">
@@ -49,7 +52,9 @@ export default function StakeholderSelectPage() {
       {/* Hiring side — a household signs in to see nearby workers' numbers,
           or posts a request and lets a worker call back. */}
       <div className="mt-8 animate-fade-up">
-        <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Need help at home?</p>
+        <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">
+          Need help at home?
+        </p>
         <div className="grid grid-cols-1 gap-3">
           <button
             onClick={() => navigate("/citizen/login")}
@@ -58,13 +63,17 @@ export default function StakeholderSelectPage() {
             <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-2xl shadow-md transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
               🏠
             </span>
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">I need a worker near me</span>
-            <span className="ml-auto text-gray-300 dark:text-gray-600 text-xl transition-transform duration-200 group-hover:translate-x-1 group-hover:text-brand-500">›</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              I need a worker near me
+            </span>
+            <span className="ml-auto text-gray-300 dark:text-gray-600 text-xl transition-transform duration-200 group-hover:translate-x-1 group-hover:text-brand-500">
+              ›
+            </span>
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2 text-center">
-          Sign in with a household account to see nearby workers' numbers and call them —
-          or post a request and let a matching worker call you. Numbers are never shown without signing in.
+          Sign in with a household account to see nearby workers' numbers and call them — or post a
+          request and let a matching worker call you. Numbers are never shown without signing in.
         </p>
       </div>
     </Screen>

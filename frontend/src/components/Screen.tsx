@@ -14,12 +14,11 @@ export function Screen({
   hideBack?: boolean;
 }) {
   const navigate = useNavigate();
-  const handleBack =
-    hideBack
-      ? undefined
-      : onBack === true
+  const handleBack = hideBack
+    ? undefined
+    : onBack === true
       ? () => navigate(-1)
-      : onBack ?? (() => navigate(-1));
+      : (onBack ?? (() => navigate(-1)));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
@@ -35,9 +34,7 @@ export function Screen({
             </button>
           )}
           {title && (
-            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
-              {title}
-            </h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">{title}</h1>
           )}
         </header>
       )}

@@ -46,14 +46,8 @@ export interface GovLoginResponse {
   government: GovernmentUser;
 }
 
-export async function govLogin(
-  employee_id: string,
-  password: string
-): Promise<GovLoginResponse> {
-  const { data } = await axios.post(
-    `${API_BASE}/auth/government/login`,
-    { employee_id, password }
-  );
+export async function govLogin(employee_id: string, password: string): Promise<GovLoginResponse> {
+  const { data } = await axios.post(`${API_BASE}/auth/government/login`, { employee_id, password });
   return data;
 }
 
@@ -88,13 +82,10 @@ export interface DashboardStats {
   workers_by_state: Record<string, number>;
 }
 
-export async function govGetStats(
-  token: string
-): Promise<DashboardStats> {
-  const { data } = await axios.get(
-    `${API_BASE}/government/dashboard/stats`,
-    { headers: authHeaders(token) }
-  );
+export async function govGetStats(token: string): Promise<DashboardStats> {
+  const { data } = await axios.get(`${API_BASE}/government/dashboard/stats`, {
+    headers: authHeaders(token),
+  });
   return data;
 }
 
@@ -116,10 +107,7 @@ export interface WorkersResponse {
   workers: WorkerRecord[];
 }
 
-export async function govGetWorkers(
-  token: string,
-  search?: string
-): Promise<WorkersResponse> {
+export async function govGetWorkers(token: string, search?: string): Promise<WorkersResponse> {
   const params: Record<string, string> = {};
   if (search) params.search = search;
   const { data } = await axios.get(`${API_BASE}/government/workers`, {
@@ -154,7 +142,7 @@ export interface GrievancesResponse {
 export async function govGetGrievances(
   token: string,
   statusFilter?: string,
-  category?: string
+  category?: string,
 ): Promise<GrievancesResponse> {
   const params: Record<string, string> = {};
   if (statusFilter) params.status_filter = statusFilter;
@@ -202,12 +190,11 @@ export interface GovGrievanceDetail {
 
 export async function govGetGrievanceDetail(
   token: string,
-  grievanceId: number
+  grievanceId: number,
 ): Promise<GovGrievanceDetail> {
-  const { data } = await axios.get(
-    `${API_BASE}/government/grievances/${grievanceId}`,
-    { headers: authHeaders(token) }
-  );
+  const { data } = await axios.get(`${API_BASE}/government/grievances/${grievanceId}`, {
+    headers: authHeaders(token),
+  });
   return data;
 }
 
@@ -215,12 +202,12 @@ export async function govUpdateGrievanceStatus(
   token: string,
   grievanceId: number,
   newStatus: string,
-  note?: string
+  note?: string,
 ): Promise<{ detail: string; old_status: string; new_status: string }> {
   const { data } = await axios.post(
     `${API_BASE}/government/grievances/${grievanceId}/status`,
     { status: newStatus, note },
-    { headers: authHeaders(token) }
+    { headers: authHeaders(token) },
   );
   return data;
 }
@@ -229,12 +216,12 @@ export async function govAddComment(
   token: string,
   grievanceId: number,
   content: string,
-  isInternal: boolean = false
+  isInternal: boolean = false,
 ) {
   const { data } = await axios.post(
     `${API_BASE}/government/grievances/${grievanceId}/comment`,
     { content, is_internal: isInternal },
-    { headers: authHeaders(token) }
+    { headers: authHeaders(token) },
   );
   return data;
 }
@@ -267,19 +254,15 @@ export async function govSendNotification(
     target?: string;
     target_value?: string;
     is_broadcast?: boolean;
-  }
+  },
 ): Promise<{ detail: string; notification_id: number; sent_count: number }> {
-  const { data } = await axios.post(
-    `${API_BASE}/government/notifications/send`,
-    payload,
-    { headers: authHeaders(token) }
-  );
+  const { data } = await axios.post(`${API_BASE}/government/notifications/send`, payload, {
+    headers: authHeaders(token),
+  });
   return data;
 }
 
-export async function govGetNotifications(
-  token: string
-): Promise<NotificationsResponse> {
+export async function govGetNotifications(token: string): Promise<NotificationsResponse> {
   const { data } = await axios.get(`${API_BASE}/government/notifications`, {
     headers: authHeaders(token),
   });
@@ -305,9 +288,7 @@ export interface OfficialsResponse {
 }
 
 /** Superadmin only — the server answers 403 for any other official. */
-export async function govGetOfficials(
-  token: string
-): Promise<OfficialsResponse> {
+export async function govGetOfficials(token: string): Promise<OfficialsResponse> {
   const { data } = await axios.get(`${API_BASE}/government/officials`, {
     headers: authHeaders(token),
   });
@@ -333,13 +314,10 @@ export interface AuditLogsResponse {
   logs: AuditLog[];
 }
 
-export async function govGetAuditLogs(
-  token: string
-): Promise<AuditLogsResponse> {
-  const { data } = await axios.get(
-    `${API_BASE}/government/audit-logs`,
-    { headers: authHeaders(token) }
-  );
+export async function govGetAuditLogs(token: string): Promise<AuditLogsResponse> {
+  const { data } = await axios.get(`${API_BASE}/government/audit-logs`, {
+    headers: authHeaders(token),
+  });
   return data;
 }
 
@@ -405,9 +383,7 @@ export interface GovJobApplicant {
   created_at: string;
 }
 
-export async function govGetPostedJobs(
-  token: string
-): Promise<{ jobs: GovJobPosting[] }> {
+export async function govGetPostedJobs(token: string): Promise<{ jobs: GovJobPosting[] }> {
   const { data } = await axios.get(`${API_BASE}/jobs/posted`, {
     headers: authHeaders(token),
   });
@@ -429,7 +405,7 @@ export async function govCreateJob(
     work_type?: string;
     openings?: number;
     contact_phone?: string | null;
-  }
+  },
 ): Promise<GovJobPosting> {
   const { data } = await axios.post(`${API_BASE}/jobs`, payload, {
     headers: authHeaders(token),
@@ -440,12 +416,12 @@ export async function govCreateJob(
 export async function govSetJobStatus(
   token: string,
   jobId: string,
-  status: "open" | "closed"
+  status: "open" | "closed",
 ): Promise<GovJobPosting> {
   const { data } = await axios.patch(
     `${API_BASE}/jobs/${jobId}/status`,
     { status },
-    { headers: authHeaders(token) }
+    { headers: authHeaders(token) },
   );
   return data;
 }
@@ -458,7 +434,7 @@ export interface JobApplicantsResponse {
 
 export async function govGetJobApplicants(
   token: string,
-  jobId: string
+  jobId: string,
 ): Promise<JobApplicantsResponse> {
   const { data } = await axios.get(`${API_BASE}/jobs/${jobId}/applications`, {
     headers: authHeaders(token),
@@ -475,13 +451,12 @@ export async function govReviewJobApplicant(
   token: string,
   jobId: string,
   applicationId: string,
-  status: "submitted" | "shortlisted"
+  status: "submitted" | "shortlisted",
 ): Promise<GovJobApplicant> {
   const { data } = await axios.patch(
     `${API_BASE}/jobs/${jobId}/applications/${applicationId}`,
     { status },
-    { headers: authHeaders(token) }
+    { headers: authHeaders(token) },
   );
   return data;
 }
-

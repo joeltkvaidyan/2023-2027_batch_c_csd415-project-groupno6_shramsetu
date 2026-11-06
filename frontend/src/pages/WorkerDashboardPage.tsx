@@ -77,15 +77,25 @@ export default function WorkerDashboardPage() {
   };
 
   const greetingKey =
-    new Date().getHours() < 12 ? "dashboard.greetingMorning" : new Date().getHours() < 17 ? "dashboard.greetingAfternoon" : "dashboard.greetingEvening";
+    new Date().getHours() < 12
+      ? "dashboard.greetingMorning"
+      : new Date().getHours() < 17
+        ? "dashboard.greetingAfternoon"
+        : "dashboard.greetingEvening";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-36">
       {/* Header — brand gradient with real avatar + greeting */}
       <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-12 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
         {/* Subtle decorative glow */}
-        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none animate-aurora-shift" aria-hidden="true" />
-        <div className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-emerald-300/10 blur-2xl pointer-events-none animate-float" aria-hidden="true" />
+        <div
+          className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none animate-aurora-shift"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-emerald-300/10 blur-2xl pointer-events-none animate-float"
+          aria-hidden="true"
+        />
         <div className="flex items-center gap-4 relative">
           <Avatar name={worker.full_name} size="lg" className="ring-2 ring-white/30" />
           <div className="min-w-0">
@@ -106,14 +116,20 @@ export default function WorkerDashboardPage() {
             }`}
             role="status"
           >
-            <span className="text-xl shrink-0" aria-hidden="true">{govStatus === "rejected" ? "❌" : "⏳"}</span>
+            <span className="text-xl shrink-0" aria-hidden="true">
+              {govStatus === "rejected" ? "❌" : "⏳"}
+            </span>
             <div>
-              <p className={`font-semibold text-sm ${govStatus === "rejected" ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-200"}`}>
+              <p
+                className={`font-semibold text-sm ${govStatus === "rejected" ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-200"}`}
+              >
                 {govStatus === "rejected"
                   ? "Registration not accepted"
                   : "Waiting for government approval"}
               </p>
-              <p className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}>
+              <p
+                className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}
+              >
                 {govStatus === "rejected"
                   ? "A labour-office official did not verify this registration. Please visit your nearest labour office."
                   : "A labour-office official must accept your registration before you can apply to jobs or appear in the directory employers use to call workers."}
@@ -129,7 +145,9 @@ export default function WorkerDashboardPage() {
               <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">
                 {t("dashboard.yourWorkerId")}
               </p>
-              <p className="text-lg font-mono font-bold text-brand-700 dark:text-brand-400">{worker.worker_id}</p>
+              <p className="text-lg font-mono font-bold text-brand-700 dark:text-brand-400">
+                {worker.worker_id}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Digital ID QR — encodes the worker_id only. It is an offline
@@ -151,7 +169,11 @@ export default function WorkerDashboardPage() {
                 className="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition"
                 aria-label={t("dashboard.copyWorkerId", "Copy worker ID")}
               >
-                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -161,20 +183,35 @@ export default function WorkerDashboardPage() {
         {snapshot && (
           <Card className="mt-5 animate-rise">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <button onClick={() => navigate("/worker/jobs")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.jobs}</p>
+              <button
+                onClick={() => navigate("/worker/jobs")}
+                className="active:scale-95 transition"
+              >
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
+                  {snapshot.jobs}
+                </p>
                 <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
                   {t("dashboard.jobMatches", "Job matches")}
                 </p>
               </button>
-              <button onClick={() => navigate("/worker/employers")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.employers}</p>
+              <button
+                onClick={() => navigate("/worker/employers")}
+                className="active:scale-95 transition"
+              >
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
+                  {snapshot.employers}
+                </p>
                 <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
                   {t("dashboard.employers", "Employers")}
                 </p>
               </button>
-              <button onClick={() => navigate("/worker/wages")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">₹{snapshot.unpaid}</p>
+              <button
+                onClick={() => navigate("/worker/wages")}
+                className="active:scale-95 transition"
+              >
+                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
+                  ₹{snapshot.unpaid}
+                </p>
                 <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
                   {t("dashboard.unpaid", "Unpaid")}
                 </p>
@@ -289,7 +326,9 @@ export default function WorkerDashboardPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{g.subject}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {g.subject}
+                      </p>
                       <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {g.created_at ? new Date(g.created_at).toLocaleDateString() : ""}

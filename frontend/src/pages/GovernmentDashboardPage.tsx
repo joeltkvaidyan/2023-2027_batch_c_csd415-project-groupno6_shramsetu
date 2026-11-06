@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
-import { getGovToken, clearGovToken } from "../api/client";
+import { getGovToken, clearGovToken, httpStatus } from "../api/client";
 import NotificationsPanel from "../components/government/NotificationsPanel";
 import JobsPanel from "../components/government/JobsPanel";
 import ApprovalsPanel from "../components/government/ApprovalsPanel";
@@ -22,7 +22,16 @@ import {
   type AuditLog,
 } from "../api/governmentClient";
 
-type Tab = "overview" | "approvals" | "employers" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
+type Tab =
+  | "overview"
+  | "approvals"
+  | "employers"
+  | "grievances"
+  | "workers"
+  | "jobs"
+  | "notifications"
+  | "officials"
+  | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -41,14 +50,6 @@ export default function GovernmentDashboardPage() {
   const [grievanceCategoryFilter, setGrievanceCategoryFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/government/login");
-      return;
-    }
-    loadTabData();
-  }, [activeTab, token]);
-
   const loadTabData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -62,7 +63,7 @@ export default function GovernmentDashboardPage() {
         const res = await govGetGrievances(
           token,
           grievanceStatusFilter || undefined,
-          grievanceCategoryFilter || undefined
+          grievanceCategoryFilter || undefined,
         );
         setGrievances(res.grievances || []);
       } else if (activeTab === "notifications") {
@@ -75,9 +76,9 @@ export default function GovernmentDashboardPage() {
         const res = await govGetAuditLogs(token);
         setAuditLogs(res.logs || []);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load:", err);
-      if (err?.response?.status === 401) {
+      if (httpStatus(err) === 401) {
         clearGovToken();
         localStorage.removeItem("gov_user");
         navigate("/government/login");
@@ -85,7 +86,15 @@ export default function GovernmentDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, token, searchQuery, grievanceStatusFilter, grievanceCategoryFilter]);
+  }, [activeTab, token, searchQuery, grievanceStatusFilter, grievanceCategoryFilter, navigate]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/government/login");
+      return;
+    }
+    void loadTabData();
+  }, [loadTabData, navigate, token]);
 
   const handleUpdateGrievanceStatus = async (id: number, newStatus: string) => {
     if (!token) return;
@@ -113,9 +122,7 @@ export default function GovernmentDashboardPage() {
     { key: "notifications", icon: "🔔", label: "Notifications" },
     // Officials monitoring is superadmin-only — hidden here and 403-guarded
     // server-side, so ordinary state/district officials never see the tab.
-    ...(govUser.is_superadmin
-      ? [{ key: "officials" as Tab, icon: "👥", label: "Officials" }]
-      : []),
+    ...(govUser.is_superadmin ? [{ key: "officials" as Tab, icon: "👥", label: "Officials" }] : []),
     { key: "audit", icon: "📋", label: "Audit Logs" },
   ];
 
@@ -131,7 +138,9 @@ export default function GovernmentDashboardPage() {
             <div>
               <h1 className="font-bold text-lg">ShramSetu Government Portal</h1>
               <div className="flex items-center gap-2 text-sm text-slate-400">
-                <span>{govUser.is_superadmin ? "Super Admin" : govUser.department || "Official"}</span>
+                <span>
+                  {govUser.is_superadmin ? "Super Admin" : govUser.department || "Official"}
+                </span>
                 <span>•</span>
                 <span>{govUser.employee_id}</span>
                 {govUser.state && (
@@ -177,35 +186,71 @@ export default function GovernmentDashboardPage() {
       <main className="max-w-7xl mx-auto p-4">
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-400 rounded-full animate-spin" aria-label="Loading" />
+            <div
+              className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-400 rounded-full animate-spin"
+              aria-label="Loading"
+            />
           </div>
         )}
 
         {!loading && activeTab === "overview" && stats && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard icon={Users} label="Total Workers" value={stats.total_workers} color="blue" />
-              <StatCard icon={UserCheck} label="Active Workers" value={stats.active_workers} color="green" />
-              <StatCard icon={Building2} label="Employers" value={stats.total_employers ?? 0} color="emerald" />
-              <StatCard icon={Clock} label="Employers Pending" value={stats.pending_employers ?? 0} color="amber" />
-              <StatCard icon={Megaphone} label="Open Grievances" value={stats.open_grievances} color="amber" />
-              <StatCard icon={Flag} label="Resolved" value={stats.resolved_grievances} color="emerald" />
+              <StatCard
+                icon={Users}
+                label="Total Workers"
+                value={stats.total_workers}
+                color="blue"
+              />
+              <StatCard
+                icon={UserCheck}
+                label="Active Workers"
+                value={stats.active_workers}
+                color="green"
+              />
+              <StatCard
+                icon={Building2}
+                label="Employers"
+                value={stats.total_employers ?? 0}
+                color="emerald"
+              />
+              <StatCard
+                icon={Clock}
+                label="Employers Pending"
+                value={stats.pending_employers ?? 0}
+                color="amber"
+              />
+              <StatCard
+                icon={Megaphone}
+                label="Open Grievances"
+                value={stats.open_grievances}
+                color="amber"
+              />
+              <StatCard
+                icon={Flag}
+                label="Resolved"
+                value={stats.resolved_grievances}
+                color="emerald"
+              />
             </div>
 
             {/* Grievances by Category */}
-            {stats.grievances_by_category && Object.keys(stats.grievances_by_category).length > 0 && (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-                <h3 className="font-bold mb-4">📊 Grievances by Category</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {Object.entries(stats.grievances_by_category).map(([cat, count]) => (
-                    <div key={cat} className="bg-slate-900/50 rounded-xl p-3">
-                      <p className="text-2xl font-bold text-blue-400">{count}</p>
-                      <p className="text-slate-400 text-sm capitalize">{cat.replace(/_/g, " ")}</p>
-                    </div>
-                  ))}
+            {stats.grievances_by_category &&
+              Object.keys(stats.grievances_by_category).length > 0 && (
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+                  <h3 className="font-bold mb-4">📊 Grievances by Category</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Object.entries(stats.grievances_by_category).map(([cat, count]) => (
+                      <div key={cat} className="bg-slate-900/50 rounded-xl p-3">
+                        <p className="text-2xl font-bold text-blue-400">{count}</p>
+                        <p className="text-slate-400 text-sm capitalize">
+                          {cat.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Workers by State */}
             {stats.workers_by_state && Object.keys(stats.workers_by_state).length > 0 && (
@@ -228,18 +273,28 @@ export default function GovernmentDashboardPage() {
                 <h3 className="font-bold mb-4">📋 Recent Grievance Filings</h3>
                 <div className="space-y-2">
                   {stats.recent_filings.map((f) => (
-                    <div key={f.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3">
+                    <div
+                      key={f.id}
+                      className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3"
+                    >
                       <div>
-                        <span className="font-mono text-blue-400 text-sm">{f.complaint_number}</span>
+                        <span className="font-mono text-blue-400 text-sm">
+                          {f.complaint_number}
+                        </span>
                         <span className="mx-2 text-slate-600">•</span>
                         <span className="text-white text-sm">{f.subject}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        f.status === "submitted" ? "bg-blue-500/20 text-blue-400" :
-                        f.status === "under_review" ? "bg-amber-500/20 text-amber-400" :
-                        f.status === "resolved" ? "bg-green-500/20 text-green-400" :
-                        "bg-slate-500/20 text-slate-400"
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          f.status === "submitted"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : f.status === "under_review"
+                              ? "bg-amber-500/20 text-amber-400"
+                              : f.status === "resolved"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-slate-500/20 text-slate-400"
+                        }`}
+                      >
                         {f.status}
                       </span>
                     </div>
@@ -286,16 +341,23 @@ export default function GovernmentDashboardPage() {
                 </thead>
                 <tbody>
                   {workers.map((w) => (
-                    <tr key={w.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition">
+                    <tr
+                      key={w.id}
+                      className="border-b border-slate-800 hover:bg-slate-800/50 transition"
+                    >
                       <td className="py-3 px-3 font-mono text-blue-400">{w.worker_id}</td>
                       <td className="py-3 px-3">{w.full_name}</td>
                       <td className="py-3 px-3 text-slate-300">{w.occupation || "-"}</td>
                       <td className="py-3 px-3 text-slate-300">{w.current_state || "-"}</td>
                       <td className="py-3 px-3 text-slate-300">{w.current_district || "-"}</td>
                       <td className="py-3 px-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          w.is_active ? "bg-green-500/20 text-green-400" : "bg-slate-500/20 text-slate-400"
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            w.is_active
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-slate-500/20 text-slate-400"
+                          }`}
+                        >
                           {w.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
@@ -303,7 +365,9 @@ export default function GovernmentDashboardPage() {
                   ))}
                   {workers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">No workers found</td>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                        No workers found
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -355,20 +419,32 @@ export default function GovernmentDashboardPage() {
             ) : (
               <div className="space-y-3">
                 {grievances.map((g) => (
-                  <div key={g.id} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                  <div
+                    key={g.id}
+                    className="bg-slate-800/50 border border-slate-700 rounded-xl p-4"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            g.status === "submitted" ? "bg-blue-500/20 text-blue-400" :
-                            g.status === "under_review" ? "bg-amber-500/20 text-amber-400" :
-                            g.status === "resolved" ? "bg-green-500/20 text-green-400" :
-                            "bg-red-500/20 text-red-400"
-                          }`}>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              g.status === "submitted"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : g.status === "under_review"
+                                  ? "bg-amber-500/20 text-amber-400"
+                                  : g.status === "resolved"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
                             {g.status.replace(/_/g, " ")}
                           </span>
-                          <span className="font-mono text-slate-500 text-xs">{g.complaint_number || `#${g.id}`}</span>
-                          <span className="text-slate-600 text-xs">• {g.category?.replace(/_/g, " ")}</span>
+                          <span className="font-mono text-slate-500 text-xs">
+                            {g.complaint_number || `#${g.id}`}
+                          </span>
+                          <span className="text-slate-600 text-xs">
+                            • {g.category?.replace(/_/g, " ")}
+                          </span>
                         </div>
                         <h3 className="font-medium text-white">{g.subject}</h3>
                         <p className="text-slate-400 text-sm mt-1 line-clamp-2">{g.description}</p>
@@ -435,7 +511,10 @@ export default function GovernmentDashboardPage() {
                 </thead>
                 <tbody>
                   {officials.map((o) => (
-                    <tr key={o.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition">
+                    <tr
+                      key={o.id}
+                      className="border-b border-slate-800 hover:bg-slate-800/50 transition"
+                    >
                       <td className="py-3 px-3 font-mono text-blue-400">{o.employee_id || "-"}</td>
                       <td className="py-3 px-3">{o.full_name}</td>
                       <td className="py-3 px-3">
@@ -468,15 +547,18 @@ export default function GovernmentDashboardPage() {
                   ))}
                   {officials.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">No officials found</td>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                        No officials found
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-slate-500">
-              Every official logs in with their own employee ID and sees only the jurisdiction above.
-              Counts are live totals for that scope — the same numbers they see when they sign in.
+              Every official logs in with their own employee ID and sees only the jurisdiction
+              above. Counts are live totals for that scope — the same numbers they see when they
+              sign in.
             </p>
           </div>
         )}
@@ -484,7 +566,9 @@ export default function GovernmentDashboardPage() {
         {/* ── Audit Logs Tab ─────────────────────────────────── */}
         {!loading && activeTab === "audit" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">🔒 Audit Logs (Superadmin Only)</h2>
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              🔒 Audit Logs (Superadmin Only)
+            </h2>
             {auditLogs.length === 0 ? (
               <p className="text-slate-500 text-center py-8">No audit logs found</p>
             ) : (
@@ -506,16 +590,28 @@ export default function GovernmentDashboardPage() {
                         <td className="py-3 px-3 text-slate-300">
                           {log.timestamp ? new Date(log.timestamp).toLocaleString() : "-"}
                         </td>
-                        <td className="py-3 px-3 font-mono text-blue-400">{log.actor_identifier}</td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs">{log.action}</span>
+                        <td className="py-3 px-3 font-mono text-blue-400">
+                          {log.actor_identifier}
                         </td>
-                        <td className="py-3 px-3 text-slate-300">{log.resource_type || "-"} #{log.resource_id || "-"}</td>
-                        <td className="py-3 px-3 text-slate-500 font-mono text-xs">{log.ip_address || "-"}</td>
                         <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-xs ${
-                            log.success ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                          }`}>
+                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-slate-300">
+                          {log.resource_type || "-"} #{log.resource_id || "-"}
+                        </td>
+                        <td className="py-3 px-3 text-slate-500 font-mono text-xs">
+                          {log.ip_address || "-"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              log.success
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
                             {log.success ? "OK" : "FAILED"}
                           </span>
                         </td>
@@ -554,7 +650,9 @@ function StatCard({
   return (
     <div className={`bg-gradient-to-br ${colors[color]} border rounded-2xl p-5 shadow-card`}>
       <div className="flex items-center justify-between mb-3">
-        <span className={`w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center ${colors[color].split(" ").pop()}`}>
+        <span
+          className={`w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center ${colors[color].split(" ").pop()}`}
+        >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>

@@ -96,7 +96,7 @@ export default function JobsPage() {
 
   const shortlistedCount = useMemo(
     () => applications.filter((a) => a.status === "shortlisted").length,
-    [applications]
+    [applications],
   );
 
   return (
@@ -108,7 +108,7 @@ export default function JobsPage() {
             <p className="text-sm text-amber-900 dark:text-amber-100">
               {t(
                 "jobs.disclaimer",
-                "Listings are published by labour offices on ShramSetu. ShramSetu does not verify the employer or the wage. Never pay a fee to get a job."
+                "Listings are published by labour offices on ShramSetu. ShramSetu does not verify the employer or the wage. Never pay a fee to get a job.",
               )}
             </p>
           </div>
@@ -127,10 +127,17 @@ export default function JobsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setOccupation("")} className="cursor-pointer">
-              <Badge tone={occupation === "" ? "brand" : "neutral"}>{t("jobs.allTrades", "All trades")}</Badge>
+              <Badge tone={occupation === "" ? "brand" : "neutral"}>
+                {t("jobs.allTrades", "All trades")}
+              </Badge>
             </button>
             {OCCUPATIONS.map((code) => (
-              <button key={code} type="button" onClick={() => setOccupation(code)} className="cursor-pointer">
+              <button
+                key={code}
+                type="button"
+                onClick={() => setOccupation(code)}
+                className="cursor-pointer"
+              >
                 <Badge tone={occupation === code ? "brand" : "neutral"}>
                   {t(occupationLabelKey(code), code)}
                 </Badge>
@@ -176,7 +183,8 @@ export default function JobsPage() {
                       {a.job?.title ?? t("jobs.listingUnavailable", "Listing no longer available")}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {t("jobs.appliedOn", "Applied on")} {new Date(a.created_at).toLocaleDateString()}
+                      {t("jobs.appliedOn", "Applied on")}{" "}
+                      {new Date(a.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   {a.status === "shortlisted" && (
@@ -187,7 +195,7 @@ export default function JobsPage() {
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
                     {t(
                       "jobs.shortlistedNote",
-                      "The office read your application. This is not an offer of work — keep applying."
+                      "The office read your application. This is not an offer of work — keep applying.",
                     )}
                   </p>
                 )}
@@ -202,7 +210,10 @@ export default function JobsPage() {
           <Card className="text-center py-8">
             <Briefcase className="h-8 w-8 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t("jobs.empty", "No job matches right now. New listings from your district will appear here.")}
+              {t(
+                "jobs.empty",
+                "No job matches right now. New listings from your district will appear here.",
+              )}
             </p>
             {(occupation || query) && (
               <button
@@ -222,7 +233,9 @@ export default function JobsPage() {
             {jobs.map((job) => (
               <Card key={job.id} className="!p-4">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">{job.title}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">
+                    {job.title}
+                  </h3>
                   <Badge tone={LEVEL_TONE[job.match.level]}>
                     {t(`jobs.level.${job.match.level}`, job.match.level)}
                   </Badge>
@@ -254,14 +267,16 @@ export default function JobsPage() {
                   </p>
                   {job.wage_max !== null && (
                     <p>
-                      {t("jobs.wageRange", "Stated wage")}: ₹{job.wage_min ?? job.wage_max}–{job.wage_max}{" "}
-                      {t(`jobs.period.${job.wage_period}`, job.wage_period)}
+                      {t("jobs.wageRange", "Stated wage")}: ₹{job.wage_min ?? job.wage_max}–
+                      {job.wage_max} {t(`jobs.period.${job.wage_period}`, job.wage_period)}
                     </p>
                   )}
                   <p className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
                     {t("jobs.openings", "Openings")}: {job.openings}
-                    {job.posted_by_department && <span className="ml-1">· {job.posted_by_department}</span>}
+                    {job.posted_by_department && (
+                      <span className="ml-1">· {job.posted_by_department}</span>
+                    )}
                   </p>
                 </div>
 
@@ -285,7 +300,7 @@ export default function JobsPage() {
                 <p className="text-[11px] text-gray-400 mt-3">
                   {t(
                     "jobs.unverifiedNote",
-                    "ShramSetu has not verified this employer or the wage. Confirm the terms in writing before starting work."
+                    "ShramSetu has not verified this employer or the wage. Confirm the terms in writing before starting work.",
                   )}
                 </p>
 
@@ -334,7 +349,7 @@ export default function JobsPage() {
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
                     {t(
                       "jobs.shortlistedNote",
-                      "The office read your application. This is not an offer of work — keep applying."
+                      "The office read your application. This is not an offer of work — keep applying.",
                     )}
                   </p>
                 )}

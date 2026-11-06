@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
 // Register service worker for PWA offline support

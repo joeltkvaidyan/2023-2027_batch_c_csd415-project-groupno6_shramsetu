@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ExternalLink, ShieldCheck, AlertTriangle, Info } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge } from "../components/ui";
+import type { BadgeTone } from "../components/ui/Badge";
 
 interface VerifiedEntry {
   id: string;
@@ -28,7 +29,7 @@ const StatusIcon = ({ status }: { status: string }) => {
   return <Info className="h-4 w-4 text-gray-600" />;
 };
 
-const StatusTone = (status: string) => {
+const StatusTone = (status: string): BadgeTone => {
   if (status === "verified") return "success";
   if (status === "unverified") return "danger";
   if (status === "superseded") return "warning";
@@ -71,9 +72,8 @@ export default function ServiceDirectoryPage() {
   }
 
   const categories = Array.from(new Set(registry.entries.map((e) => e.category))).sort();
-  const filtered = filter === "all" 
-    ? registry.entries 
-    : registry.entries.filter((e) => e.category === filter);
+  const filtered =
+    filter === "all" ? registry.entries : registry.entries.filter((e) => e.category === filter);
 
   return (
     <Screen title={t("services.title", "Verified Services Directory")} onBack={true}>
@@ -81,18 +81,11 @@ export default function ServiceDirectoryPage() {
         <Card className="!p-3">
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setFilter("all")} className="cursor-pointer">
-              <Badge 
-                tone={filter === "all" ? "brand" : "neutral"}
-              >
-                All
-              </Badge>
+              <Badge tone={filter === "all" ? "brand" : "neutral"}>All</Badge>
             </button>
             {categories.map((c) => (
               <button key={c} onClick={() => setFilter(c)} className="cursor-pointer">
-                <Badge
-                  tone={filter === c ? "brand" : "neutral"}
-                  className="capitalize"
-                >
+                <Badge tone={filter === c ? "brand" : "neutral"} className="capitalize">
                   {c}
                 </Badge>
               </button>
@@ -107,13 +100,15 @@ export default function ServiceDirectoryPage() {
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">
                   {entry.title}
                 </h3>
-                <Badge tone={StatusTone(entry.status) as any}>
+                <Badge tone={StatusTone(entry.status)}>
                   <StatusIcon status={entry.status} />
                   <span className="ml-1 capitalize">{entry.status}</span>
                 </Badge>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-3">
-                <div>Category: <span className="capitalize">{entry.category}</span></div>
+                <div>
+                  Category: <span className="capitalize">{entry.category}</span>
+                </div>
                 <div>Jurisdiction: {entry.jurisdiction}</div>
                 <div>Verified: {entry.verified_at}</div>
               </div>

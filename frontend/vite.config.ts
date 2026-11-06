@@ -34,10 +34,18 @@ export default defineConfig({
         // not invalidate 200 kB of framework for returning visitors.
         manualChunks(id: string) {
           if (!id.includes("node_modules")) return undefined;
-          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+          if (
+            /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(
+              id,
+            )
+          ) {
             return "react-vendor";
           }
-          if (/[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector|http-negotiator)[\\/]/.test(id)) {
+          if (
+            /[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector|http-negotiator)[\\/]/.test(
+              id,
+            )
+          ) {
             return "i18n-vendor";
           }
           // axios and nothing else. It is on the startup path (the auth context

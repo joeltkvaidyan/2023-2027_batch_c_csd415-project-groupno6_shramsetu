@@ -3,7 +3,6 @@
  * Extracted verbatim from WorkerRegisterPage (behaviour unchanged);
  * OTP input given an explicit id/htmlFor label association.
  */
-import { useTranslation } from "react-i18next";
 import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import type { RegistrationResponse } from "./constants";
 
@@ -16,24 +15,40 @@ interface OtpPhaseProps {
   onSubmit: () => void;
 }
 
-export default function OtpPhase({ registrationData, otp, setOtp, submitting, error, onSubmit }: OtpPhaseProps) {
-  const { t } = useTranslation();
-
+export default function OtpPhase({
+  registrationData,
+  otp,
+  setOtp,
+  submitting,
+  error,
+  onSubmit,
+}: OtpPhaseProps) {
   return (
     <div className="space-y-6 mt-6">
       <div className="text-center">
         <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/40 dark:to-brand-900/20 ring-1 ring-inset ring-brand-200/70 dark:ring-brand-800 flex items-center justify-center mb-4 animate-pop-in">
           <ShieldCheck className="h-8 w-8 text-brand-500" strokeWidth={1.5} aria-hidden="true" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Verify Your Phone</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Verify Your Phone
+        </h3>
         <p className="text-gray-600 dark:text-gray-400">
           Enter the 6-digit code sent to {registrationData?.mobile_number}
         </p>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit();
+        }}
+        className="space-y-4"
+      >
         <div>
-          <label htmlFor="register-otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="register-otp"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             OTP Code
           </label>
           <input

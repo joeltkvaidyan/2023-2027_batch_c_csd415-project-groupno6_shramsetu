@@ -15,7 +15,10 @@ export default function AddressStep({ formData, fieldErrors, onChange }: Registe
       <h3 className="font-semibold text-gray-900 dark:text-white">{t("auth.currentAddress")}</h3>
 
       <div>
-        <label htmlFor="register-currentAddressLine" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-currentAddressLine"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.addressLine")}
         </label>
         <input
@@ -28,23 +31,34 @@ export default function AddressStep({ formData, fieldErrors, onChange }: Registe
       </div>
 
       <div>
-        <label htmlFor="register-currentVillageOrCity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-currentVillageOrCity"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.villageOrCity")} *
         </label>
         <input
           id="register-currentVillageOrCity"
           className={fieldClass(fieldErrors, "currentVillageOrCity")}
           aria-invalid={!!fieldErrors.currentVillageOrCity}
-          aria-describedby={fieldErrors.currentVillageOrCity ? "currentVillageOrCity-error" : undefined}
+          aria-describedby={
+            fieldErrors.currentVillageOrCity ? "currentVillageOrCity-error" : undefined
+          }
           value={formData.currentVillageOrCity}
           onChange={(e) => onChange("currentVillageOrCity", e.target.value)}
           placeholder="Village or city name"
         />
-        <FieldErrorText id="currentVillageOrCity-error" message={fieldErrors.currentVillageOrCity} />
+        <FieldErrorText
+          id="currentVillageOrCity-error"
+          message={fieldErrors.currentVillageOrCity}
+        />
       </div>
 
       <div>
-        <label htmlFor="register-currentDistrict" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-currentDistrict"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.district")}
         </label>
         <input
@@ -57,7 +71,10 @@ export default function AddressStep({ formData, fieldErrors, onChange }: Registe
       </div>
 
       <div>
-        <label htmlFor="register-currentState" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-currentState"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.state")} *
         </label>
         <select
@@ -79,7 +96,10 @@ export default function AddressStep({ formData, fieldErrors, onChange }: Registe
       </div>
 
       <div>
-        <label htmlFor="register-currentPincode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-currentPincode"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.pincode")}
         </label>
         <input

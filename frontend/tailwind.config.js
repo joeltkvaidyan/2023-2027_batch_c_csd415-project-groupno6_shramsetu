@@ -61,7 +61,8 @@ export default {
         "glow-brand-lg": "0 8px 40px -8px rgba(16, 185, 129, 0.5)",
         // Layered, soft "premium SaaS" elevations (Linear/Stripe-style).
         card: "0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06)",
-        "card-hover": "0 4px 8px -2px rgba(16, 24, 40, 0.04), 0 18px 32px -8px rgba(16, 24, 40, 0.14)",
+        "card-hover":
+          "0 4px 8px -2px rgba(16, 24, 40, 0.04), 0 18px 32px -8px rgba(16, 24, 40, 0.14)",
         lift: "0 2px 4px -2px rgba(16, 24, 40, 0.05), 0 12px 24px -6px rgba(16, 24, 40, 0.1)",
         dock: "0 8px 40px -4px rgba(2, 44, 34, 0.22), 0 2px 8px -2px rgba(2, 44, 34, 0.12)",
         "ring-inner": "inset 0 1px 0 0 rgba(255, 255, 255, 0.08)",

@@ -14,7 +14,7 @@ import {
   Search,
   Star,
 } from "lucide-react";
-import { citizenApi, clearCitizenToken } from "../api/client";
+import { citizenApi, clearCitizenToken, apiErrorDetail, httpStatus } from "../api/client";
 import { apiErrorMessage } from "../api/client";
 import type { PublicWorker, PublicWorkersResponse } from "../types";
 import { Button } from "../components/ui/Button";
@@ -81,11 +81,11 @@ export default function CitizenDashboardPage() {
   });
   const [formBusy, setFormBusy] = useState(false);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearCitizenToken();
     localStorage.removeItem("citizen_user");
     navigate("/citizen/login", { replace: true });
-  };
+  }, [navigate]);
 
   useEffect(() => {
     if (!localStorage.getItem("citizen_token")) navigate("/citizen/login", { replace: true });
@@ -104,8 +104,8 @@ export default function CitizenDashboardPage() {
         params: { place: me.data.current_district || me.data.current_state || "" },
       });
       setWorkers(dir.data.workers);
-    } catch (err: any) {
-      if (err?.response?.status === 401 || err?.response?.status === 403) {
+    } catch (err) {
+      if (httpStatus(err) === 401 || httpStatus(err) === 403) {
         logout();
         return;
       }
@@ -118,8 +118,7 @@ export default function CitizenDashboardPage() {
     } catch {
       /* the trade list is non-critical */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [logout]);
 
   useEffect(() => {
     void loadAll();
@@ -134,8 +133,7 @@ export default function CitizenDashboardPage() {
         state: f.state || profile.current_state || "",
       }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.current_district, profile?.current_state, profile?.current_village_or_city]);
+  }, [profile]);
 
   useEffect(() => {
     prefilled();
@@ -153,12 +151,14 @@ export default function CitizenDashboardPage() {
         state: form.state.trim() || undefined,
         preferred_time: form.preferred_time.trim() || undefined,
       });
-      setNote(t("citizen.requestPosted", "Request posted. Workers near you will see it in their app."));
+      setNote(
+        t("citizen.requestPosted", "Request posted. Workers near you will see it in their app."),
+      );
       setForm((f) => ({ ...f, occupation: "", description: "", preferred_time: "" }));
       setShowForm(false);
       void loadAll();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.postFailed", "Could not post the request."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.postFailed", "Could not post the request."));
     } finally {
       setFormBusy(false);
     }
@@ -169,8 +169,8 @@ export default function CitizenDashboardPage() {
     try {
       await citizenApi.post(`/requests/${id}/cancel`);
       void loadAll();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.cancelFailed", "Could not cancel."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.cancelFailed", "Could not cancel."));
     } finally {
       setBusyId(null);
     }
@@ -181,11 +181,14 @@ export default function CitizenDashboardPage() {
     try {
       await citizenApi.post(`/requests/${id}/done`);
       setNote(
-        t("citizen.doneHint", "Marked done. If the work went well, you can rate the worker publicly in the directory below."),
+        t(
+          "citizen.doneHint",
+          "Marked done. If the work went well, you can rate the worker publicly in the directory below.",
+        ),
       );
       void loadAll();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.doneFailed", "Could not update."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.doneFailed", "Could not update."));
     } finally {
       setBusyId(null);
     }
@@ -230,7 +233,9 @@ export default function CitizenDashboardPage() {
           ].map((s) => (
             <Card key={s.label} className="text-center py-4">
               <p className="text-xl font-bold text-brand-700 dark:text-brand-400">{s.value}</p>
-              <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">{s.label}</p>
+              <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+                {s.label}
+              </p>
             </Card>
           ))}
         </div>
@@ -257,19 +262,27 @@ export default function CitizenDashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
-                <Plus className="h-4.5 w-4.5 text-brand-600 dark:text-brand-400" aria-hidden="true" />
+                <Plus
+                  className="h-4.5 w-4.5 text-brand-600 dark:text-brand-400"
+                  aria-hidden="true"
+                />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">
                   {t("citizen.postTitle", "Request a worker")}
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("citizen.postHint", "Tell the trade, what, where and when — a matching worker accepts, then you call.")}
+                  {t(
+                    "citizen.postHint",
+                    "Tell the trade, what, where and when — a matching worker accepts, then you call.",
+                  )}
                 </p>
               </div>
             </div>
             <Button onClick={() => setShowForm((v) => !v)}>
-              {showForm ? t("citizen.hideForm", "Hide form") : t("citizen.newRequest", "New request")}
+              {showForm
+                ? t("citizen.hideForm", "Hide form")
+                : t("citizen.newRequest", "New request")}
             </Button>
           </div>
 
@@ -298,19 +311,25 @@ export default function CitizenDashboardPage() {
                   className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 outline-none"
                   placeholder={t("citizen.preferredTime", "Preferred time (e.g. mornings)")}
                   value={form.preferred_time}
-                  onChange={(e) => setForm((f) => ({ ...f, preferred_time: e.target.value.slice(0, 60) }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, preferred_time: e.target.value.slice(0, 60) }))
+                  }
                 />
                 <input
                   className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 outline-none"
                   placeholder={t("citizen.areaPlaceholder", "Area / village")}
                   value={form.area_village}
-                  onChange={(e) => setForm((f) => ({ ...f, area_village: e.target.value.slice(0, 120) }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, area_village: e.target.value.slice(0, 120) }))
+                  }
                 />
                 <input
                   className="px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 outline-none"
                   placeholder={t("citizen.districtPlaceholder", "District")}
                   value={form.district}
-                  onChange={(e) => setForm((f) => ({ ...f, district: e.target.value.slice(0, 80) }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, district: e.target.value.slice(0, 80) }))
+                  }
                 />
               </div>
               <input
@@ -325,13 +344,19 @@ export default function CitizenDashboardPage() {
                 required
                 minLength={5}
                 maxLength={500}
-                placeholder={t("citizen.describeWork", "What needs doing? (e.g. two days of help replacing tiles on the veranda)")}
+                placeholder={t(
+                  "citizen.describeWork",
+                  "What needs doing? (e.g. two days of help replacing tiles on the veranda)",
+                )}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-gray-400">
-                  {t("citizen.phoneGate", "🔒 Your number only reaches the worker who ACCEPTS your request — and theirs to you.")}
+                  {t(
+                    "citizen.phoneGate",
+                    "🔒 Your number only reaches the worker who ACCEPTS your request — and theirs to you.",
+                  )}
                 </p>
                 <Button type="submit" loading={formBusy}>
                   {t("citizen.post", "Post request")}
@@ -345,7 +370,9 @@ export default function CitizenDashboardPage() {
         <section className="space-y-3">
           <div className="flex items-center gap-2">
             <Briefcase className="h-4.5 w-4.5 text-gray-500" aria-hidden="true" />
-            <h3 className="font-bold text-gray-900 dark:text-gray-100">{t("citizen.myRequests", "My requests")}</h3>
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">
+              {t("citizen.myRequests", "My requests")}
+            </h3>
           </div>
           {requests === null ? (
             <p className="text-center text-sm text-gray-400 py-6">
@@ -355,7 +382,10 @@ export default function CitizenDashboardPage() {
             <EmptyState
               icon={Briefcase}
               title={t("citizen.noRequests", "No requests yet")}
-              description={t("citizen.noRequestsHint", "Post one above and matching workers near you will be notified in their app.")}
+              description={t(
+                "citizen.noRequestsHint",
+                "Post one above and matching workers near you will be notified in their app.",
+              )}
             />
           ) : (
             requests.map((r) => (
@@ -370,7 +400,9 @@ export default function CitizenDashboardPage() {
                         {t(`citizen.status.${r.status}`, r.status)}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1.5">{r.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1.5">
+                      {r.description}
+                    </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {r.area_village ? `${r.area_village}, ` : ""}
                       {r.district || "—"}
@@ -379,12 +411,22 @@ export default function CitizenDashboardPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {r.status === "open" && (
-                      <Button variant="ghost" size="sm" loading={busyId === r.id} onClick={() => void cancelRequest(r.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={busyId === r.id}
+                        onClick={() => void cancelRequest(r.id)}
+                      >
                         {t("citizen.cancel", "Cancel")}
                       </Button>
                     )}
                     {r.status === "accepted" && (
-                      <Button variant="secondary" size="sm" loading={busyId === r.id} onClick={() => void markDone(r.id)}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={busyId === r.id}
+                        onClick={() => void markDone(r.id)}
+                      >
                         {t("citizen.markDone", "Mark done")}
                       </Button>
                     )}
@@ -411,13 +453,15 @@ export default function CitizenDashboardPage() {
                           href={`tel:${r.worker.phone}`}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 transition active:scale-95"
                         >
-                          <Phone className="h-4 w-4" aria-hidden="true" /> {t("citizen.call", "Call")}
+                          <Phone className="h-4 w-4" aria-hidden="true" />{" "}
+                          {t("citizen.call", "Call")}
                         </a>
                         <a
                           href={`sms:${r.worker.phone}`}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-800/50 text-brand-700 dark:text-brand-400 text-sm font-medium px-3.5 py-2 transition active:scale-95"
                         >
-                          <MessageSquare className="h-4 w-4" aria-hidden="true" /> {t("citizen.sms", "SMS")}
+                          <MessageSquare className="h-4 w-4" aria-hidden="true" />{" "}
+                          {t("citizen.sms", "SMS")}
                         </a>
                       </div>
                     </div>
@@ -435,17 +479,20 @@ export default function CitizenDashboardPage() {
             <h3 className="font-bold text-gray-900 dark:text-gray-100">
               {t("citizen.nearbyTitle", "Workers near you")}
             </h3>
-            {profile?.current_district && (
-              <Badge tone="brand">{profile.current_district}</Badge>
-            )}
+            {profile?.current_district && <Badge tone="brand">{profile.current_district}</Badge>}
           </div>
           {workers === null ? (
-            <p className="text-center text-sm text-gray-400 py-6">{t("citizen.loading", "Loading…")}</p>
+            <p className="text-center text-sm text-gray-400 py-6">
+              {t("citizen.loading", "Loading…")}
+            </p>
           ) : workers.length === 0 ? (
             <EmptyState
               icon={Search}
               title={t("citizen.noWorkers", "No listed workers here yet")}
-              description={t("citizen.noWorkersHint", "Only government-accepted workers are listed in the directory. You can still post a request above.")}
+              description={t(
+                "citizen.noWorkersHint",
+                "Only government-accepted workers are listed in the directory. You can still post a request above.",
+              )}
             />
           ) : (
             workers.map((w) => (
@@ -455,8 +502,7 @@ export default function CitizenDashboardPage() {
                     <Avatar name={w.full_name} size="md" />
                     <div className="min-w-0">
                       <h4 className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">
-                        {w.full_name}{" "}
-                        <span className="text-xs font-normal">{w.worker_code}</span>
+                        {w.full_name} <span className="text-xs font-normal">{w.worker_code}</span>
                       </h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         {w.occupation?.replace(/_/g, " ")} • {w.place || ""}

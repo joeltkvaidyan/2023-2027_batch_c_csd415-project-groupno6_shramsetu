@@ -1,9 +1,17 @@
 import { FormEvent, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Building2, CheckCircle, KeyRound, Loader2, Lock, Phone, UserPlus } from "lucide-react";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle,
+  KeyRound,
+  Loader2,
+  Lock,
+  Phone,
+  UserPlus,
+} from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setEmployerToken } from "../api/client";
-import { Button } from "../components/ui/Button";
+import { api, setEmployerToken, apiErrorDetail } from "../api/client";
 import { Card } from "../components/ui/Card";
 
 type Mode = "password" | "otp";
@@ -37,7 +45,7 @@ export default function EmployerLoginPage() {
       localStorage.setItem("employer_user", JSON.stringify(data.employer));
       navigate("/employer/dashboard", { replace: true });
     },
-    [navigate]
+    [navigate],
   );
 
   const switchMode = (next: Mode) => {
@@ -55,7 +63,10 @@ export default function EmployerLoginPage() {
     setBusy(true);
     try {
       if (mode === "password") {
-        const res = await api.post<EmployerResponse>("/auth/employer/login", { mobile_number: mobile, password });
+        const res = await api.post<EmployerResponse>("/auth/employer/login", {
+          mobile_number: mobile,
+          password,
+        });
         return finishLogin(res.data);
       }
 
@@ -70,14 +81,14 @@ export default function EmployerLoginPage() {
         otp: otp.replace(/\D/g, ""),
       });
       finishLogin(res.data);
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail;
+    } catch (err) {
+      const detail = apiErrorDetail(err);
       setError(
         typeof detail === "string"
           ? detail
           : mode === "password"
             ? "Invalid mobile number or password."
-            : "Verification failed."
+            : "Verification failed.",
       );
     } finally {
       setBusy(false);
@@ -91,7 +102,9 @@ export default function EmployerLoginPage() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center shadow-lg shadow-brand-600/25 mb-4">
             <Building2 className="h-7 w-7 text-white" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">ShramSetu Employer</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            ShramSetu Employer
+          </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Find workers, see their number and call them about work
           </p>
@@ -107,7 +120,9 @@ export default function EmployerLoginPage() {
                 type="button"
                 onClick={() => switchMode(m)}
                 className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
-                  active ? "bg-white shadow-sm text-brand-700 dark:text-brand-400" : "text-gray-600 dark:text-gray-300"
+                  active
+                    ? "bg-white shadow-sm text-brand-700 dark:text-brand-400"
+                    : "text-gray-600 dark:text-gray-300"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -120,7 +135,10 @@ export default function EmployerLoginPage() {
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="emp-login-mobile" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="emp-login-mobile"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Mobile number
               </label>
               <div className="relative">
@@ -142,11 +160,17 @@ export default function EmployerLoginPage() {
 
             {mode === "password" && (
               <div>
-                <label htmlFor="emp-login-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="emp-login-password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Password
                 </label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" aria-hidden="true" />
+                  <KeyRound
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4"
+                    aria-hidden="true"
+                  />
                   <input
                     id="emp-login-password"
                     type="password"
@@ -164,7 +188,10 @@ export default function EmployerLoginPage() {
 
             {mode === "otp" && otpSent && (
               <div>
-                <label htmlFor="emp-login-otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="emp-login-otp"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   OTP sent to your mobile
                 </label>
                 <input
@@ -183,18 +210,17 @@ export default function EmployerLoginPage() {
             )}
 
             {error && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 p-3" role="alert">
+              <div
+                className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 p-3"
+                role="alert"
+              >
                 <p className="text-sm text-red-700 dark:text-red-400 flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" /> {error}
                 </p>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="btn-primary w-full shadow-glow-brand"
-            >
+            <button type="submit" disabled={busy} className="btn-primary w-full shadow-glow-brand">
               {busy ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> Working…

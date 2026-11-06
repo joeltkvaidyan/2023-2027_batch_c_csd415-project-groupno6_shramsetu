@@ -39,7 +39,7 @@ export async function cacheDocument(
   display_name: string,
   content_type: string,
   size_bytes: number,
-  blob: Blob
+  blob: Blob,
 ): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {

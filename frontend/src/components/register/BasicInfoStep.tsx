@@ -12,7 +12,12 @@ interface BasicInfoStepProps extends RegisterStepProps {
   onPhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function BasicInfoStep({ formData, fieldErrors, onChange, onPhotoChange }: BasicInfoStepProps) {
+export default function BasicInfoStep({
+  formData,
+  fieldErrors,
+  onChange,
+  onPhotoChange,
+}: BasicInfoStepProps) {
   const { t } = useTranslation();
 
   return (
@@ -30,12 +35,23 @@ export default function BasicInfoStep({ formData, fieldErrors, onChange, onPhoto
             <Camera className="h-8 w-8 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           )}
         </label>
-        <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
-        <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t("auth.uploadPhoto")}</span>
+        <input
+          id="photo-upload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onPhotoChange}
+        />
+        <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          {t("auth.uploadPhoto")}
+        </span>
       </div>
 
       <div>
-        <label htmlFor="register-fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-fullName"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.fullName")} *
         </label>
         <input
@@ -51,7 +67,10 @@ export default function BasicInfoStep({ formData, fieldErrors, onChange, onPhoto
       </div>
 
       <div>
-        <label htmlFor="register-mobileNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-mobileNumber"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.mobileNumber")} *
         </label>
         <input
@@ -69,7 +88,10 @@ export default function BasicInfoStep({ formData, fieldErrors, onChange, onPhoto
       </div>
 
       <div>
-        <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-email"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.email")} <span className="text-gray-400">({t("auth.optional")})</span>
         </label>
         <input
@@ -83,7 +105,10 @@ export default function BasicInfoStep({ formData, fieldErrors, onChange, onPhoto
       </div>
 
       <div>
-        <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-password"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.password")} *
         </label>
         <input

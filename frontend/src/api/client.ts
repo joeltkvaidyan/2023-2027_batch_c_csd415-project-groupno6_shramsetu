@@ -96,33 +96,73 @@ citizenApi.interceptors.request.use((config) => {
  * the i18n `errors.rateLimited` key, and network failures to
  * `errors.network`. Every error handler should go through this.
  */
-export function apiErrorMessage(err: unknown, fallback = "Something went wrong. Please try again."): string {
-  const status = (err as any)?.response?.status;
+/** HTTP status of a rejected request, or undefined for network failures. */
+export function httpStatus(err: unknown): number | undefined {
+  return axios.isAxiosError(err) ? err.response?.status : undefined;
+}
+
+/** `code` field the server puts on a refused request (e.g. gov_approval_pending). */
+export function apiErrorCode(err: unknown): string | undefined {
+  const data: unknown = axios.isAxiosError(err) ? err.response?.data : undefined;
+  if (data && typeof data === "object" && "code" in data) {
+    const code = (data as { code?: unknown }).code;
+    if (typeof code === "string") return code;
+  }
+  return undefined;
+}
+
+/** Server-supplied human message, when the error carries one. */
+export function apiErrorDetail(err: unknown): string | undefined {
+  const data: unknown = axios.isAxiosError(err) ? err.response?.data : undefined;
+  if (data && typeof data === "object" && "detail" in data) {
+    const detail = (data as { detail?: unknown }).detail;
+    if (typeof detail === "string" && detail) return detail;
+  }
+  return undefined;
+}
+
+/** Pydantic/FastAPI 422 detail entries are `{loc: string[], msg: string}`. */
+interface ValidationIssue {
+  loc?: unknown;
+  msg?: unknown;
+}
+
+export function apiErrorMessage(
+  err: unknown,
+  fallback = "Something went wrong. Please try again.",
+): string {
+  const status = httpStatus(err);
   if (status === 429) {
     // Imported lazily to avoid a circular import with the i18n module.
     const translated = safeT("errors.rateLimited");
     if (translated) return translated;
   }
-  if (!status && (err as any)?.code === "ERR_NETWORK") {
+  const networkFailure = axios.isAxiosError(err) && !err.response && err.code === "ERR_NETWORK";
+  if (networkFailure) {
     const translated = safeT("errors.network");
     if (translated) return translated;
   }
-  const detail = (err as any)?.response?.data?.detail;
+  const data: unknown = axios.isAxiosError(err) ? err.response?.data : undefined;
+  const detail =
+    data && typeof data === "object" && "detail" in data
+      ? (data as { detail?: unknown }).detail
+      : undefined;
   if (Array.isArray(detail)) {
     return (
-      detail
-        .map((d: any) => {
-          const where = Array.isArray(d?.loc)
-            ? d.loc.filter((p: any) => p !== "body").join(".")
+      (detail as ValidationIssue[])
+        .map((issue) => {
+          const where = Array.isArray(issue.loc)
+            ? issue.loc.filter((part) => part !== "body").join(".")
             : "";
-          return where ? `${where}: ${d?.msg ?? "Invalid input"}` : d?.msg ?? "Invalid input";
+          const message = typeof issue.msg === "string" ? issue.msg : "Invalid input";
+          return where ? `${where}: ${message}` : message;
         })
         .join("; ") || fallback
     );
   }
   if (typeof detail === "string" && detail) return detail;
-  const msg = (err as any)?.message;
-  return typeof msg === "string" && msg ? msg : fallback;
+  if (err instanceof Error && err.message) return err.message;
+  return fallback;
 }
 
 /** i18n lookup that survives i18n not being initialised yet (returns null). */
@@ -146,11 +186,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error?.response?.status === 401) {
+    if (httpStatus(error) === 401) {
       clearToken();
       // Let the app-level auth context handle redirect on next render;
       // avoid a hard reload loop here.
     }
     return Promise.reject(error);
-  }
+  },
 );

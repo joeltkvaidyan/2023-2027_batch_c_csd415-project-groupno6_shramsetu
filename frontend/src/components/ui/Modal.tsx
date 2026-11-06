@@ -2,7 +2,8 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 
-const FOCUSABLE = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 export function Modal({
   open,
@@ -37,7 +38,7 @@ export function Modal({
       if (e.key !== "Tab" || !panelRef.current) return;
       // Keep Tab cycling inside the dialog (focus trap).
       const items = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null
+        (el) => el.offsetParent !== null,
       );
       if (items.length === 0) return;
       const first = items[0];
@@ -71,7 +72,15 @@ export function Modal({
       aria-label={title}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm animate-[fadeIn_150ms_ease-out]" onClick={onClose} />
+      {/* A button, not a div: dismissible by click, and it carries an
+          accessible name for screen readers. Escape handles the keyboard. */}
+      <button
+        type="button"
+        aria-label="Close dialog"
+        tabIndex={-1}
+        className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm animate-[fadeIn_150ms_ease-out]"
+        onClick={onClose}
+      />
       {/* Panel — bottom sheet on mobile, centered dialog on desktop */}
       <div
         ref={panelRef}
@@ -89,7 +98,11 @@ export function Modal({
           </button>
         </div>
         <div className="px-5 pb-5 overflow-y-auto">{children}</div>
-        {footer && <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/60 rounded-b-2xl flex gap-3 justify-end">{footer}</div>}
+        {footer && (
+          <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/60 rounded-b-2xl flex gap-3 justify-end">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -126,7 +139,12 @@ export function ConfirmDialog({
           <Button variant="ghost" size="sm" onClick={onClose} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button variant={danger ? "danger" : "primary"} size="sm" onClick={onConfirm} loading={loading}>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            size="sm"
+            onClick={onConfirm}
+            loading={loading}
+          >
             {confirmLabel}
           </Button>
         </>

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
-import { api, clearToken, getToken, setToken } from "../api/client";
+import { api, clearToken, getToken, setToken, httpStatus } from "../api/client";
 import type { Worker } from "../types";
 
 interface AuthContextValue {
@@ -29,12 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.get<Worker>("/auth/worker/me");
       setWorker(res.data);
       setBootError(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Only treat this as "not logged in" for an actual auth failure.
       // A network hiccup (offline, timeout, 5xx) shouldn't silently log
       // the worker out and bounce them to the login screen — surface it
       // as a retryable error instead (see ProtectedRoute).
-      if (err?.response?.status === 401) {
+      if (httpStatus(err) === 401) {
         clearToken();
         setWorker(null);
         setBootError(false);
