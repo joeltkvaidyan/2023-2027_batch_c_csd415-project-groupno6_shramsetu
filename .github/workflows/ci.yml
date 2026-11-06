@@ -69,6 +69,11 @@ jobs:
       - run: npm ci
       - name: Locale parity (all 6 languages, no silent English fallbacks)
         run: npm run i18n:check
+      # --max-warnings 0 so a new `any` cannot land as a "warning" nobody reads.
+      - name: Lint (hooks rules, jsx-a11y, no escape-hatch types)
+        run: npm run lint -- --max-warnings 0
+      - name: Format check (Prettier)
+        run: npm run format:check
       - name: Typecheck (covers src/**/*.test.tsx too)
         run: npx tsc -b
       - name: Unit + component tests (vitest + jsdom)
