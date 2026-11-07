@@ -104,6 +104,8 @@ services:
       - DEBUG=false
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET_KEY
+      # HMAC key for stored OTP digests; assertProductionSafe() requires it.
+      - OTP_PEPPER
       - AI_SERVICE_URL=http://ai-service:8100
       - AI_INTERNAL_KEY
       - BOOTSTRAP_ADMIN_PASSWORD

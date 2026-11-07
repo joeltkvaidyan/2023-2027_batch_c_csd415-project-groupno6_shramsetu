@@ -8,7 +8,7 @@
 #
 # Secrets are declared sync: false and are NOT in this file:
 #   JWT_SECRET_KEY, BOOTSTRAP_ADMIN_PASSWORD, DOC_MASTER_KEY, AI_INTERNAL_KEY,
-#   GROQ_API_KEY, HF_TOKEN
+#   OTP_PEPPER, GROQ_API_KEY, HF_TOKEN
 # The dashboard prompts for them during blueprint creation; when creating via
 # the API they land empty until set (see DEPLOYMENT.md).
 #
@@ -85,6 +85,11 @@ services:
       - key: DOC_MASTER_KEY
         sync: false
       - key: AI_INTERNAL_KEY
+        sync: false
+      # Key for stored OTP digests (HMAC-SHA256). assertProductionSafe()
+      # refuses to boot without it. Generate:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      - key: OTP_PEPPER
         sync: false
 
   # ── 3. AI service (RAG + Groq LLM, fully local STT/TTS) ───────────────
