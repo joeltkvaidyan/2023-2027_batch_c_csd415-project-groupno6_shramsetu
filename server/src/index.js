@@ -8,6 +8,13 @@ import app from "./app.js";
 
 assertProductionSafe();
 
+// A rejected promise nobody awaited used to kill the process silently on
+// modern Node. Log it with the stack so a failing SMS gateway or AI call shows
+// up in the server log instead of vanishing.
+process.on("unhandledRejection", (reason) => {
+  console.error("[process] unhandled promise rejection:", reason);
+});
+
 async function bootstrap() {
   fs.mkdirSync(config.uploadDir, { recursive: true });
   await connectDB();

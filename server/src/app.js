@@ -26,7 +26,12 @@ import recordRoutes from "./routes/records.js";
  * integration tests can exercise the full middleware stack over supertest.
  */
 const app = express();
-app.set("trust proxy", false); // local deployment: rate limits key off the socket IP
+// req.ip (and therefore every rate-limit key) must be the REAL client, not the
+// reverse proxy in front of us. One hop in production by default; set
+// TRUST_PROXY=0 when the app is exposed directly, or to the hop count / CIDR
+// list your topology needs. Never `true`: that lets any client forge
+// X-Forwarded-For and walk past the limiters.
+app.set("trust proxy", config.trustProxy);
 
 // Security headers. This is a JSON API (no HTML), so CSP is disabled here;
 // the SPA's own headers belong to the frontend host.

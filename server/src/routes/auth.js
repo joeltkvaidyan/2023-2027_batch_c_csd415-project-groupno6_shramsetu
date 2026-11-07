@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { OtpCode } from "../models/Document.js";
-import { hashPassword, verifyPassword, signToken, sha256, randomOtp } from "../utils/crypto.js";
+import { hashPassword, verifyPassword, signToken, sha256, hashOtp, randomOtp } from "../utils/crypto.js";
 import { validateDocumentFile } from "../utils/fileValidation.js";
 import { config } from "../config.js";
 import { send } from "../services/smsAdapter.js";
@@ -29,6 +29,26 @@ async function sendOtp(mobile, code) {
   await send(mobile, code);
 }
 
+/**
+ * The SMS gateway refused the message. Callers answer 502 (an upstream
+ * failure), not 500 ("we are broken") and not 200 ("code sent") — the worker
+ * must know that no code is coming and that the request was not their fault.
+ */
+class OtpDeliveryError extends Error {
+  constructor(cause) {
+    super("Could not send OTP");
+    this.name = "OtpDeliveryError";
+    this.cause = cause;
+  }
+}
+
+/** Answers 502 and returns true when `err` was an OTP delivery failure. */
+function otpSendFailed(res, err) {
+  if (!(err instanceof OtpDeliveryError)) return false;
+  res.status(502).json({ detail: "Could not send OTP" });
+  return true;
+}
+
 async function issueOtp(mobile, purpose) {
   const now = new Date();
   const cooldown = new Date(now.getTime() - config.otp.resendCooldownSeconds * 1000);
@@ -46,38 +66,76 @@ async function issueOtp(mobile, purpose) {
   const code = randomOtp();
   // invalidate previous unconsumed codes for this mobile+purpose
   await OtpCode.updateMany({ mobile_number: mobile, purpose, consumed_at: null }, { consumed_at: now });
-  await OtpCode.create({
+  const row = await OtpCode.create({
     mobile_number: mobile,
-    code_hash: sha256(code),
+    code_hash: hashOtp(code),
     purpose,
     expires_at: new Date(now.getTime() + config.otp.expireSeconds * 1000),
     last_sent_at: now,
   });
-  sendOtp(mobile, code);
+  try {
+    await sendOtp(mobile, code);
+  } catch (err) {
+    // Nothing was delivered, so the row must not survive: leaving it behind
+    // would start the resend cooldown on a code nobody can ever receive, and
+    // the worker would be locked out for a minute after a gateway hiccup.
+    await OtpCode.deleteOne({ _id: row._id }).catch(() => {});
+    throw new OtpDeliveryError(err);
+  }
   return { wait: 0, code };
 }
 
+/**
+ * Verify and burn an OTP in one atomic step.
+ *
+ * The read-then-write version this replaces could be raced: two requests both
+ * read `consumed_at: null`, both matched the same code, and both were told
+ * "ok" — so the same intercepted code could open two sessions. Here the check
+ * and the burn are a single findOneAndUpdate, so exactly one caller can win.
+ * A wrong code charges exactly one attempt, also atomically, which is what makes
+ * the attempt cap actually hold under parallel guessing.
+ */
 async function consumeOtp(mobile, code, purpose) {
-  const row = await OtpCode.findOne({
+  const now = new Date();
+  const live = {
     mobile_number: mobile,
     purpose,
     consumed_at: null,
-    expires_at: { $gt: new Date() },
-  }).sort({ createdAt: -1 });
-  if (!row) return { ok: false, reason: "OTP expired or not requested. Request a new code." };
-  if (row.attempts >= config.otp.maxAttempts) {
-    row.consumed_at = new Date();
-    await row.save();
+    expires_at: { $gt: now },
+    attempts: { $lt: config.otp.maxAttempts },
+  };
+
+  const claimed = await OtpCode.findOneAndUpdate(
+    { ...live, code_hash: hashOtp(code) },
+    { $set: { consumed_at: now } },
+    { sort: { createdAt: -1 }, new: true }
+  );
+  if (claimed) return { ok: true };
+
+  const charged = await OtpCode.findOneAndUpdate(
+    live,
+    { $inc: { attempts: 1 } },
+    { sort: { createdAt: -1 }, new: true }
+  );
+  if (!charged) {
+    // No live row left. If one is still within its lifetime but has used up
+    // every attempt, say so — "expired or not requested" would send the worker
+    // hunting for a problem that is actually just the attempt cap.
+    const exhausted = await OtpCode.findOne({
+      mobile_number: mobile,
+      purpose,
+      attempts: { $gte: config.otp.maxAttempts },
+      expires_at: { $gt: now },
+    }).sort({ createdAt: -1 });
+    if (exhausted) return { ok: false, reason: "Too many attempts. Request a new code." };
+    return { ok: false, reason: "OTP expired or not requested. Request a new code." };
+  }
+  if (charged.attempts >= config.otp.maxAttempts) {
+    // Last allowed guess was wrong: retire the code now so the cap is final.
+    await OtpCode.updateOne({ _id: charged._id }, { $set: { consumed_at: now } });
     return { ok: false, reason: "Too many attempts. Request a new code." };
   }
-  if (row.code_hash !== sha256(code)) {
-    row.attempts += 1;
-    await row.save();
-    return { ok: false, reason: "Incorrect OTP." };
-  }
-  row.consumed_at = new Date();
-  await row.save();
-  return { ok: true };
+  return { ok: false, reason: "Incorrect OTP." };
 }
 
 // ── Account recovery key (shown ONCE, stored only as a sha-256 hash) ───
@@ -108,19 +166,32 @@ function generateRecoveryKey() {
 // the final backstop; the register route retries past any duplicate-key race.
 async function nextWorkerId() {
   const counters = mongoose.connection.collection("counters");
-  const last = await User.findOne({ role: "worker", worker_id: /^SS-\d{6}$/ })
-    .sort({ worker_id: -1 })
-    .select("worker_id")
-    .lean();
-  const floor = last ? Number.parseInt(last.worker_id.slice(3), 10) : 100000;
-  await counters.updateOne({ _id: "worker_id" }, { $max: { seq: floor } }, { upsert: true });
+  // The floor is computed ONCE, when the counter document is first created —
+  // for a fresh database that is the starting point, and after restoring a
+  // dump it is the highest code already handed out, so no printed ID card is
+  // ever re-issued. Once the document exists the atomic $inc below is the
+  // whole allocation path; re-sorting the users collection on every
+  // registration only added a query to each signup.
+  const existing = await counters.findOne({ _id: "worker_id" });
+  if (!existing) {
+    const last = await User.findOne({ role: "worker", worker_id: /^SS-\d{6}$/ })
+      .sort({ worker_id: -1 })
+      .select("worker_id")
+      .lean();
+    const floor = last ? Number.parseInt(last.worker_id.slice(3), 10) : 100000;
+    await counters.updateOne({ _id: "worker_id" }, { $max: { seq: floor } }, { upsert: true });
+  }
   const updated = await counters.findOneAndUpdate(
     { _id: "worker_id" },
     { $inc: { seq: 1 } },
     { upsert: true, returnDocument: "after" }
   );
   // Driver 6 returns the document directly; older shapes wrap it in `value`.
-  const seq = Number(updated?.seq ?? updated?.value?.seq ?? floor + 1);
+  const seq = Number(updated?.seq ?? updated?.value?.seq);
+  // `updated` can only be empty if another process dropped the counter between
+  // the upsert and this call; the register route's duplicate-key retry handles
+  // that rare case, so never fall back to a value that might collide.
+  if (!Number.isInteger(seq) || seq < 100001) throw new Error("worker_id counter unavailable");
   return `SS-${String(seq).padStart(6, "0")}`;
 }// ── Worker: register (multipart form) ────────────────────────────────
 router.post("/worker/register", registerLimiter, upload.single("profile_photo"), async (req, res) => {
@@ -230,6 +301,7 @@ router.post("/worker/register", registerLimiter, upload.single("profile_photo"),
     res.status(201).json({ worker_id: workerId, mobile_number: mobile, recovery_key: recoveryKey });
   } catch (err) {
     console.error("[auth/register]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Registration failed. Please try again." });
   }
 });
@@ -271,6 +343,7 @@ router.post("/worker/login/otp/request", otpRequestLimiter, async (req, res) => 
     res.json({ detail: "OTP sent" });
   } catch (err) {
     console.error("[auth/otp/request]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Could not send OTP. Please try again." });
   }
 });
@@ -416,6 +489,7 @@ router.post("/worker/recover/mobile", otpRequestLimiter, async (req, res) => {
     res.json({ detail: "OTP sent to the new mobile number." });
   } catch (err) {
     console.error("[auth/recover/mobile]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Recovery failed. Please try again." });
   }
 });
@@ -512,6 +586,7 @@ router.post("/employer/register", registerLimiter, async (req, res) => {
     });
   } catch (err) {
     console.error("[auth/employer/register]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Registration failed. Please try again." });
   }
 });
@@ -558,6 +633,7 @@ router.post("/employer/login/otp/request", otpRequestLimiter, async (req, res) =
     res.json({ detail: "OTP sent" });
   } catch (err) {
     console.error("[auth/employer/otp/request]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Could not send OTP. Please try again." });
   }
 });
@@ -659,6 +735,7 @@ router.post("/citizen/register", registerLimiter, async (req, res) => {
     res.status(201).json({ mobile_number: mobile, recovery_key: recoveryKey });
   } catch (err) {
     console.error("[auth/citizen/register]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Registration failed. Please try again." });
   }
 });
@@ -690,6 +767,7 @@ router.post("/citizen/login/otp/request", otpRequestLimiter, async (req, res) =>
     res.json({ detail: "OTP sent" });
   } catch (err) {
     console.error("[auth/citizen/otp/request]", err);
+    if (otpSendFailed(res, err)) return;
     res.status(500).json({ detail: "Could not send OTP. Please try again." });
   }
 });

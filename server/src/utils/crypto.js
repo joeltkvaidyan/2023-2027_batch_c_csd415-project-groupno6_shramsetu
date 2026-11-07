@@ -50,3 +50,13 @@ export function decryptBuffer(payload, keyB64) {
 
 export const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
 export const randomOtp = () => String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+
+/**
+ * Digest for a stored OTP. Keyed (HMAC-SHA256), not a plain hash: six digits is
+ * only a million candidates, so anyone who reads an unkeyed digest out of a
+ * database dump recovers the live login code instantly. The key comes from
+ * OTP_PEPPER (required in production); the JWT secret is the dev fallback,
+ * which is still a secret that never reaches the database.
+ */
+export const hashOtp = (code) =>
+  crypto.createHmac("sha256", config.otp.pepper || config.jwtSecret).update(String(code)).digest("hex");

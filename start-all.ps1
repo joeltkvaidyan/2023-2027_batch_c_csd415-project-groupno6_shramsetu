@@ -60,8 +60,17 @@ if (Get-PortPid 8000) {
   $already++
 } else {
   Write-Host "[start] API      :8000 ..."
+  # Dev-only switches live HERE (and in server/.env.example), not in the app's
+  # defaults: a deploy that forgets a variable must run safe, while this local
+  # launcher still gets demo seeding and terminal OTP delivery. dotenv never
+  # overrides values already in the environment, so these win over .env.
+  $env:ENV = "development"
+  $env:SEED_DEMO_DATA = "true"
+  $env:OTP_ECHO_ENABLED = "true"
+  $env:DEBUG = "true"
   Start-Detached "node.exe" @("src/index.js") (Join-Path $Root "server") `
     (Join-Path $Logs "server.log") (Join-Path $Logs "server.err.log") | Out-Null
+  Remove-Item Env:ENV, Env:SEED_DEMO_DATA, Env:OTP_ECHO_ENABLED, Env:DEBUG -ErrorAction SilentlyContinue
   $started++
 }
 

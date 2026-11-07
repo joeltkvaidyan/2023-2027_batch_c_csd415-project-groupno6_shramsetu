@@ -16,7 +16,7 @@ import { User } from "../src/models/User.js";
 import { OtpCode } from "../src/models/Document.js";
 import { WorkerRating } from "../src/models/WorkerRating.js";
 import { JobPosting } from "../src/models/JobPosting.js";
-import { sha256, hashPassword, signToken } from "../src/utils/crypto.js";
+import { sha256, hashOtp, hashPassword, signToken } from "../src/utils/crypto.js";
 
 const api = supertest(app);
 let mongod;
@@ -293,7 +293,7 @@ describe("account recovery", () => {
     // Simulate phone verification (terminal-only delivery).
     await OtpCode.create({
       mobile_number: mobile,
-      code_hash: sha256("123456"),
+      code_hash: hashOtp("123456"),
       purpose: "register",
       expires_at: new Date(Date.now() + 5 * 60_000),
     });
@@ -372,7 +372,7 @@ describe("account recovery", () => {
     // Find a matching code by brute force over the 6-digit space is impractical;
     // create a known consumed-ready OTP instead and use it directly.
     const code = "654321";
-    otpRow.code_hash = sha256(code);
+    otpRow.code_hash = hashOtp(code);
     await otpRow.save();
 
     const step2 = await api.post("/api/v1/auth/worker/recover/mobile/confirm").send({
@@ -415,7 +415,7 @@ describe("employer accounts", () => {
 
     await OtpCode.create({
       mobile_number: mobile,
-      code_hash: sha256("123456"),
+      code_hash: hashOtp("123456"),
       purpose: "register",
       expires_at: new Date(Date.now() + 5 * 60_000),
     });
@@ -428,7 +428,7 @@ describe("employer accounts", () => {
     const user = await User.findById(ids.employer._id);
     await OtpCode.create({
       mobile_number: user.mobile_number,
-      code_hash: sha256("123456"),
+      code_hash: hashOtp("123456"),
       purpose: "login",
       expires_at: new Date(Date.now() + 5 * 60_000),
     });
