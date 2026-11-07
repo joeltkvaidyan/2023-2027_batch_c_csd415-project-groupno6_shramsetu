@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,6 +23,53 @@ import { Card, Badge, Avatar, SkeletonList } from "../components/ui";
 import { api } from "../api/client";
 import type { Employer, Grievance, JobMatch } from "../types";
 
+/** One card of the work snapshot: loaded, still loading, or failed on its own. */
+type SnapshotMetric = { value: number | null; failed: boolean };
+
+const PENDING: SnapshotMetric = { value: null, failed: false };
+
+function metricFrom(result: PromiseSettledResult<number>): SnapshotMetric {
+  return result.status === "fulfilled"
+    ? { value: result.value, failed: false }
+    : { value: null, failed: true };
+}
+
+/** A snapshot card: the figure, a skeleton while loading, or Retry on failure. */
+function SnapshotCell({
+  metric,
+  label,
+  retryLabel,
+  onActivate,
+  prefix = "",
+}: {
+  metric: SnapshotMetric;
+  label: string;
+  retryLabel: string;
+  onActivate: () => void;
+  prefix?: string;
+}) {
+  const loading = metric.value === null && !metric.failed;
+  return (
+    <button type="button" onClick={onActivate} className="active:scale-95 transition">
+      <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
+        {metric.failed ? (
+          <span className="text-base font-semibold text-amber-600 dark:text-amber-400">—</span>
+        ) : loading ? (
+          <span
+            className="inline-block h-5 w-8 align-middle rounded bg-gray-200 dark:bg-gray-700 animate-pulse"
+            aria-hidden="true"
+          />
+        ) : (
+          `${prefix}${metric.value}`
+        )}
+      </p>
+      <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+        {metric.failed ? retryLabel : label}
+      </p>
+    </button>
+  );
+}
+
 export default function WorkerDashboardPage() {
   const { t } = useTranslation();
   const { worker } = useAuth();
@@ -31,11 +78,29 @@ export default function WorkerDashboardPage() {
   const [copied, setCopied] = useState(false);
   const [recent, setRecent] = useState<Grievance[] | null>(null);
   // Phase 2 snapshot: job matches, saved recurring employers, unpaid wages.
-  const [snapshot, setSnapshot] = useState<{
-    jobs: number;
-    employers: number;
-    unpaid: number;
-  } | null>(null);
+  // Each figure keeps its own state because they come from three unrelated
+  // services: the wage summary being down must not blank the job count, which
+  // is what a single Promise.all with one catch used to do.
+  const [snapshot, setSnapshot] = useState({
+    jobs: PENDING,
+    employers: PENDING,
+    unpaid: PENDING,
+  });
+
+  const loadMetric = useCallback(async (key: "jobs" | "employers" | "unpaid") => {
+    setSnapshot((s) => ({ ...s, [key]: PENDING }));
+    try {
+      const value =
+        key === "jobs"
+          ? (await api.get<{ jobs: JobMatch[] }>("/jobs")).data.jobs.length
+          : key === "employers"
+            ? (await api.get<{ employers: Employer[] }>("/employers")).data.employers.length
+            : (await api.get<{ total_unpaid: number }>("/wages/summary")).data.total_unpaid;
+      setSnapshot((s) => ({ ...s, [key]: { value, failed: false } }));
+    } catch {
+      setSnapshot((s) => ({ ...s, [key]: { value: null, failed: true } }));
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -44,20 +109,20 @@ export default function WorkerDashboardPage() {
       .then((res) => active && setRecent(res.data))
       .catch(() => active && setRecent([]));
 
-    Promise.all([
-      api.get<{ jobs: JobMatch[] }>("/jobs"),
-      api.get<{ employers: Employer[] }>("/employers"),
-      api.get<{ total_unpaid: number }>("/wages/summary"),
-    ])
-      .then(([jobs, employers, wages]) => {
-        if (!active) return;
-        setSnapshot({
-          jobs: jobs.data.jobs.length,
-          employers: employers.data.employers.length,
-          unpaid: wages.data.total_unpaid,
-        });
-      })
-      .catch(() => active && setSnapshot(null));
+    // allSettled, not all: one dead endpoint leaves the other two figures on
+    // screen instead of collapsing the whole card.
+    Promise.allSettled([
+      api.get<{ jobs: JobMatch[] }>("/jobs").then((res) => res.data.jobs.length),
+      api.get<{ employers: Employer[] }>("/employers").then((res) => res.data.employers.length),
+      api.get<{ total_unpaid: number }>("/wages/summary").then((res) => res.data.total_unpaid),
+    ]).then(([jobs, employers, wages]) => {
+      if (!active) return;
+      setSnapshot({
+        jobs: metricFrom(jobs),
+        employers: metricFrom(employers),
+        unpaid: metricFrom(wages),
+      });
+    });
 
     return () => {
       active = false;
@@ -180,45 +245,35 @@ export default function WorkerDashboardPage() {
         </Card>
 
         {/* Work snapshot — job matches, recurring employers, unpaid wages */}
-        {snapshot && (
-          <Card className="mt-5 animate-rise">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <button
-                onClick={() => navigate("/worker/jobs")}
-                className="active:scale-95 transition"
-              >
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
-                  {snapshot.jobs}
-                </p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.jobMatches", "Job matches")}
-                </p>
-              </button>
-              <button
-                onClick={() => navigate("/worker/employers")}
-                className="active:scale-95 transition"
-              >
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
-                  {snapshot.employers}
-                </p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.employers", "Employers")}
-                </p>
-              </button>
-              <button
-                onClick={() => navigate("/worker/wages")}
-                className="active:scale-95 transition"
-              >
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
-                  ₹{snapshot.unpaid}
-                </p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.unpaid", "Unpaid")}
-                </p>
-              </button>
-            </div>
-          </Card>
-        )}
+        <Card className="mt-5 animate-rise">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <SnapshotCell
+              metric={snapshot.jobs}
+              label={t("dashboard.jobMatches", "Job matches")}
+              retryLabel={t("common.retry", "Retry")}
+              onActivate={() =>
+                snapshot.jobs.failed ? loadMetric("jobs") : navigate("/worker/jobs")
+              }
+            />
+            <SnapshotCell
+              metric={snapshot.employers}
+              label={t("dashboard.employers", "Employers")}
+              retryLabel={t("common.retry", "Retry")}
+              onActivate={() =>
+                snapshot.employers.failed ? loadMetric("employers") : navigate("/worker/employers")
+              }
+            />
+            <SnapshotCell
+              metric={snapshot.unpaid}
+              label={t("dashboard.unpaid", "Unpaid")}
+              retryLabel={t("common.retry", "Retry")}
+              prefix="₹"
+              onActivate={() =>
+                snapshot.unpaid.failed ? loadMetric("unpaid") : navigate("/worker/wages")
+              }
+            />
+          </div>
+        </Card>
 
         {/* Primary actions */}
         <div className="grid grid-cols-2 gap-3.5 mt-5">
