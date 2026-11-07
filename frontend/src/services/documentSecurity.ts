@@ -35,6 +35,9 @@ export interface PinStatus {
 
 let unlockToken: string | null = null;
 let tokenExpiresAt = 0;
+// Needed to derive the offline-cache key, so it lives here and dies with the
+// token. It is never written to storage.
+let sessionPin: string | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
 let lockoutUntil = 0;
 const lockListeners = new Set<() => void>();
@@ -70,6 +73,7 @@ function notifyLock() {
 export function lockWallet(): void {
   unlockToken = null;
   tokenExpiresAt = 0;
+  sessionPin = null;
   clearIdleTimer();
   purgeLegacyStorage();
 }
@@ -83,7 +87,17 @@ function armIdleTimer() {
   }, WALLET_IDLE_MS);
 }
 
-function acceptToken(token: string, expiresInSeconds: number) {
+/**
+ * The PIN the worker just proved, for deriving the offline-cache key. Null
+ * whenever the wallet is locked — cached bytes stay unreadable then.
+ */
+export function getSessionPin(): string | null {
+  if (!isWalletUnlocked()) return null;
+  return sessionPin;
+}
+
+function acceptToken(token: string, expiresInSeconds: number, pin: string) {
+  sessionPin = pin;
   unlockToken = token;
   tokenExpiresAt = Date.now() + expiresInSeconds * 1000;
   armIdleTimer();
@@ -162,7 +176,7 @@ export async function setPin(pin: string, currentPin?: string): Promise<void> {
       currentPin === undefined ? { pin } : { pin, current_pin: currentPin },
     );
     lockoutUntil = 0;
-    acceptToken(res.data.unlock_token, res.data.expires_in);
+    acceptToken(res.data.unlock_token, res.data.expires_in, pin);
   } catch (err) {
     throw new Error(apiErrorDetail(err) || "Could not save PIN");
   }
@@ -186,7 +200,7 @@ export async function verifyPin(pin: string): Promise<boolean> {
       { pin },
     );
     lockoutUntil = 0;
-    acceptToken(res.data.unlock_token, res.data.expires_in);
+    acceptToken(res.data.unlock_token, res.data.expires_in, pin);
     return true;
   } catch (err) {
     const status = httpStatus(err);

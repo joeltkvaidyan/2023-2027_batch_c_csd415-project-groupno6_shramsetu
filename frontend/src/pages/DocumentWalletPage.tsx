@@ -329,7 +329,13 @@ export default function DocumentWalletPage() {
 
   const handleViewCached = async (doc: DocumentItem) => {
     const cached = await getCachedDocument(doc.id);
-    if (!cached) return;
+    if (!cached) {
+      // Either the wallet locked since caching, or the record failed its
+      // integrity check — either way the bytes cannot be opened, so say so
+      // rather than doing nothing.
+      toast.error(t("common.error"));
+      return;
+    }
     const url = URL.createObjectURL(cached.blob);
     window.open(url, "_blank");
   };

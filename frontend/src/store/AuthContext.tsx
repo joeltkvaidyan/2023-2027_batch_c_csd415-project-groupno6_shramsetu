@@ -1,6 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { api, clearToken, getToken, setToken, httpStatus } from "../api/client";
+import { clearAllCachedDocuments } from "../services/documentCache";
+import { lockWallet } from "../services/documentSecurity";
 import type { Worker } from "../types";
+
+/**
+ * Ending a session must also end everything the wallet was holding: the PIN in
+ * memory, the derived cache key and the encrypted documents themselves. Failed
+ * cache cleanup is not worth blocking a logout on, hence the catch.
+ */
+function purgeWallet() {
+  lockWallet();
+  void clearAllCachedDocuments().catch(() => {
+    /* no IndexedDB (private mode) — nothing was cached */
+  });
+}
 
 interface AuthContextValue {
   worker: Worker | null;
@@ -36,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // as a retryable error instead (see ProtectedRoute).
       if (httpStatus(err) === 401) {
         clearToken();
+        purgeWallet();
         setWorker(null);
         setBootError(false);
       } else {
@@ -57,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     clearToken();
+    purgeWallet();
     setWorker(null);
   };
 

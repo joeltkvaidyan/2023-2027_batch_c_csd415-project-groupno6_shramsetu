@@ -78,14 +78,17 @@ Final-year project scope, stated plainly: what is enforced, what is not.
    gateway integration.
 2. **No HTTPS termination here.** TLS must be handled by a reverse proxy or
    load balancer.
-3. **The document PIN is a server-side access control, not encryption of
-   the cache.** The PIN digest (scrypt), attempt counter and five-minute
-   lockout live on the user row, and `GET /documents/:id/download` refuses a
-   request without a 10-minute wallet token once a PIN exists — so holding a
-   stolen session is not enough to pull Aadhaar cards. Stored files are
-   encrypted at rest separately (AES-256-GCM with wrapped per-file keys). What
-   this does NOT do: a document already cached in the browser for offline
-   viewing is protected only by the device's own storage isolation.
+3. **The document PIN is a server-side access control, and offline copies are
+   encrypted with it.** The PIN digest (scrypt), attempt counter and
+   five-minute lockout live on the user row, and `GET /documents/:id/download`
+   refuses a request without a 10-minute wallet token once a PIN exists — so
+   holding a stolen session is not enough to pull Aadhaar cards. Documents
+   cached for offline viewing are AES-256-GCM encrypted with a key derived from
+   the PIN (PBKDF2-SHA256, 310k iterations, device salt), so the IndexedDB
+   contents are unreadable once the wallet locks, and the store is wiped on
+   logout. What this does NOT do: it cannot stop someone who knows the PIN from
+   reading a cached file, and it does not protect a document already opened in
+   another tab's memory.
 4. **Liveness cache window.** A deactivated user can keep working for up to
    30 s after deactivation (cache TTL); zero the TTL to trade performance
    for strictness.
