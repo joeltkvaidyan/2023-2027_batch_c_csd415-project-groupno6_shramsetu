@@ -28,6 +28,9 @@ import {
   verifyPin,
   lockWallet,
   getLockoutRemaining,
+  getWalletToken,
+  onWalletLock,
+  touchWallet,
 } from "../services/documentSecurity";
 import {
   FileText,
@@ -110,6 +113,28 @@ export default function DocumentWalletPage() {
       }
     })();
   }, [updateCachedIds, updateLockoutTimer]);
+
+  // The wallet closes itself: 2 minutes idle, or when the 10-minute server
+  // token expires. Without this the UI would keep showing documents the API
+  // has already stopped serving.
+  useEffect(() => {
+    return onWalletLock(() => {
+      setWalletLocked(true);
+      setPinInput("");
+    });
+  }, []);
+
+  // Any interaction keeps the idle timer from firing mid-read.
+  useEffect(() => {
+    if (walletLocked) return;
+    const activity = () => touchWallet();
+    window.addEventListener("pointerdown", activity);
+    window.addEventListener("keydown", activity);
+    return () => {
+      window.removeEventListener("pointerdown", activity);
+      window.removeEventListener("keydown", activity);
+    };
+  }, [walletLocked]);
 
   // One ticking interval while a lockout is running, torn down on unlock or
   // unmount. Previously updateLockoutTimer() returned its cleanup into an
@@ -231,7 +256,10 @@ export default function DocumentWalletPage() {
 
   const handleDownload = async (doc: DocumentItem) => {
     try {
-      const res = await api.get(`/documents/${doc.id}/download`, { responseType: "blob" });
+      const res = await api.get(`/documents/${doc.id}/download`, {
+        responseType: "blob",
+        headers: { "X-Wallet-Token": getWalletToken() ?? "" },
+      });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url;
@@ -278,7 +306,11 @@ export default function DocumentWalletPage() {
   const handleCacheForOffline = async (doc: DocumentItem) => {
     setCaching(doc.id);
     try {
-      const res = await api.get(`/documents/${doc.id}/download`, { responseType: "blob" });
+      const res = await api.get(`/documents/${doc.id}/download`, {
+        responseType: "blob",
+        // The API refuses downloads while the wallet is locked.
+        headers: { "X-Wallet-Token": getWalletToken() ?? "" },
+      });
       await cacheDocument(doc.id, doc.display_name, doc.content_type, doc.size_bytes, res.data);
       await updateCachedIds();
       toast.success(t("documents.cachedOffline", "Available offline"));

@@ -1,254 +1,256 @@
 /**
- * Document wallet PIN lock — the highest-value thing to test in the frontend.
+ * Document wallet PIN — client half.
  *
- * This is the one place where a logic bug silently weakens a security control a
- * worker can feel: five wrong attempts must lock the wallet for five minutes, an
- * expired lockout must actually clear, and a PIN stored under PBKDF2 must not be
- * verifiable through the legacy fallback. `documentSecurity` states plainly that
- * this is a UI lock and not encryption, so these tests assert exactly what it
- * claims — no more, no less.
+ * The security boundary now lives on the server (scrypt digest, attempt counter,
+ * lockout, 10-minute wallet token), so these tests assert what the browser is
+ * still responsible for: it must never write a PIN or a "verified" flag to
+ * storage, it must stop reporting "unlocked" when the token expires or after two
+ * idle minutes, and it must surface a server lockout instead of retrying.
+ *
+ * The old suite tested a localStorage PBKDF2 hash. That code is gone on purpose:
+ * a lock whose secret and attempt counter sit in localStorage is advisory only.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  changePin,
-  getLockoutRemaining,
-  isPinSet,
-  isWalletUnlocked,
-  lockWallet,
-  setPin,
-  verifyPin,
-} from "./documentSecurity";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const PIN_KEY = "shramsetu.doc_pin_hash";
-const ATTEMPTS_KEY = "shramsetu.doc_pin_attempts";
-const LOCKOUT_KEY = "shramsetu.doc_lockout_until";
+const get = vi.fn();
+const post = vi.fn();
+
+vi.mock("../api/client", () => ({
+  api: { get: (...args: unknown[]) => get(...args), post: (...args: unknown[]) => post(...args) },
+  httpStatus: (err: unknown) => (err as { status?: number }).status,
+  apiErrorDetail: (err: unknown) => (err as { detail?: string }).detail,
+}));
+
+type ServerError = Error & {
+  status?: number;
+  detail?: string;
+  response?: { data?: { retry_after?: number } };
+};
+
+function serverError(status: number, detail: string, retryAfter?: number): ServerError {
+  return Object.assign(new Error(detail), {
+    status,
+    detail,
+    response: retryAfter === undefined ? undefined : { data: { retry_after: retryAfter } },
+  });
+}
+
+async function loadModule() {
+  vi.resetModules();
+  return import("./documentSecurity");
+}
 
 beforeEach(() => {
   localStorage.clear();
+  get.mockReset();
+  post.mockReset();
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
 });
 
+describe("storage", () => {
+  it("deletes the legacy localStorage PIN on load", async () => {
+    localStorage.setItem("shramsetu.doc_pin_hash", "pbkdf2:v1:150000:abc:def");
+    localStorage.setItem("shramsetu.doc_pin_verified", "true");
+    localStorage.setItem("shramsetu.doc_pin_attempts", "3");
+    localStorage.setItem("shramsetu.doc_lockout_until", "9999999999999");
+
+    await loadModule();
+
+    expect(localStorage.getItem("shramsetu.doc_pin_hash")).toBeNull();
+    expect(localStorage.getItem("shramsetu.doc_pin_verified")).toBeNull();
+    expect(localStorage.getItem("shramsetu.doc_pin_attempts")).toBeNull();
+    expect(localStorage.getItem("shramsetu.doc_lockout_until")).toBeNull();
+  });
+
+  it("never writes anything to storage when a PIN is set or verified", async () => {
+    const mod = await loadModule();
+    post.mockResolvedValue({ data: { unlock_token: "tok", expires_in: 600 } });
+
+    await mod.setPin("4821");
+    await mod.verifyPin("4821");
+
+    expect(localStorage.length).toBe(0);
+  });
+});
+
 describe("setPin", () => {
-  it("rejects a PIN shorter than 4 characters", async () => {
-    await expect(setPin("123")).rejects.toThrow("PIN must be 4-8 digits");
-    expect(await isPinSet()).toBe(false);
+  it("refuses a PIN that is not 4-8 digits without calling the API", async () => {
+    const mod = await loadModule();
+    await expect(mod.setPin("123")).rejects.toThrow("PIN must be 4-8 digits");
+    await expect(mod.setPin("123456789")).rejects.toThrow("PIN must be 4-8 digits");
+    await expect(mod.setPin("abcd")).rejects.toThrow("PIN must be 4-8 digits");
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("rejects a PIN longer than 8 characters", async () => {
-    await expect(setPin("123456789")).rejects.toThrow("PIN must be 4-8 digits");
+  it("posts the PIN and unlocks with the returned token", async () => {
+    const mod = await loadModule();
+    post.mockResolvedValue({ data: { unlock_token: "tok-1", expires_in: 600 } });
+
+    await mod.setPin("4821");
+
+    expect(post).toHaveBeenCalledWith("/documents/pin/set", { pin: "4821" });
+    expect(mod.isWalletUnlocked()).toBe(true);
+    expect(mod.getWalletToken()).toBe("tok-1");
   });
 
-  it("accepts the 4- and 8-character boundaries", async () => {
-    await setPin("1234");
-    expect(await verifyPin("1234")).toBe(true);
+  it("sends the current PIN when changing", async () => {
+    const mod = await loadModule();
+    post.mockResolvedValue({ data: { unlock_token: "tok-2", expires_in: 600 } });
 
-    localStorage.clear();
-    await setPin("12345678");
-    expect(await verifyPin("12345678")).toBe(true);
+    await mod.changePin("4821", "7391");
+
+    expect(post).toHaveBeenCalledWith("/documents/pin/set", {
+      pin: "7391",
+      current_pin: "4821",
+    });
   });
 
-  it("stores a salted PBKDF2 hash, never the PIN itself", async () => {
-    await setPin("4821");
-    const stored = localStorage.getItem(PIN_KEY);
-    expect(stored).toMatch(/^pbkdf2:v1:150000:/);
-    expect(stored).not.toContain("4821");
-  });
-
-  it("gives two users different stored hashes for the same PIN (per-user salt)", async () => {
-    await setPin("4821");
-    const first = localStorage.getItem(PIN_KEY);
-    localStorage.clear();
-    await setPin("4821");
-    const second = localStorage.getItem(PIN_KEY);
-    expect(first).not.toBe(second);
+  it("surfaces the server's rejection reason", async () => {
+    const mod = await loadModule();
+    post.mockRejectedValue(serverError(401, "Current PIN is incorrect"));
+    await expect(mod.changePin("0000", "7391")).rejects.toThrow("Current PIN is incorrect");
   });
 });
 
 describe("verifyPin", () => {
-  it("returns false when no PIN has been set", async () => {
-    expect(await verifyPin("4821")).toBe(false);
+  it("returns true and unlocks on the correct PIN", async () => {
+    const mod = await loadModule();
+    post.mockResolvedValue({ data: { unlock_token: "tok", expires_in: 600 } });
+
+    await expect(mod.verifyPin("4821")).resolves.toBe(true);
+    expect(mod.isWalletUnlocked()).toBe(true);
   });
 
-  it("accepts the correct PIN and marks the wallet unlocked", async () => {
-    await setPin("4821");
-    expect(await verifyPin("4821")).toBe(true);
-    expect(isWalletUnlocked()).toBe(true);
+  it("returns false (not throws) for a wrong PIN, leaving the wallet locked", async () => {
+    const mod = await loadModule();
+    post.mockRejectedValue(serverError(401, "Incorrect PIN", undefined));
+
+    await expect(mod.verifyPin("0000")).resolves.toBe(false);
+    expect(mod.isWalletUnlocked()).toBe(false);
   });
 
-  it("rejects a wrong PIN and leaves the wallet locked", async () => {
-    await setPin("4821");
-    expect(await verifyPin("0000")).toBe(false);
-    expect(isWalletUnlocked()).toBe(false);
-  });
+  it("throws a lockout message and counts down when the server says 423", async () => {
+    const mod = await loadModule();
+    post.mockRejectedValue(serverError(423, "Locked out", 300));
 
-  it("does not unlock on a near-miss PIN", async () => {
-    await setPin("4821");
-    expect(await verifyPin("4822")).toBe(false);
-    expect(await verifyPin("482")).toBe(false);
-    expect(await verifyPin("48210")).toBe(false);
-  });
-
-  it("resets the attempt counter after a successful attempt", async () => {
-    await setPin("4821");
-    await verifyPin("0000");
-    await verifyPin("0000");
-    expect(localStorage.getItem(ATTEMPTS_KEY)).toBe("2");
-
-    await verifyPin("4821");
-    expect(localStorage.getItem(ATTEMPTS_KEY)).toBeNull();
-  });
-});
-
-describe("lockout after five failed attempts", () => {
-  it("throws on the fifth wrong attempt and records a lockout window", async () => {
-    await setPin("4821");
-    for (let i = 0; i < 4; i++) {
-      expect(await verifyPin("0000")).toBe(false);
-    }
-    await expect(verifyPin("0000")).rejects.toThrow(
+    await expect(mod.verifyPin("0000")).rejects.toThrow(
       "Too many failed attempts. Locked out for 5 minutes.",
     );
-    expect(localStorage.getItem(LOCKOUT_KEY)).not.toBeNull();
+    expect(mod.getLockoutRemaining()).toBe(300);
+    expect(mod.isWalletUnlocked()).toBe(false);
   });
 
-  it("refuses even the CORRECT PIN while locked out", async () => {
-    // The lockout must not be a UI hint that a correct guess walks through.
-    await setPin("4821");
-    for (let i = 0; i < 5; i++) {
-      await verifyPin("0000").catch(() => undefined);
-    }
-    await expect(verifyPin("4821")).rejects.toThrow(/Locked out/);
-    expect(isWalletUnlocked()).toBe(false);
+  it("refuses to even call the API while a lockout is running, even with the right PIN", async () => {
+    const mod = await loadModule();
+    post.mockRejectedValueOnce(serverError(423, "Locked out", 300));
+    await expect(mod.verifyPin("0000")).rejects.toThrow(/Locked out/);
+
+    post.mockClear();
+    await expect(mod.verifyPin("4821")).rejects.toThrow(/Locked out/);
+    expect(post).not.toHaveBeenCalled();
   });
 
-  it("reports the remaining lockout time", async () => {
-    await setPin("4821");
-    for (let i = 0; i < 5; i++) {
-      await verifyPin("0000").catch(() => undefined);
-    }
-    const remaining = getLockoutRemaining();
-    expect(remaining).toBeGreaterThan(290);
-    expect(remaining).toBeLessThanOrEqual(300);
-  });
-
-  it("clears the lockout and the counter once the window has expired", async () => {
-    await setPin("4821");
-    for (let i = 0; i < 5; i++) {
-      await verifyPin("0000").catch(() => undefined);
-    }
-    expect(localStorage.getItem(LOCKOUT_KEY)).not.toBeNull();
-
-    // Wind the clock past the 5-minute window rather than sleeping through it.
-    const future = Date.now() + 5 * 60 * 1000 + 1000;
-    const realNow = Date.now;
-    Date.now = () => future;
-    try {
-      expect(await verifyPin("4821")).toBe(true);
-    } finally {
-      Date.now = realNow;
-    }
-    expect(localStorage.getItem(LOCKOUT_KEY)).toBeNull();
-    expect(localStorage.getItem(ATTEMPTS_KEY)).toBeNull();
-  });
-
-  it("returns 0 seconds remaining when not locked out", () => {
-    expect(getLockoutRemaining()).toBe(0);
-  });
-
-  it("returns 0 seconds remaining for an expired lockout", () => {
-    localStorage.setItem(LOCKOUT_KEY, String(Date.now() - 1000));
-    expect(getLockoutRemaining()).toBe(0);
+  it("reports no PIN set as a distinct error", async () => {
+    const mod = await loadModule();
+    post.mockRejectedValue(serverError(409, "No PIN is set."));
+    await expect(mod.verifyPin("4821")).rejects.toThrow("No PIN is set");
   });
 });
 
-describe("lockWallet", () => {
-  it("clears the session verification but keeps the PIN", async () => {
-    await setPin("4821");
-    await verifyPin("4821");
-    expect(isWalletUnlocked()).toBe(true);
-
-    lockWallet();
-    expect(isWalletUnlocked()).toBe(false);
-    expect(await isPinSet()).toBe(true);
-    expect(await verifyPin("4821")).toBe(true);
-  });
-});
-
-describe("changePin", () => {
-  it("refuses when the current PIN is wrong", async () => {
-    await setPin("4821");
-    await expect(changePin("0000", "9999")).rejects.toThrow("Current PIN is incorrect");
-    expect(await verifyPin("4821")).toBe(true);
-  });
-
-  it("replaces the PIN when the current one is correct", async () => {
-    await setPin("4821");
-    await changePin("4821", "7391");
-    expect(await verifyPin("7391")).toBe(true);
-    expect(await verifyPin("4821")).toBe(false);
-  });
-
-  it("validates the NEW PIN's length too", async () => {
-    await setPin("4821");
-    await expect(changePin("4821", "12")).rejects.toThrow("PIN must be 4-8 digits");
-    expect(await verifyPin("4821")).toBe(true);
-  });
-});
-
-describe("plain-HTTP fallback (no crypto.subtle)", () => {
-  /**
-   * documentSecurity falls back to a non-cryptographic toy hash when
-   * crypto.subtle is unavailable (plain-HTTP LAN testing). Two things matter:
-   * a PIN set that way still verifies, and a PBKDF2 PIN is NOT verifiable by
-   * that path — otherwise the weak path becomes an oracle.
-   */
-  function withoutSubtle<T>(fn: () => T): T {
-    const original = globalThis.crypto;
-    Object.defineProperty(globalThis, "crypto", {
-      value: { getRandomValues: original.getRandomValues.bind(original) },
-      configurable: true,
-      writable: true,
+describe("PIN status", () => {
+  it("reports whether a PIN exists on the account", async () => {
+    const mod = await loadModule();
+    get.mockResolvedValue({
+      data: { is_set: true, locked: false, locked_until: null, attempts_remaining: 5 },
     });
-    try {
-      return fn();
-    } finally {
-      Object.defineProperty(globalThis, "crypto", {
-        value: original,
-        configurable: true,
-        writable: true,
-      });
-    }
+    await expect(mod.isPinSet()).resolves.toBe(true);
+    expect(get).toHaveBeenCalledWith("/documents/pin/status");
+  });
+
+  it("treats an unreachable server as 'no PIN' and keeps the wallet closed", async () => {
+    const mod = await loadModule();
+    get.mockRejectedValue(serverError(500, "boom"));
+    await expect(mod.isPinSet()).resolves.toBe(false);
+    expect(mod.isWalletUnlocked()).toBe(false);
+  });
+
+  it("carries a server lockout into the countdown", async () => {
+    const mod = await loadModule();
+    const until = new Date(Date.now() + 120_000).toISOString();
+    get.mockResolvedValue({
+      data: { is_set: true, locked: true, locked_until: until, attempts_remaining: 0 },
+    });
+    await mod.getPinStatus();
+    expect(mod.getLockoutRemaining()).toBe(120);
+  });
+});
+
+describe("the wallet closes on its own", () => {
+  async function unlocked() {
+    const mod = await loadModule();
+    post.mockResolvedValue({ data: { unlock_token: "tok", expires_in: 600 } });
+    await mod.verifyPin("4821");
+    expect(mod.isWalletUnlocked()).toBe(true);
+    return mod;
   }
 
-  it("verifies a legacy-stored PIN when subtle is missing", async () => {
-    await withoutSubtle(async () => {
-      await setPin("4821");
-      const stored = localStorage.getItem(PIN_KEY);
-      expect(stored).toMatch(/^legacy:/);
+  it("locks after two idle minutes and notifies listeners", async () => {
+    const mod = await unlocked();
+    const onLock = vi.fn();
+    mod.onWalletLock(onLock);
 
-      expect(await verifyPin("4821")).toBe(true);
-      expect(await verifyPin("0000")).toBe(false);
-    });
+    vi.advanceTimersByTime(mod.WALLET_IDLE_MS - 1000);
+    expect(mod.isWalletUnlocked()).toBe(true);
+
+    vi.advanceTimersByTime(2000);
+    expect(mod.isWalletUnlocked()).toBe(false);
+    expect(onLock).toHaveBeenCalledOnce();
+    expect(mod.getWalletToken()).toBeNull();
   });
 
-  it("refuses to verify a PBKDF2-stored PIN when subtle is missing", async () => {
-    await setPin("4821"); // stored with PBKDF2
-    await withoutSubtle(async () => {
-      expect(await verifyPin("4821")).toBe(false);
-    });
+  it("keeps the wallet open while the worker is interacting", async () => {
+    const mod = await unlocked();
+
+    // Three idle-length stretches, each interrupted by a touch.
+    for (let i = 0; i < 3; i++) {
+      vi.advanceTimersByTime(mod.WALLET_IDLE_MS - 1000);
+      mod.touchWallet();
+    }
+    vi.advanceTimersByTime(mod.WALLET_IDLE_MS - 1000);
+    expect(mod.isWalletUnlocked()).toBe(true);
   });
 
-  it("a legacy PIN does not verify on a subtle-capable device", async () => {
-    await withoutSubtle(async () => {
-      await setPin("4821");
-    });
-    expect(localStorage.getItem(PIN_KEY)).toMatch(/^legacy:/);
-    // Still verifies: the legacy hash is deterministic, so the same code path
-    // can check it. This documents the honest reality that the fallback is not
-    // a security boundary (see the module docstring).
-    expect(await verifyPin("4821")).toBe(true);
+  it("closes when the 10-minute token expires, even while active", async () => {
+    const mod = await unlocked();
+    const onLock = vi.fn();
+    mod.onWalletLock(onLock);
+
+    for (let i = 0; i < 10; i++) {
+      vi.advanceTimersByTime(60_000);
+      mod.touchWallet();
+    }
+
+    expect(mod.isWalletUnlocked()).toBe(false);
+    expect(mod.getWalletToken()).toBeNull();
+    expect(onLock).toHaveBeenCalled();
+  });
+
+  it("lockWallet drops the token immediately and stops notifying", async () => {
+    const mod = await unlocked();
+    const onLock = vi.fn();
+    const unsubscribe = mod.onWalletLock(onLock);
+
+    mod.lockWallet();
+    unsubscribe();
+    vi.advanceTimersByTime(mod.WALLET_IDLE_MS + 1000);
+
+    expect(mod.isWalletUnlocked()).toBe(false);
+    expect(onLock).not.toHaveBeenCalled(); // manual lock is not an idle lock
   });
 });

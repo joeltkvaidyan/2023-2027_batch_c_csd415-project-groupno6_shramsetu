@@ -78,6 +78,14 @@ const UserSchema = new Schema(
     // account can only be recovered at a Common Service Centre / labour office.
     recovery_key_hash: { type: String, default: null },
 
+    // Document-wallet PIN, verified server-side: an scrypt digest plus the
+    // attempt counter and lockout. These used to live in localStorage, where
+    // the "hash" was readable and deletable by anyone holding the phone (or
+    // running one line in the console), which made the lock decorative.
+    wallet_pin_hash: { type: String, default: null },
+    wallet_pin_attempts: { type: Number, default: 0 },
+    wallet_pin_locked_until: { type: Date, default: null },
+
     // Privacy notice at registration: worker consented to chat text/voice
     // being processed by third-party AI providers (see the registration UI).
     consent_ai_processing: { type: Boolean, default: false },

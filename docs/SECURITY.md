@@ -78,10 +78,14 @@ Final-year project scope, stated plainly: what is enforced, what is not.
    gateway integration.
 2. **No HTTPS termination here.** TLS must be handled by a reverse proxy or
    load balancer.
-3. **Client-side document PIN lock is convenience only.** It gates UI
-   access on a shared device; it is not encryption and provides no
-   protection against someone with the worker's API token. The real
-   protection is server-side encryption of stored files.
+3. **The document PIN is a server-side access control, not encryption of
+   the cache.** The PIN digest (scrypt), attempt counter and five-minute
+   lockout live on the user row, and `GET /documents/:id/download` refuses a
+   request without a 10-minute wallet token once a PIN exists — so holding a
+   stolen session is not enough to pull Aadhaar cards. Stored files are
+   encrypted at rest separately (AES-256-GCM with wrapped per-file keys). What
+   this does NOT do: a document already cached in the browser for offline
+   viewing is protected only by the device's own storage isolation.
 4. **Liveness cache window.** A deactivated user can keep working for up to
    30 s after deactivation (cache TTL); zero the TTL to trade performance
    for strictness.
