@@ -1,9 +1,10 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FileWarning } from "lucide-react";
+import { CalendarCheck, Copy, FileWarning } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
+import { WageCalendar } from "../components/WageCalendar";
 import { Button } from "../components/ui/Button";
 import { api, apiErrorMessage, apiErrorCode, isNetworkFailure } from "../api/client";
 import { submitOnce } from "../api/idempotency";
@@ -227,6 +228,26 @@ export default function WageLogPage() {
     });
   };
 
+  /** Yesterday's entry, if there is one — the source for "same as yesterday". */
+  const yesterdayEntry = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+    return (entries ?? []).find((e) => day(e.work_date) === iso);
+  })();
+
+  const copyYesterday = () => {
+    if (!yesterdayEntry) return;
+    setWorkDate(todayISO());
+    setEmployerName(yesterdayEntry.employer_name ?? "");
+    setAgreedAmount(String(yesterdayEntry.agreed_amount));
+    setPaidAmount(String(yesterdayEntry.paid_amount));
+    setSavedOk(false);
+    setFormError(null);
+  };
+
   const summaryCards = summary
     ? [
         {
@@ -339,12 +360,45 @@ export default function WageLogPage() {
           )}
         </Card>
 
+        {/* The month at a glance, before the form: what did I work, what is
+            still owed. Tapping a square fills the date into the form below. */}
+        <Card className="!p-4">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            {t("wages.calendarLabel", { month })}
+          </h2>
+          {entries === null ? (
+            <SkeletonList rows={2} />
+          ) : (
+            <WageCalendar
+              month={month}
+              entries={entries}
+              selectedDay={workDate}
+              onSelectDay={(iso) => {
+                setWorkDate(iso);
+                setSavedOk(false);
+                setFormError(null);
+              }}
+            />
+          )}
+        </Card>
+
         {/* Add-entry form (upserts the day sheet) */}
         <Card className="!p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             {t("wages.addEntry")}
           </h2>
           <form onSubmit={handleSubmit} noValidate className="space-y-3">
+            {yesterdayEntry && (
+              <button
+                type="button"
+                onClick={copyYesterday}
+                className="flex min-h-tap w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-line bg-surface-raised px-3 text-sm font-semibold text-ink-secondary
+                  hover:border-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+                {t("wages.sameAsYesterday")}
+              </button>
+            )}
             <div>
               <label
                 htmlFor="wage-date"
@@ -497,6 +551,24 @@ export default function WageLogPage() {
         <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
           {t("wages.selfReported")}
         </p>
+
+        {summary && summary.total_unpaid > 0 && (
+          <div className="sticky bottom-3 z-10 flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-2.5 shadow-lg">
+            <CalendarCheck
+              className="h-5 w-5 shrink-0 text-red-700 dark:text-red-300"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-ink-muted">{t("wages.summaryUnpaid")}</p>
+              <p className="text-base font-bold tabular-nums text-red-800 dark:text-red-300">
+                {rupees(summary.total_unpaid)}
+              </p>
+            </div>
+            <Button size="sm" onClick={fileUnpaidGrievance} className="!w-auto shrink-0">
+              {t("wages.makeComplaint")}
+            </Button>
+          </div>
+        )}
       </div>
     </Screen>
   );

@@ -324,7 +324,12 @@
     "last90Days": "last 90 days",
     "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
     "exportCSV": "Export CSV",
-    "savedOffline": "Saved on this phone. The entry will be sent when you are back online."
+    "savedOffline": "Saved on this phone. The entry will be sent when you are back online.",
+    "calendarLabel": "Wage calendar for {{month}}",
+    "cellLabel": "{{date}}: {{status}}, {{agreed}} agreed, {{paid}} paid",
+    "cellEmpty": "{{date}}: no entry yet",
+    "sameAsYesterday": "Same as yesterday",
+    "makeComplaint": "Make complaint"
   },
   "errors": {
     "network": "You appear to be offline. Check your connection and try again.",
