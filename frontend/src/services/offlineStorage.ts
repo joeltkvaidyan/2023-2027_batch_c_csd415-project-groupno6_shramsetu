@@ -3,6 +3,9 @@
  * Caches chat messages, documents, and grievance data for offline access
  */
 import { openDB, IDBPDatabase } from "idb";
+import { api } from "../api/client";
+import { newSubmissionKey } from "../api/idempotency";
+import { replayQueue, type ReplayOutcome } from "./syncReplay";
 
 const DB_NAME = "shramsetu-offline";
 const DB_VERSION = 1;
@@ -45,8 +48,13 @@ export type SyncPayload = Record<string, unknown>;
 
 export interface PendingSyncItem {
   id: string;
-  type: "chat" | "document" | "grievance";
+  type: "chat" | "document" | "grievance" | "wage";
   action: "create" | "update" | "delete";
+  /**
+   * `client_request_id` is assigned when the item is queued, not when it is
+   * replayed: it must be the same key the original attempt would have used, or
+   * the replay would file a duplicate. See api/idempotency.ts.
+   */
   data: SyncPayload;
   timestamp: number;
 }
@@ -266,7 +274,7 @@ export async function deleteCachedGrievanceDraft(): Promise<void> {
 // === Pending Sync Queue ===
 
 export async function addToSyncQueue(
-  type: "chat" | "document" | "grievance",
+  type: "chat" | "document" | "grievance" | "wage",
   action: "create" | "update" | "delete",
   data: SyncPayload,
 ): Promise<void> {
@@ -275,7 +283,8 @@ export async function addToSyncQueue(
     id: `${type}-${action}-${Date.now()}`,
     type,
     action,
-    data,
+    // A queued create is one intent: it keeps its key until the server has it.
+    data: action === "create" ? { client_request_id: newSubmissionKey(), ...data } : data,
     timestamp: Date.now(),
   });
 }
@@ -324,20 +333,33 @@ export function onOnlineStatusChange(callback: (online: boolean) => void): () =>
 
 // === Sync Queue Processor ===
 
-export async function processSyncQueue(): Promise<void> {
-  if (!isOnline()) return;
+let replaying: Promise<ReplayOutcome | null> | null = null;
 
-  const items = await getPendingSyncItems();
-  for (const item of items) {
-    try {
-      // Replaying a queued write is only safe because the API accepts the same
-      // client_request_id twice (see api/idempotency.ts); the queue is not yet
-      // wired to those endpoints, so items are dropped rather than duplicated.
-      await removeSyncItem(item.id);
-    } catch (error) {
-      console.error(`[OfflineSync] Failed to process item ${item.id}:`, error);
+/**
+ * Send queued writes, then remove only the ones the server accounted for.
+ * Concurrent callers share one run: a burst of `online` events must not send the
+ * same queued grievance several times at once.
+ */
+export function processSyncQueue(): Promise<ReplayOutcome | null> {
+  if (!isOnline()) return Promise.resolve(null);
+  if (replaying) return replaying;
+  replaying = (async () => {
+    const outcome = await replayQueue(await getPendingSyncItems(), (target, body) =>
+      api.request({ method: target.method, url: target.url, data: body }),
+    );
+    for (const id of [...outcome.sent, ...outcome.dropped]) {
+      await removeSyncItem(id);
     }
-  }
+    if (outcome.dropped.length > 0) {
+      // Dropped means the server refused it; a quiet drop would hide a complaint
+      // that never reached the labour office.
+      console.warn("[offline] dropped unreplayable queued writes:", outcome.dropped);
+    }
+    return outcome;
+  })().finally(() => {
+    replaying = null;
+  });
+  return replaying;
 }
 
 // Auto-sync when coming back online
