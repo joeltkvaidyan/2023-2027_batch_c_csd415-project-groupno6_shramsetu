@@ -553,7 +553,7 @@ export default function WageLogPage() {
         </p>
 
         {summary && summary.total_unpaid > 0 && (
-          <div className="sticky bottom-3 z-10 flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-2.5 shadow-lg">
+          <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-2.5 shadow-lg">
             <CalendarCheck
               className="h-5 w-5 shrink-0 text-red-700 dark:text-red-300"
               aria-hidden="true"

@@ -289,7 +289,9 @@
     "grievances": "Grievances",
     "alerts": "Alerts",
     "chat": "Chat",
-    "settings": "Settings"
+    "settings": "Settings",
+    "wages": "Wages",
+    "primary": "Primary"
   },
   "wages": {
     "title": "Wage Diary",

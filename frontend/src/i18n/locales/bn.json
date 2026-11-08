@@ -289,7 +289,9 @@
     "grievances": "অভিযোগ",
     "alerts": "বিজ্ঞপ্তি",
     "chat": "চ্যাট",
-    "settings": "সেটিংস"
+    "settings": "সেটিংস",
+    "wages": "মজুরি",
+    "primary": "প্রধান"
   },
   "wages": {
     "title": "মজুরি ডায়েরি",

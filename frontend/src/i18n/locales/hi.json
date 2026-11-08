@@ -289,7 +289,9 @@
     "grievances": "शिकायतें",
     "alerts": "सूचनाएं",
     "chat": "चैट",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "wages": "मज़दूरी",
+    "primary": "मुख्य"
   },
   "wages": {
     "title": "मजदूरी डायरी",
