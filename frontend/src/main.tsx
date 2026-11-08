@@ -6,6 +6,7 @@ import "./i18n/index";
 import "./index.css";
 import { AuthProvider } from "./store/AuthContext";
 import { ThemeProvider } from "./store/ThemeContext";
+import { ToastProvider } from "./components/ui/Toast";
 import { applyTextScale, readTextScale } from "./design/textScale";
 
 // Before the first paint: a page that renders at 17px and then jumps to
@@ -17,7 +18,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

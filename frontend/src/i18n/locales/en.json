@@ -553,5 +553,9 @@
     "offline": "You are offline. New entries are saved on this phone.",
     "pendingOne": "1 entry waiting to be sent",
     "pendingMany": "{{count}} entries waiting to be sent"
+  },
+  "a11y": {
+    "dismiss": "Dismiss",
+    "close": "Close"
   }
 }
