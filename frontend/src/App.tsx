@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { RoleRoute } from "./components/RoleRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { OfflineBanner } from "./components/OfflineBanner";
 
 // Pages are statically imported on purpose. They used to be React.lazy chunks
 // behind a full-screen "Loading…" fallback, so every navigation showed a
@@ -37,6 +38,9 @@ import WorkerRequestsPage from "./pages/WorkerRequestsPage";
 export default function App() {
   return (
     <ErrorBoundary>
+      {/* Above the routes: one strip for the app, shown only when it has
+          something to say (offline, or writes still waiting to be sent). */}
+      <OfflineBanner />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LanguageSelectPage />} />
