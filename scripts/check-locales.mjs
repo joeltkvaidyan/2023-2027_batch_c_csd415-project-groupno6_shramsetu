@@ -25,7 +25,14 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const LOCALES_DIR = path.resolve(here, "..", "frontend", "src", "i18n", "locales");
+const LOCALES_DIR = path.resolve(
+  here,
+  "..",
+  "frontend",
+  "src",
+  "i18n",
+  "locales",
+);
 const ALLOWLIST_PATH = path.join(here, "locale-allowlist.json");
 
 const BASE = "en";
@@ -50,7 +57,9 @@ function readLocale(locale) {
   try {
     raw = readFileSync(file, "utf8");
   } catch {
-    throw new Error(`Missing locale file: ${path.relative(process.cwd(), file)}`);
+    throw new Error(
+      `Missing locale file: ${path.relative(process.cwd(), file)}`,
+    );
   }
   try {
     return flatten(JSON.parse(raw));
@@ -66,12 +75,59 @@ const base = readLocale(BASE);
 const locales = ["hi", "bn", "te", "ta", "ml"];
 const violations = [];
 
+// Rule 4 — placeholders. The i18n instance is configured with SINGLE braces
+// (src/i18n/index.ts sets interpolation prefix "{"), so "{{month}}" is not a
+// placeholder at all: it renders to the user as the literal text "{{MONTH}}".
+// A double-brace string therefore looks translated, passes every other rule,
+// and ships a broken label — which is exactly what happened once. The names are
+// also compared against en.json, so a locale that renames a variable silently
+// loses its value instead of failing.
+const PLACEHOLDER = /(?<!\{)\{([a-zA-Z0-9_]+)\}(?!\})/g;
+function placeholderNames(value) {
+  return [...value.matchAll(PLACEHOLDER)].map((m) => m[1]).sort();
+}
+function checkPlaceholders(locale, key, value) {
+  if (typeof value !== "string") return;
+  if (value.includes("{{") || value.includes("}}")) {
+    violations.push({
+      type: "bad-placeholder",
+      locale,
+      key,
+      detail: `double braces render literally (config uses single): "${value}"`,
+    });
+    return;
+  }
+  const expected = placeholderNames(String(base.get(key) ?? ""));
+  if (expected.length === 0) return;
+  const actual = placeholderNames(value);
+  const missing = expected.filter((n) => !actual.includes(n));
+  const extra = actual.filter((n) => !expected.includes(n));
+  if (missing.length || extra.length) {
+    violations.push({
+      type: "placeholder-mismatch",
+      locale,
+      key,
+      detail:
+        `expected {${expected.join("}, {")}}` +
+        (missing.length ? `, missing {${missing.join("}, {")}}` : "") +
+        (extra.length ? `, unknown {${extra.join("}, {")}}` : ""),
+    });
+  }
+}
+
+for (const key of base.keys()) checkPlaceholders(BASE, key, base.get(key));
+
 for (const locale of locales) {
   const strings = readLocale(locale);
 
   for (const key of base.keys()) {
     if (!strings.has(key)) {
-      violations.push({ type: "missing", locale, key, detail: "key absent from this locale" });
+      violations.push({
+        type: "missing",
+        locale,
+        key,
+        detail: "key absent from this locale",
+      });
       continue;
     }
     const translated = strings.get(key);
@@ -90,11 +146,17 @@ for (const locale of locales) {
         detail: `still English: "${english}"`,
       });
     }
+    checkPlaceholders(locale, key, translated);
   }
 
   for (const key of strings.keys()) {
     if (!base.has(key)) {
-      violations.push({ type: "stale", locale, key, detail: "key no longer in en.json" });
+      violations.push({
+        type: "stale",
+        locale,
+        key,
+        detail: "key no longer in en.json",
+      });
     }
   }
 }
@@ -126,7 +188,9 @@ for (const entry of allowlist.entries) {
 }
 
 if (asJson) {
-  console.log(JSON.stringify({ ok: violations.length === 0, violations }, null, 2));
+  console.log(
+    JSON.stringify({ ok: violations.length === 0, violations }, null, 2),
+  );
 } else if (violations.length === 0) {
   console.log(
     `Locale parity OK — ${base.size} keys × ${locales.length + 1} locales ` +

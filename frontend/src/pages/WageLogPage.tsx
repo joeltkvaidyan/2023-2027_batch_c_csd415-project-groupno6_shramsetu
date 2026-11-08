@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarCheck, Copy, FileWarning } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
-import { WageCalendar } from "../components/WageCalendar";
+import { WageCalendar, formatMonthLabel } from "../components/WageCalendar";
 import { Button } from "../components/ui/Button";
 import { api, apiErrorMessage, apiErrorCode, isNetworkFailure } from "../api/client";
 import { submitOnce } from "../api/idempotency";
@@ -39,7 +39,7 @@ const STATUS_TONE: Record<WageEntry["payment_status"], "success" | "danger" | "w
 };
 
 export default function WageLogPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [month, setMonth] = useState(currentMonth());
@@ -364,7 +364,7 @@ export default function WageLogPage() {
             still owed. Tapping a square fills the date into the form below. */}
         <Card className="!p-4">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            {t("wages.calendarLabel", { month })}
+            {t("wages.calendarLabel", { month: formatMonthLabel(month, i18n.language || "en") })}
           </h2>
           {entries === null ? (
             <SkeletonList rows={2} />

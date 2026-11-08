@@ -37,6 +37,21 @@ export function buildMonthGrid(month: string, entries: WageEntry[]): (CalendarCe
   return cells;
 }
 
+/**
+ * "2026-11" -> "November 2026" in the reader's language.
+ *
+ * The page used to interpolate the raw ISO string into the heading, so a worker
+ * read "Wage calendar for 2026-11". Built from parts for the same reason the grid
+ * is: no UTC round-trip, so no off-by-one month at a timezone boundary.
+ */
+export function formatMonthLabel(month: string, locale: string): string {
+  const [year, monthIndex] = month.split("-").map((part) => Number(part));
+  if (!year || !monthIndex) return month;
+  return new Intl.DateTimeFormat(locale || "en", { month: "long", year: "numeric" }).format(
+    new Date(year, monthIndex - 1, 1),
+  );
+}
+
 const STATUS_ICON = {
   paid: Check,
   partial: TriangleAlert,
@@ -78,9 +93,10 @@ export function WageCalendar({ month, entries, onSelectDay, selectedDay }: WageC
   }, [i18n.language]);
 
   const rupees = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+  const monthLabel = formatMonthLabel(month, i18n.language || "en");
 
   return (
-    <section aria-label={t("wages.calendarLabel", { month })}>
+    <section aria-label={t("wages.calendarLabel", { month: monthLabel })}>
       <div className="grid grid-cols-7 gap-1.5 text-center" role="grid">
         {weekdays.map((name) => (
           <div

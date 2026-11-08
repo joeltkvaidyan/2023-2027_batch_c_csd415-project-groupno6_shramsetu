@@ -18,7 +18,13 @@
  *
  * Re-run it when a family or weight changes — do not hand-edit fonts.css.
  */
-import { mkdirSync, writeFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import {
+  mkdirSync,
+  writeFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -70,16 +76,22 @@ let total = 0;
 
 for (const family of FAMILIES) {
   const css = await fetchText(cssUrl(family.query));
-  const faces = css.split("@font-face").slice(1).map((chunk) => chunk.split("}")[0]);
-  if (faces.length === 0) throw new Error(`no @font-face returned for ${family.query}`);
-
+  const faces = css
+    .split("@font-face")
+    .slice(1)
+    .map((chunk) => chunk.split("}")[0]);
+  if (faces.length === 0)
+    throw new Error(`no @font-face returned for ${family.query}`);
 
   for (const face of faces) {
     // Google has two ways to hand back a woff2: a path ending in `.woff2`, and
     // the `l/font?kit=…` endpoint with no extension at all. Which one a node
     // returns varies between requests, so neither the extension nor the path
     // shape can be trusted — the \`format('woff2')\` on the rule is the signal.
-    const src = /url\(\s*(https:\/\/[^)]+?)\s*\)\s*format\(\s*['"]woff2['"]\s*\)/.exec(face);
+    const src =
+      /url\(\s*(https:\/\/[^)]+?)\s*\)\s*format\(\s*['"]woff2['"]\s*\)/.exec(
+        face,
+      );
     const range = /unicode-range:\s*([^;]+);/.exec(face);
     const weight = /font-weight:\s*([^;]+);/.exec(face);
     const style = /font-style:\s*([^;]+);/.exec(face);
@@ -94,7 +106,10 @@ for (const family of FAMILIES) {
     let name = seen.get(url);
     if (!name) {
       const kit = /[?&]kit=([^&]+)/.exec(url)?.[1];
-      const slug = (kit ?? url.split("/").pop().split("?")[0]).replace(/[^A-Za-z0-9._-]/g, "");
+      const slug = (kit ?? url.split("/").pop().split("?")[0]).replace(
+        /[^A-Za-z0-9._-]/g,
+        "",
+      );
       name = `${family.label}-${slug}`;
       seen.set(url, name);
       const bytes = await fetchBinary(url);
@@ -121,7 +136,10 @@ for (const family of FAMILIES) {
 
 /** The family name Google declared, so the CSS and our stack cannot disagree. */
 function faceFamily(face) {
-  return /font-family:\s*'([^']+)'/.exec(face)?.[1] ?? /font-family:\s*"([^"]+)"/.exec(face)?.[1];
+  return (
+    /font-family:\s*'([^']+)'/.exec(face)?.[1] ??
+    /font-family:\s*"([^"]+)"/.exec(face)?.[1]
+  );
 }
 
 const header = `/*
@@ -140,7 +158,10 @@ const header = `/*
 writeFileSync(CSS_OUT, header + "\n" + blocks.join("\n\n") + "\n");
 
 const size = (dir) =>
-  readdirSync(dir).reduce((sum, f) => sum + statSync(path.join(dir, f)).size, 0);
+  readdirSync(dir).reduce(
+    (sum, f) => sum + statSync(path.join(dir, f)).size,
+    0,
+  );
 console.log(
   `Vendored ${seen.size} woff2 files (${(size(FONT_DIR) / 1024).toFixed(0)} kB) → ${path.relative(
     ROOT,

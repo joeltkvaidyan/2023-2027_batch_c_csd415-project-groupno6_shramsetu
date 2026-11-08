@@ -327,9 +327,9 @@
     "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
     "exportCSV": "Export CSV",
     "savedOffline": "Saved on this phone. The entry will be sent when you are back online.",
-    "calendarLabel": "Wage calendar for {{month}}",
-    "cellLabel": "{{date}}: {{status}}, {{agreed}} agreed, {{paid}} paid",
-    "cellEmpty": "{{date}}: no entry yet",
+    "calendarLabel": "Wage calendar for {month}",
+    "cellLabel": "{date}: {status}, {agreed} agreed, {paid} paid",
+    "cellEmpty": "{date}: no entry yet",
     "sameAsYesterday": "Same as yesterday",
     "makeComplaint": "Make complaint"
   },
@@ -386,8 +386,8 @@
     "matchScore": "Profile fit",
     "shortlisted": "Shortlisted",
     "shortlistedNote": "The office read your application. This is not an offer of work — keep applying.",
-    "shortlistedCount": "{{count}} shortlisted by the office",
-    "resultsCount": "{{count}} listing(s) match your profile",
+    "shortlistedCount": "{count} shortlisted by the office",
+    "resultsCount": "{count} listing(s) match your profile",
     "loadingMatches": "Finding listings near your profile…",
     "clearFilters": "Clear search and trade filter",
     "review": {
@@ -562,7 +562,7 @@
   "offline": {
     "offline": "You are offline. New entries are saved on this phone.",
     "pendingOne": "1 entry waiting to be sent",
-    "pendingMany": "{{count}} entries waiting to be sent"
+    "pendingMany": "{count} entries waiting to be sent"
   },
   "a11y": {
     "dismiss": "Dismiss",

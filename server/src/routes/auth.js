@@ -873,9 +873,23 @@ router.post("/government/login", governmentLoginLimiter, async (req, res) => {
 // cookie/bearer session? Before this, a page load could fire three different
 // "am I allowed here" requests (one per token store) and they could disagree.
 // The role comes from the verified token, never from the client.
-router.get("/session", authenticate, (req, res) => {
+//
+// A worker session also carries the profile. The SPA boots its worker context
+// from this one answer and renders nothing until `worker` is present, so a
+// response with the role alone looked exactly like a signed-out visitor: every
+// hard refresh or deep link bounced a signed-in worker back to the login page,
+// while in-app navigation (which already has the login payload) kept working and
+// hid the fault.
+router.get("/session", authenticate, async (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json({ role: req.userRole });
+  if (req.userRole !== "worker") {
+    return res.json({ role: req.userRole });
+  }
+  const worker = await User.findById(req.userId);
+  if (!worker || !worker.is_active) {
+    return res.status(401).json({ detail: "Not authenticated", code: "no_token" });
+  }
+  res.json({ role: "worker", worker: worker.toWorkerJSON() });
 });
 
 // ── Session refresh ──────────────────────────────────────────────────

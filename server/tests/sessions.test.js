@@ -316,9 +316,49 @@ describe("GET /auth/session", () => {
 
     const session = await api.get("/api/v1/auth/session").set("Cookie", cookiefy(cookies));
     expect(session.status).toBe(200);
-    expect(session.body).toEqual({ role: "worker" });
+    expect(session.body.role).toBe("worker");
     // A guard answer must not be cached by a shared proxy.
     expect(session.headers["cache-control"]).toContain("no-store");
+  });
+
+  /**
+   * The SPA boots its worker context from this one answer and renders nothing
+   * until `worker` is there. When the endpoint returned the role alone, a hard
+   * refresh or a deep link looked exactly like a signed-out visitor and bounced
+   * a signed-in worker to the login page — in-app navigation hid it, because the
+   * login response had already supplied the profile.
+   */
+  it("carries the worker profile, so a refresh does not sign the worker out", async () => {
+    const res = await login();
+    const cookies = {
+      st_access: cookieValue(res, "st_access"),
+      st_csrf: cookieValue(res, "st_csrf"),
+    };
+
+    const session = await api.get("/api/v1/auth/session").set("Cookie", cookiefy(cookies));
+    expect(session.status).toBe(200);
+    expect(session.body.worker).toBeTruthy();
+    expect(session.body.worker.full_name).toBe(res.body.worker.full_name);
+    expect(session.body.worker.id ?? session.body.worker._id).toBeTruthy();
+  });
+
+  it("never leaks the password hash through the session probe", async () => {
+    const res = await login();
+    const cookies = {
+      st_access: cookieValue(res, "st_access"),
+      st_csrf: cookieValue(res, "st_csrf"),
+    };
+
+    const session = await api.get("/api/v1/auth/session").set("Cookie", cookiefy(cookies));
+    expect(session.status).toBe(200);
+    // `recovery_key_set` is a deliberate boolean (the UI tells the worker whether
+    // a key exists); the hash itself must never leave the server.
+    const raw = JSON.stringify(session.body);
+    expect(raw).not.toContain("password");
+    expect(raw).not.toContain("recovery_key_hash");
+    expect(raw).not.toContain("_hash");
+    expect(session.body.worker.recovery_key_set === undefined ||
+      typeof session.body.worker.recovery_key_set === "boolean").toBe(true);
   });
 
   it("answers anonymous visitors with no_token instead of a role", async () => {

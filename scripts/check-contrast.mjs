@@ -28,14 +28,19 @@ const TOKENS_CSS = path.join(DESIGN_DIR, "tokens.css");
 const asJson = process.argv.includes("--json");
 
 /** `--color-surface-raised` for the JSON key `surfaceRaised`. */
-const cssVar = (name) => `--color-${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+const cssVar = (name) =>
+  `--color-${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 
 function parseCssThemes(css) {
   const themes = {};
   // Each theme is one `selector { ... }` block; :root is light, .dark is dark,
   // .hc is high contrast. Anything else (:root:lang(hi) etc.) is not a palette.
   const blockRe = /(^|\n)\s*(:root|\.dark|\.hc)\s*\{([^}]*)\}/g;
-  const selectors = { ":root": "light", ".dark": "dark", ".hc": "highContrast" };
+  const selectors = {
+    ":root": "light",
+    ".dark": "dark",
+    ".hc": "highContrast",
+  };
   for (const match of css.matchAll(blockRe)) {
     const values = themes[selectors[match[2]]] ?? {};
     for (const decl of match[3].matchAll(/(--color-[a-z-]+)\s*:\s*([^;]+);/g)) {
@@ -60,7 +65,9 @@ function luminance(hex) {
           .map((c) => c + c)
           .join("")
       : clean;
-  const [r, g, b] = [0, 2, 4].map((i) => channel(parseInt(full.slice(i, i + 2), 16)));
+  const [r, g, b] = [0, 2, 4].map((i) =>
+    channel(parseInt(full.slice(i, i + 2), 16)),
+  );
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -80,7 +87,9 @@ for (const [themeName, expected] of Object.entries(tokens.themes)) {
   for (const [token, value] of Object.entries(expected)) {
     const raw = declared[cssVar(token)];
     if (raw === undefined) {
-      violations.push(`${themeName}: tokens.css does not declare ${cssVar(token)}`);
+      violations.push(
+        `${themeName}: tokens.css does not declare ${cssVar(token)}`,
+      );
       continue;
     }
     if (raw.replace(/\s/g, "") !== value.toLowerCase()) {
@@ -89,9 +98,13 @@ for (const [themeName, expected] of Object.entries(tokens.themes)) {
       );
     }
   }
-  const extra = Object.keys(declared).filter((v) => !Object.keys(expected).some((t) => cssVar(t) === v));
+  const extra = Object.keys(declared).filter(
+    (v) => !Object.keys(expected).some((t) => cssVar(t) === v),
+  );
   for (const name of extra) {
-    violations.push(`${themeName}: ${name} is declared in CSS but missing from tokens.json`);
+    violations.push(
+      `${themeName}: ${name} is declared in CSS but missing from tokens.json`,
+    );
   }
 }
 
@@ -101,7 +114,9 @@ for (const [themeName, palette] of Object.entries(tokens.themes)) {
     const fg = palette[pair.fg];
     const bg = palette[pair.bg];
     if (!fg || !bg) {
-      violations.push(`${themeName}: pair ${pair.fg} on ${pair.bg} names a missing token`);
+      violations.push(
+        `${themeName}: pair ${pair.fg} on ${pair.bg} names a missing token`,
+      );
       continue;
     }
     const ratio = contrastRatio(fg, bg);
