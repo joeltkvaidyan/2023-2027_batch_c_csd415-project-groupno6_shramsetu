@@ -236,7 +236,8 @@
     "allCategories": "All Categories",
     "due": "Due",
     "loadError": "Couldn't load your complaints.",
-    "empty": "No complaints yet"
+    "empty": "No complaints yet",
+    "savedOffline": "Saved on this phone. It will be sent when you are back online."
   },
   "common": {
     "save": "Save",
@@ -315,7 +316,8 @@
     "fileForDate": "File a complaint for {date}",
     "last90Days": "last 90 days",
     "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
-    "exportCSV": "Export CSV"
+    "exportCSV": "Export CSV",
+    "savedOffline": "Saved on this phone. The entry will be sent when you are back online."
   },
   "errors": {
     "network": "You appear to be offline. Check your connection and try again.",

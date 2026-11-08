@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { VoiceRecorder } from "../components/VoiceRecorder";
-import { api, apiErrorDetail, httpStatus } from "../api/client";
+import { api, apiErrorDetail, httpStatus, isNetworkFailure } from "../api/client";
+import { addToSyncQueue } from "../services/offlineStorage";
 import { submitOnce } from "../api/idempotency";
 import {
   cacheGrievanceDraft,
@@ -55,6 +56,7 @@ export default function GrievanceFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ subject?: string; description?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [queuedOffline, setQueuedOffline] = useState(false);
 
   useEffect(() => {
     // Load draft if no prefill state
@@ -100,27 +102,60 @@ export default function GrievanceFormPage() {
   // complaint twice. It is cleared only by a successful response.
   const submissionKey = useRef<string | null>(null);
 
+  /**
+   * Keep the complaint when there is no signal. The write goes into the offline
+   * queue, which attaches the idempotency key at enqueue time, so the replay
+   * files it exactly once. The worker is told plainly that it has not reached
+   * the office yet — a silent "sent" would be a lie.
+   */
+  const queueOffline = async (body: Record<string, unknown>) => {
+    try {
+      await addToSyncQueue("grievance", "create", {
+        ...body,
+        client_request_id: submissionKey.current ?? undefined,
+      });
+      // The form is empty again because the complaint is no longer on it — it is
+      // in the queue. Leaving the text there invites a second, duplicate filing.
+      setSubject("");
+      setDescription("");
+      setEmployerName("");
+      setIncidentLocation("");
+      setIncidentDate("");
+      setQueuedOffline(true);
+    } catch {
+      // IndexedDB unavailable (private mode): the complaint cannot be kept, so
+      // say so instead of pretending it was saved.
+      setError(t("errors.network"));
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setQueuedOffline(false);
     if (!validate()) return;
     setSubmitting(true);
+    // Declared outside the try so a network failure in the catch can queue the
+    // very same body the request would have carried.
+    const payload = {
+      category,
+      subject,
+      description,
+      employer_name: employerName || undefined,
+      incident_location: incidentLocation || undefined,
+      incident_date: incidentDate ? new Date(incidentDate).toISOString() : undefined,
+      // Server re-checks every reference against the worker and drops any
+      // that is not theirs; a stale id never blocks the filing.
+      evidence: state?.evidence?.length ? state.evidence : undefined,
+    };
     try {
-      const res = await submitOnce(
-        submissionKey,
-        {
-          category,
-          subject,
-          description,
-          employer_name: employerName || undefined,
-          incident_location: incidentLocation || undefined,
-          incident_date: incidentDate ? new Date(incidentDate).toISOString() : undefined,
-          // Server re-checks every reference against the worker and drops any
-          // that is not theirs; a stale id never blocks the filing.
-          evidence: state?.evidence?.length ? state.evidence : undefined,
-        },
-        (body) => api.post("/grievances", body),
-      );
+      // No signal at all: queue it rather than making the worker watch a spin.
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await queueOffline(payload);
+        return;
+      }
+
+      const res = await submitOnce(submissionKey, payload, (body) => api.post("/grievances", body));
       await deleteCachedGrievanceDraft();
       navigate(`/worker/grievances/${res.data.id}`, { replace: true });
     } catch (err) {
@@ -128,6 +163,12 @@ export default function GrievanceFormPage() {
       // field instead of only a generic banner — falls back to the banner
       // for anything that isn't a recognized field-level error (network
       // failure, 500, etc.).
+      // The request never reached the server: keep the complaint for the next
+      // reconnect instead of dropping what the worker just typed.
+      if (isNetworkFailure(err)) {
+        await queueOffline(payload);
+        return;
+      }
       const detail = apiErrorDetail(err);
       if (httpStatus(err) === 422 && Array.isArray(detail)) {
         const next: { subject?: string; description?: string } = {};
@@ -288,6 +329,15 @@ export default function GrievanceFormPage() {
             onChange={(e) => setIncidentDate(e.target.value)}
           />
         </div>
+
+        {queuedOffline && (
+          <p
+            role="status"
+            className="text-sm text-green-800 dark:text-green-200 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl px-4 py-3"
+          >
+            {t("grievance.savedOffline")}
+          </p>
+        )}
 
         {error && (
           <p

@@ -284,7 +284,15 @@ export async function addToSyncQueue(
     type,
     action,
     // A queued create is one intent: it keeps its key until the server has it.
-    data: action === "create" ? { client_request_id: newSubmissionKey(), ...data } : data,
+    // A key the caller already generated wins, so the queued write and the
+    // attempt that failed share one identity.
+    data:
+      action === "create"
+        ? {
+            ...data,
+            client_request_id: (data.client_request_id as string | undefined) || newSubmissionKey(),
+          }
+        : data,
     timestamp: Date.now(),
   });
 }

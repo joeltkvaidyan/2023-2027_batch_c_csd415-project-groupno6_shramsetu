@@ -5,8 +5,9 @@ import { FileWarning } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
-import { api, apiErrorMessage, apiErrorCode } from "../api/client";
+import { api, apiErrorMessage, apiErrorCode, isNetworkFailure } from "../api/client";
 import { submitOnce } from "../api/idempotency";
+import { addToSyncQueue } from "../services/offlineStorage";
 import type { WageEntry, WageSummary } from "../types";
 
 function currentMonth(): string {
@@ -76,6 +77,7 @@ export default function WageLogPage() {
   // A lost reply must not become a 409 on retry — the same submission keeps its
   // key until the server has confirmed it.
   const submissionKey = useRef<string | null>(null);
+  const [queuedOffline, setQueuedOffline] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,26 +103,49 @@ export default function WageLogPage() {
       return;
     }
     setSaving(true);
+    setQueuedOffline(false);
+    const payload = {
+      work_date: workDate,
+      employer_name: employerName || undefined,
+      agreed_amount: agreed,
+      paid_amount: paid,
+    };
+    // Keep the day when there is no signal. It goes into the queue with its key,
+    // so the replay writes the entry once — and reports the outcome instead of
+    // claiming the office already has it.
+    const queueOffline = async () => {
+      try {
+        await addToSyncQueue("wage", "create", {
+          ...payload,
+          client_request_id: submissionKey.current ?? undefined,
+        });
+        setAgreedAmount("");
+        setPaidAmount("");
+        setQueuedOffline(true);
+      } catch {
+        setFormError(t("errors.network"));
+      }
+    };
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      await queueOffline();
+      setSaving(false);
+      return;
+    }
     try {
       // Upsert by date — saving the same day again replaces the entry. The key
       // makes a retry of THIS submission a replay rather than an edit: without
       // it, a retry after a lost reply would be refused by the paid-day lock
       // for a change it is not making.
-      await submitOnce(
-        submissionKey,
-        {
-          work_date: workDate,
-          employer_name: employerName || undefined,
-          agreed_amount: agreed,
-          paid_amount: paid,
-        },
-        (body) => api.post("/wages", body),
-      );
+      await submitOnce(submissionKey, payload, (body) => api.post("/wages", body));
       setSavedOk(true);
       setAgreedAmount("");
       setPaidAmount("");
       await load();
     } catch (err) {
+      if (isNetworkFailure(err)) {
+        await queueOffline();
+        return;
+      }
       // Server-side paid-day lock (409) — localized message, not the API's English detail.
       const code = apiErrorCode(err);
       setFormError(
@@ -393,6 +418,11 @@ export default function WageLogPage() {
             {formError && (
               <p role="alert" className="field-error">
                 {formError}
+              </p>
+            )}
+            {queuedOffline && (
+              <p role="status" className="text-sm text-green-700 dark:text-green-400">
+                {t("wages.savedOffline")}
               </p>
             )}
             {savedOk && !formError && (

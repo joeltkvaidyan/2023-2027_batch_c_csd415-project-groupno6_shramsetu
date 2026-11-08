@@ -41,6 +41,16 @@ export function httpStatus(err: unknown): number | undefined {
   return axios.isAxiosError(err) ? err.response?.status : undefined;
 }
 
+/**
+ * True when the request never got an answer — the phone had no signal, or the
+ * connection dropped. This is the only failure that is worth queueing offline:
+ * a 4xx is the server's verdict on the content, and retrying it later would
+ * fail the same way.
+ */
+export function isNetworkFailure(err: unknown): boolean {
+  return axios.isAxiosError(err) && !err.response;
+}
+
 /** `code` field the server puts on a refused request (e.g. gov_approval_pending). */
 export function apiErrorCode(err: unknown): string | undefined {
   const data: unknown = axios.isAxiosError(err) ? err.response?.data : undefined;
