@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { WageEntry } from "../models/WageEntry.js";
 import { WageSlip } from "../models/WageSlip.js";
 import { authenticate, requireWorker, audit } from "../middleware/auth.js";
+import { isDuplicateKeyError, readIdempotencyKey, replayResponse } from "../utils/idempotency.js";
 
 const router = Router();
 
@@ -280,6 +281,15 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
       payment_status ||
       (paid <= 0 ? "unpaid" : paid >= agreed ? "paid" : "partial");
 
+    // A retried submission must not hit the locks below: the first attempt may
+    // already have written a paid, employer-confirmed day, and the retry would
+    // then be refused for a change it is not actually making.
+    const requestKey = readIdempotencyKey(req);
+    if (requestKey) {
+      const previous = await WageEntry.findOne({ worker_id: req.userId, client_request_id: requestKey });
+      if (previous) return replayResponse(res, entryJSON(previous));
+    }
+
     // Lock paid days: an entry already recorded as fully paid can no longer
     // be edited (wage fix: salary already settled). Unpaid/partial stay open.
     const existing = await WageEntry.findOne({
@@ -315,6 +325,7 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
         agreed_amount: agreed,
         paid_amount: paid,
         payment_status: status,
+        client_request_id: requestKey ?? undefined,
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
@@ -330,6 +341,11 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
     });
     res.status(201).json(entryJSON(entry));
   } catch (err) {
+    if (isDuplicateKeyError(err)) {
+      const key = readIdempotencyKey(req);
+      const previous = key && (await WageEntry.findOne({ worker_id: req.userId, client_request_id: key }));
+      if (previous) return replayResponse(res, entryJSON(previous));
+    }
     fail(res, err, "Could not save the wage entry.");
   }
 });

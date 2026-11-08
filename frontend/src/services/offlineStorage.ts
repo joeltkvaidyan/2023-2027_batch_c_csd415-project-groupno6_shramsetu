@@ -330,8 +330,9 @@ export async function processSyncQueue(): Promise<void> {
   const items = await getPendingSyncItems();
   for (const item of items) {
     try {
-      // Process based on type and action
-      console.log(`[OfflineSync] Processing: ${item.type} ${item.action}`);
+      // Replaying a queued write is only safe because the API accepts the same
+      // client_request_id twice (see api/idempotency.ts); the queue is not yet
+      // wired to those endpoints, so items are dropped rather than duplicated.
       await removeSyncItem(item.id);
     } catch (error) {
       console.error(`[OfflineSync] Failed to process item ${item.id}:`, error);
@@ -342,7 +343,6 @@ export async function processSyncQueue(): Promise<void> {
 // Auto-sync when coming back online
 if (typeof window !== "undefined") {
   window.addEventListener("online", () => {
-    console.log("[OfflineSync] Back online, processing queue...");
-    processSyncQueue();
+    void processSyncQueue();
   });
 }

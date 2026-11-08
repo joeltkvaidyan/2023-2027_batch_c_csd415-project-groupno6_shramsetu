@@ -26,6 +26,14 @@ const GrievanceSchema = new Schema(
     complaint_number: { type: String, index: true }, // GR-XXXXXXXX
     owner_id: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
 
+    // Idempotency key of the submission that created this row (see
+    // utils/idempotency.js). Left absent — not null — when a client sends none:
+    // a sparse index treats a stored null as a value, so one null per worker
+    // would collide and every keyless filing after the first would 500. Absent
+    // documents are outside the index entirely, so legacy data needs no
+    // migration.
+    client_request_id: { type: String },
+
     // Denormalised jurisdiction snapshot (where the grievance was FILED).
     // Lets government officials query their scope without joining users, and
     // preserves the filing district even if the worker later moves. Set at
@@ -93,6 +101,15 @@ const GrievanceSchema = new Schema(
     ],
   },
   { timestamps: true, collection: "grievances" }
+);
+
+// One grievance per (worker, submission key). A partial index — not `sparse`,
+// which counts a stored null as a value — so every row without a string key
+// (legacy data, API clients that send none) stays out of the constraint
+// entirely instead of colliding with the next keyless filing.
+GrievanceSchema.index(
+  { owner_id: 1, client_request_id: 1 },
+  { unique: true, partialFilterExpression: { client_request_id: { $type: "string" } } }
 );
 
 GrievanceSchema.methods.toJSON = function () {

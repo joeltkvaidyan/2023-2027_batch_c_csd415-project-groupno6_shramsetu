@@ -1,9 +1,10 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { VoiceRecorder } from "../components/VoiceRecorder";
 import { api, apiErrorDetail, httpStatus } from "../api/client";
+import { submitOnce } from "../api/idempotency";
 import {
   cacheGrievanceDraft,
   getCachedGrievanceDraft,
@@ -95,23 +96,31 @@ export default function GrievanceFormPage() {
     return Object.keys(errs).length === 0;
   };
 
+  // One key per submission: a retry after a lost reply must not file the same
+  // complaint twice. It is cleared only by a successful response.
+  const submissionKey = useRef<string | null>(null);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const res = await api.post("/grievances", {
-        category,
-        subject,
-        description,
-        employer_name: employerName || undefined,
-        incident_location: incidentLocation || undefined,
-        incident_date: incidentDate ? new Date(incidentDate).toISOString() : undefined,
-        // Server re-checks every reference against the worker and drops any
-        // that is not theirs; a stale id never blocks the filing.
-        evidence: state?.evidence?.length ? state.evidence : undefined,
-      });
+      const res = await submitOnce(
+        submissionKey,
+        {
+          category,
+          subject,
+          description,
+          employer_name: employerName || undefined,
+          incident_location: incidentLocation || undefined,
+          incident_date: incidentDate ? new Date(incidentDate).toISOString() : undefined,
+          // Server re-checks every reference against the worker and drops any
+          // that is not theirs; a stale id never blocks the filing.
+          evidence: state?.evidence?.length ? state.evidence : undefined,
+        },
+        (body) => api.post("/grievances", body),
+      );
       await deleteCachedGrievanceDraft();
       navigate(`/worker/grievances/${res.data.id}`, { replace: true });
     } catch (err) {

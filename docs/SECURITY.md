@@ -60,6 +60,12 @@ Final-year project scope, stated plainly: what is enforced, what is not.
   chat text **before** any external AI provider call
   (`ai-service/app/services/pii.py`), applied to both text chat and voice
   transcription flows.
+- Duplicate records from retried submissions: grievance and wage writes accept a
+  client `client_request_id` (or `Idempotency-Key` header), scoped per worker by
+  a partial unique index, so a retry after a lost reply returns the record that
+  already exists (200 + `Idempotent-Replay: true`) instead of filing a second
+  complaint or tripping the paid-day lock. A malformed or absent key changes
+  nothing — those requests behave exactly as before.
 
 **Network & abuse**
 - `helmet` security headers; CORS allowlist whenever `CORS_ORIGINS` is set.

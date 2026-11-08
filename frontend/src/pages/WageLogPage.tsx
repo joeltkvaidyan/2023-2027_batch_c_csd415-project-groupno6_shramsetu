@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FileWarning } from "lucide-react";
@@ -6,6 +6,7 @@ import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
 import { api, apiErrorMessage, apiErrorCode } from "../api/client";
+import { submitOnce } from "../api/idempotency";
 import type { WageEntry, WageSummary } from "../types";
 
 function currentMonth(): string {
@@ -72,6 +73,10 @@ export default function WageLogPage() {
     load();
   }, [load]);
 
+  // A lost reply must not become a 409 on retry — the same submission keeps its
+  // key until the server has confirmed it.
+  const submissionKey = useRef<string | null>(null);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -97,13 +102,20 @@ export default function WageLogPage() {
     }
     setSaving(true);
     try {
-      // Upsert by date — saving the same day again replaces the entry.
-      await api.post("/wages", {
-        work_date: workDate,
-        employer_name: employerName || undefined,
-        agreed_amount: agreed,
-        paid_amount: paid,
-      });
+      // Upsert by date — saving the same day again replaces the entry. The key
+      // makes a retry of THIS submission a replay rather than an edit: without
+      // it, a retry after a lost reply would be refused by the paid-day lock
+      // for a change it is not making.
+      await submitOnce(
+        submissionKey,
+        {
+          work_date: workDate,
+          employer_name: employerName || undefined,
+          agreed_amount: agreed,
+          paid_amount: paid,
+        },
+        (body) => api.post("/wages", body),
+      );
       setSavedOk(true);
       setAgreedAmount("");
       setPaidAmount("");
