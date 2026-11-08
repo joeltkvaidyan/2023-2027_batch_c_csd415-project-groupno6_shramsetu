@@ -168,7 +168,11 @@
     "light": "లైట్",
     "dark": "డార్క్",
     "account": "ఖాతా",
-    "logout": "లాగ్అవుట్"
+    "logout": "లాగ్అవుట్",
+    "textSize": "అక్షర పరిమాణం",
+    "contrast": "కాంట్రాస్ట్",
+    "contrastNormal": "సాధారణ",
+    "contrastHigh": "అధిక కాంట్రాస్ట్"
   },
   "grievance": {
     "title": "నా ఫిర్యాదులు",

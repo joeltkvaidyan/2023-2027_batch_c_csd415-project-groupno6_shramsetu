@@ -31,6 +31,24 @@ export default {
         ],
       },
       colors: {
+        // Semantic layer. New components should reach for these, not for a
+        // numbered grey: `text-ink-muted` follows the theme, tokens.json and
+        // the contrast gate, while `text-gray-500` is a fixed hex that can
+        // silently fail contrast in one of the three themes.
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          raised: "var(--color-surface-raised)",
+          sunken: "var(--color-surface-sunken)",
+        },
+        ink: {
+          DEFAULT: "var(--color-text-primary)",
+          secondary: "var(--color-text-secondary)",
+          muted: "var(--color-text-muted)",
+        },
+        line: {
+          DEFAULT: "var(--color-border)",
+          strong: "var(--color-border-strong)",
+        },
         brand: {
           50: "#ecfdf5",
           100: "#d1fae5",
@@ -55,6 +73,17 @@ export default {
           500: "#f59e0b",
           600: "#d97706",
         },
+      },
+      borderRadius: {
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+      },
+      minHeight: {
+        tap: "var(--tap-min)",
+      },
+      minWidth: {
+        tap: "var(--tap-min)",
       },
       boxShadow: {
         "glow-brand": "0 0 24px -6px rgba(16, 185, 129, 0.45)",

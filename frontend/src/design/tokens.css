@@ -1,0 +1,119 @@
+/*
+ * Design tokens.
+ *
+ * `--color-*` values are asserted against design/tokens.json by
+ * scripts/check-contrast.mjs, which also computes WCAG contrast for every pair
+ * the app renders. Editing a hex here without editing tokens.json fails CI, and
+ * so does a pair that drops under 4.5:1 (text) or 3:1 (UI) — the point is that a
+ * worker reading a wage claim on a sunlit phone never gets grey-on-grey.
+ *
+ * Scale below the palette is deliberately coarse: 48px minimum tap targets,
+ * four radii, two motion durations. A welfare form is not a place for taste.
+ */
+
+:root {
+  /* Type scale. 17px base, not 16: the default size is read by people who may
+     not know the app or the script well, and one extra pixel is the cheapest
+     legibility win available. `--text-scale` is the A/A+/A++ control. */
+  --font-base: 17px;
+  --text-scale: 1;
+  --leading-body: 1.55;
+  --leading-tight: 1.25;
+  --tracking-body: 0;
+
+  /* 48px is the floor for anything tappable (WCAG 2.5.5 / Android Material). */
+  --tap-min: 48px;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Light theme */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f5f7f9;
+  --color-surface-sunken: #eef1f4;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #5f6b7a;
+  --color-border: #d5dae0;
+  --color-border-strong: #6b7280;
+  --color-brand: #047857;
+  --color-brand-hover: #065f46;
+  --color-on-brand: #ffffff;
+  --color-danger: #b91c1c;
+  --color-on-danger: #ffffff;
+  --color-success: #15803d;
+  --color-on-success: #ffffff;
+  --color-warning: #92400e;
+  --color-on-warning: #ffffff;
+  --color-focus: #0369a1;
+}
+
+.dark {
+  --color-surface: #0f172a;
+  --color-surface-raised: #1e293b;
+  --color-surface-sunken: #020617;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #a3aebd;
+  --color-border: #334155;
+  --color-border-strong: #94a3b8;
+  --color-brand: #34d399;
+  --color-brand-hover: #6ee7b7;
+  --color-on-brand: #052e21;
+  --color-danger: #fca5a5;
+  --color-on-danger: #450a0a;
+  --color-success: #86efac;
+  --color-on-success: #052e16;
+  --color-warning: #fcd34d;
+  --color-on-warning: #451a03;
+  --color-focus: #7dd3fc;
+}
+
+/* High contrast is a layer on top, not a third choice: it keeps the light/dark
+   surfaces' meaning (an inverted card is still a card) while forcing maximum
+   separation. Declared after .dark so it wins when both classes are present. */
+.hc {
+  --color-surface: #000000;
+  --color-surface-raised: #0a0a0a;
+  --color-surface-sunken: #000000;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ffffff;
+  --color-text-muted: #e5e5e5;
+  --color-border: #ffffff;
+  --color-border-strong: #ffffff;
+  --color-brand: #7cffc4;
+  --color-brand-hover: #b6ffdd;
+  --color-on-brand: #000000;
+  --color-danger: #ff9a9a;
+  --color-on-danger: #000000;
+  --color-success: #8dff9e;
+  --color-on-success: #000000;
+  --color-warning: #ffe066;
+  --color-on-warning: #000000;
+  --color-focus: #7dd3fc;
+}
+
+/* The five Indic scripts sit low in the Latin line box and their matras collide
+   when tracking is tight, so they get their own metrics instead of inheriting
+   the Latin ones. */
+:root:lang(hi),
+:root:lang(bn),
+:root:lang(te),
+:root:lang(ta),
+:root:lang(ml) {
+  --leading-body: 1.65;
+  --tracking-body: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0.01ms;
+    --motion-base: 0.01ms;
+  }
+}

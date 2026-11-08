@@ -1,8 +1,13 @@
+/* Token variables first: px/rem sizing below depends on them. */
+@import "./design/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html {
+  /* Every rem in the app hangs off this: 17px base × the A/A+/A++ step. */
+  font-size: calc(var(--font-base) * var(--text-scale));
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
 }
@@ -14,6 +19,30 @@ body {
   @apply text-gray-900 dark:text-gray-100 antialiased;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+}
+
+/* Nothing tappable may be smaller than 48px in either direction, including the
+   icon-only buttons that used to be 32px squares. */
+button,
+a[role="button"],
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  min-height: var(--tap-min);
+}
+
+/* Motion budget: 200ms. Anything decorative and longer is a bug, not a style. */
+@media (prefers-reduced-motion: no-preference) {
+  .transition,
+  .transition-all,
+  .transition-colors,
+  .transition-transform,
+  .transition-opacity {
+    transition-duration: var(--motion-base);
+  }
 }
 
 /* Headings and hero numerals get the display face automatically */

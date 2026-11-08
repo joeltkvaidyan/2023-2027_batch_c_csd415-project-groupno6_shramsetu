@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "i18n:check": "node ../scripts/check-locales.mjs",
+    "contrast:check": "node ../scripts/check-contrast.mjs",
     "test:direct": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "vitest",
     "lint": "eslint .",

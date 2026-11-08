@@ -168,7 +168,11 @@
     "light": "லைட்",
     "dark": "டார்க்",
     "account": "கணக்கு",
-    "logout": "வெளியேறு"
+    "logout": "வெளியேறு",
+    "textSize": "எழுத்து அளவு",
+    "contrast": "மாறுபாடு",
+    "contrastNormal": "இயல்பு",
+    "contrastHigh": "அதிக மாறுபாடு"
   },
   "grievance": {
     "title": "எனது புகார்கள்",

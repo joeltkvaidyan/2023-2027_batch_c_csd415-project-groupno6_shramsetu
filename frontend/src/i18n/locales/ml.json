@@ -168,7 +168,11 @@
     "light": "ലൈറ്റ്",
     "dark": "ഡാർക്ക്",
     "account": "അക്കൗണ്ട്",
-    "logout": "ലോഗ്ഔട്ട്"
+    "logout": "ലോഗ്ഔട്ട്",
+    "textSize": "അക്ഷര വലിപ്പം",
+    "contrast": "കോൺട്രാസ്റ്റ്",
+    "contrastNormal": "സാധാരണ",
+    "contrastHigh": "ഉയർന്ന കോൺട്രാസ്റ്റ്"
   },
   "grievance": {
     "title": "എന്റെ പരാതികൾ",

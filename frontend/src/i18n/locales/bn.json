@@ -168,7 +168,11 @@
     "light": "লাইট",
     "dark": "ডার্ক",
     "account": "অ্যাকাউন্ট",
-    "logout": "লগআউট"
+    "logout": "লগআউট",
+    "textSize": "লেখার আকার",
+    "contrast": "কনট্রাস্ট",
+    "contrastNormal": "সাধারণ",
+    "contrastHigh": "উচ্চ কনট্রাস্ট"
   },
   "grievance": {
     "title": "আমার অভিযোগসমূহ",

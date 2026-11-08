@@ -69,6 +69,10 @@ jobs:
       - run: npm ci
       - name: Locale parity (all 6 languages, no silent English fallbacks)
         run: npm run i18n:check
+      # Fails if tokens.css and tokens.json disagree, or if any colour pair the
+      # app renders drops under WCAG AA (4.5:1 text / 3:1 UI).
+      - name: Design tokens (contrast + single source of truth)
+        run: npm run contrast:check
       # --max-warnings 0 so a new `any` cannot land as a "warning" nobody reads.
       - name: Lint (hooks rules, jsx-a11y, no escape-hatch types)
         run: npm run lint -- --max-warnings 0

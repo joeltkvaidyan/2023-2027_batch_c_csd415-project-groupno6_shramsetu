@@ -168,7 +168,11 @@
     "light": "Light",
     "dark": "Dark",
     "account": "Account",
-    "logout": "Logout"
+    "logout": "Logout",
+    "textSize": "Text size",
+    "contrast": "Contrast",
+    "contrastNormal": "Normal",
+    "contrastHigh": "High contrast"
   },
   "grievance": {
     "title": "My Complaints",

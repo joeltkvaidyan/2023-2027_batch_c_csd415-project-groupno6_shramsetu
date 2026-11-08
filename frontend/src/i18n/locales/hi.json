@@ -168,7 +168,11 @@
     "light": "लाइट",
     "dark": "डार्क",
     "account": "खाता",
-    "logout": "लॉगआउट"
+    "logout": "लॉगआउट",
+    "textSize": "पाठ का आकार",
+    "contrast": "कंट्रास्ट",
+    "contrastNormal": "सामान्य",
+    "contrastHigh": "अधिक कंट्रास्ट"
   },
   "grievance": {
     "title": "मेरी शिकायतें",
