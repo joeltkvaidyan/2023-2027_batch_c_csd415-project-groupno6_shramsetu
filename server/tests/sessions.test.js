@@ -300,3 +300,57 @@ describe("expired or missing access cookie", () => {
     expect(me.body.code).toBe("token_expired");
   });
 });
+
+/**
+ * One guard, one question. The SPA's RoleRoute needs to know which role the
+ * cookie session belongs to; asking that here keeps it from inferring
+ * authorization from a stored name or from a second, role-specific endpoint.
+ */
+describe("GET /auth/session", () => {
+  it("reports the role of the cookie session, never the client's claim", async () => {
+    const res = await login();
+    const cookies = {
+      st_access: cookieValue(res, "st_access"),
+      st_csrf: cookieValue(res, "st_csrf"),
+    };
+
+    const session = await api.get("/api/v1/auth/session").set("Cookie", cookiefy(cookies));
+    expect(session.status).toBe(200);
+    expect(session.body).toEqual({ role: "worker" });
+    // A guard answer must not be cached by a shared proxy.
+    expect(session.headers["cache-control"]).toContain("no-store");
+  });
+
+  it("answers anonymous visitors with no_token instead of a role", async () => {
+    const session = await api.get("/api/v1/auth/session");
+    expect(session.status).toBe(401);
+    expect(session.body.code).toBe("no_token");
+    expect(session.body.role).toBeUndefined();
+  });
+
+  it("ignores a government session presented on a worker route", async () => {
+    // The role endpoint is role-agnostic; a browser that asked for "worker"
+    // still only gets the truth, so the guard can bounce it.
+    const official = await User.create({
+      role: "government",
+      full_name: "Session Official",
+      employee_id: "SESS-001",
+      mobile_number: "9100000021",
+      password_hash: await hashPassword(PASSWORD),
+      is_active: true,
+    });
+    const res = await api
+      .post("/api/v1/auth/government/login")
+      .send({ employee_id: "SESS-001", password: PASSWORD });
+    expect(res.status).toBe(200);
+    const cookies = {
+      st_access: cookieValue(res, "st_access"),
+      st_csrf: cookieValue(res, "st_csrf"),
+    };
+
+    const session = await api.get("/api/v1/auth/session").set("Cookie", cookiefy(cookies));
+    expect(session.status).toBe(200);
+    expect(session.body.role).toBe("government");
+    expect(official.role).toBe("government");
+  });
+});

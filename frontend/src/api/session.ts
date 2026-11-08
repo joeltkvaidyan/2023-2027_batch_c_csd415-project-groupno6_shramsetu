@@ -20,6 +20,7 @@
  * so an upgrade cannot leave an old 12-hour token behind.
  */
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
+import type { Worker } from "../types";
 
 export type SessionRole = "worker" | "employer" | "citizen" | "government";
 
@@ -34,6 +35,23 @@ const LEGACY_KEYS = ["shramsetu.token", "gov_token", "employer_token", "citizen_
 let role: SessionRole | null = null;
 let refreshing: Promise<boolean> | null = null;
 const expiryListeners = new Set<() => void>();
+
+/**
+ * The answer from `GET /auth/session`, cached for the life of the page.
+ *
+ * Before this, every guarded route asked its own question — three token stores,
+ * three "am I allowed here" checks — so a single navigation could fire several
+ * requests that disagreed with each other. One probe, one answer, shared by the
+ * route guard and the worker profile boot.
+ */
+export interface ResolvedSession {
+  role: SessionRole;
+  /** Present only for a worker session: the profile the dashboards render. */
+  worker?: Worker;
+}
+
+let resolved: ResolvedSession | null = null;
+let probing: Promise<ResolvedSession | null> | null = null;
 
 function purgeLegacyTokens() {
   try {
@@ -69,11 +87,15 @@ export function currentRole(): SessionRole | null {
 export function declareSession(next: SessionRole): void {
   purgeLegacyTokens();
   role = next;
+  resolved = null;
+  probing = null;
 }
 
 /** Forget the in-memory session marker (the server call is `signOut`). */
 export function forgetSession(): void {
   role = null;
+  resolved = null;
+  probing = null;
 }
 
 export function onSessionExpired(listener: () => void): () => void {
@@ -83,6 +105,8 @@ export function onSessionExpired(listener: () => void): () => void {
 
 function notifyExpired() {
   role = null;
+  resolved = null;
+  probing = null;
   purgeLegacyTokens();
   for (const listener of expiryListeners) {
     try {
@@ -133,6 +157,60 @@ export async function signOut(): Promise<void> {
   } finally {
     forgetSession();
   }
+}
+
+async function probeSession(retried: boolean): Promise<ResolvedSession | null> {
+  try {
+    const { data } = await axios.get<{ role?: SessionRole; worker?: Worker }>(
+      `${API_BASE_URL}/auth/session`,
+      { withCredentials: true },
+    );
+    if (!data || typeof data.role !== "string") return null;
+    role = data.role;
+    resolved = data.worker ? { role: data.role, worker: data.worker } : { role: data.role };
+    return resolved;
+  } catch (err) {
+    // An expired access cookie is not a signed-out visitor: refresh once, then
+    // ask again. `no_token` is a real answer (nobody is signed in) and must not
+    // trigger a refresh on every anonymous page load.
+    if (!retried && isExpiredAuthError(err) && (await refreshSession())) {
+      return probeSession(true);
+    }
+    if (axios.isAxiosError(err) && err.response?.status === 401) {
+      role = null;
+      resolved = null;
+      return null;
+    }
+    // Network failure or 5xx: not "signed out", so let the caller offer retry
+    // instead of bouncing a signed-in user to the login page.
+    throw err;
+  }
+}
+
+/**
+ * Ask the server who this session belongs to — once per page, then cached.
+ *
+ * Resolves to `null` when there is no session (redirect to login). Throws when
+ * the answer could not be obtained at all, which the guard renders as a
+ * retryable error rather than a login redirect.
+ */
+export function resolveSession(force = false): Promise<ResolvedSession | null> {
+  if (force) {
+    resolved = null;
+    probing = null;
+  }
+  if (resolved) return Promise.resolve(resolved);
+  if (probing) return probing;
+  probing = probeSession(false).finally(() => {
+    probing = null;
+  });
+  return probing;
+}
+
+/** The role alone, for callers that do not need the profile. */
+export async function resolveRole(force = false): Promise<SessionRole | null> {
+  const session = await resolveSession(force);
+  return session?.role ?? null;
 }
 
 interface RetriableConfig extends InternalAxiosRequestConfig {

@@ -1,6 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
-import { api, httpStatus } from "../api/client";
-import { declareSession, forgetSession, onSessionExpired, signOut } from "../api/session";
+import {
+  declareSession,
+  forgetSession,
+  onSessionExpired,
+  resolveSession,
+  signOut,
+} from "../api/session";
 import { clearAllCachedDocuments } from "../services/documentCache";
 import { lockWallet } from "../services/documentSecurity";
 import type { Worker } from "../types";
@@ -23,7 +28,7 @@ interface AuthContextValue {
   bootError: boolean;
   completeLogin: (worker: Worker) => void;
   logout: () => Promise<void>;
-  refreshMe: () => Promise<void>;
+  refreshMe: (force?: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -34,26 +39,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [bootError, setBootError] = useState(false);
 
   // There is no token to check before asking: the session lives in an httpOnly
-  // cookie, so the only way to know whether one exists is to try. A signed-out
-  // visitor gets `no_token`, which is not an error worth surfacing.
-  const refreshMe = useCallback(async () => {
+  // cookie, so the only way to know whether one exists is to try. The probe
+  // (`GET /auth/session`) is shared with RoleRoute, so a page load asks the
+  // server once and both the guard and this context read the same answer — the
+  // worker profile comes back in that response rather than in a second call.
+  const refreshMe = useCallback(async (force = false) => {
     try {
-      const res = await api.get<Worker>("/auth/worker/me");
-      setWorker(res.data);
-      setBootError(false);
-    } catch (err: unknown) {
-      // Only treat this as "not logged in" for an actual auth failure.
-      // A network hiccup (offline, timeout, 5xx) shouldn't silently log
-      // the worker out and bounce them to the login screen — surface it
-      // as a retryable error instead (see ProtectedRoute).
-      if (httpStatus(err) === 401) {
+      const session = await resolveSession(force);
+      if (session?.role === "worker" && session.worker) {
+        setWorker(session.worker);
+        setBootError(false);
+      } else {
+        // Signed out, or signed in as another role: this tab holds no worker.
         forgetSession();
         purgeWallet();
         setWorker(null);
         setBootError(false);
-      } else {
-        setBootError(true);
       }
+    } catch {
+      // A network hiccup (offline, timeout, 5xx) must not silently log the
+      // worker out and bounce them to the login screen — surface it as a
+      // retryable error instead (see RoleRoute).
+      setBootError(true);
     } finally {
       setLoading(false);
     }

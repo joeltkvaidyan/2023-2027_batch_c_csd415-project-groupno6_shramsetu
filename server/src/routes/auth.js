@@ -868,6 +868,16 @@ router.post("/government/login", governmentLoginLimiter, async (req, res) => {
   }
 });
 
+// ── Who is this? ─────────────────────────────────────────────────────
+// One endpoint that answers a route guard's only question: which role is the
+// cookie/bearer session? Before this, a page load could fire three different
+// "am I allowed here" requests (one per token store) and they could disagree.
+// The role comes from the verified token, never from the client.
+router.get("/session", authenticate, (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ role: req.userRole });
+});
+
 // ── Session refresh ──────────────────────────────────────────────────
 // The access cookie lives 15 minutes, so the SPA silently trades its refresh
 // cookie for a new pair. Rotation makes a copied refresh token detectable: the

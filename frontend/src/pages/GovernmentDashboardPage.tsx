@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
 import { httpStatus } from "../api/client";
+import { readJson } from "../utils/storage";
 import { signOut } from "../api/session";
 import NotificationsPanel from "../components/government/NotificationsPanel";
 import JobsPanel from "../components/government/JobsPanel";
@@ -16,6 +17,7 @@ import {
   govGetOfficials,
   govGetAuditLogs,
   type GovernmentOfficial,
+  type GovernmentUser,
   type DashboardStats,
   type WorkerRecord,
   type GovGrievance,
@@ -36,7 +38,8 @@ type Tab =
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
-  const govUser = JSON.parse(localStorage.getItem("gov_user") || "{}");
+  // A corrupt cache entry must not take the dashboard down with it.
+  const govUser = readJson<Partial<GovernmentUser>>("gov_user", {});
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<DashboardStats | null>(null);

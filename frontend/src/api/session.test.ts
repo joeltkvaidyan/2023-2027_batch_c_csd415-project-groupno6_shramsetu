@@ -7,7 +7,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 
-import { attachSession, declareSession, onSessionExpired } from "./session";
+import {
+  attachSession,
+  declareSession,
+  forgetSession,
+  onSessionExpired,
+  resolveSession,
+} from "./session";
 
 interface Seen {
   method: string;
@@ -65,6 +71,8 @@ function client(
 beforeEach(() => {
   seen = [];
   localStorage.clear();
+  // The role probe is cached per page; each test starts from a cold page.
+  forgetSession();
   document.cookie = "st_csrf=csrf-value";
 });
 
@@ -181,5 +189,96 @@ describe("no tokens in storage", () => {
     expect(localStorage.getItem("gov_token")).toBeNull();
     expect(localStorage.getItem("employer_token")).toBeNull();
     expect(localStorage.getItem("citizen_token")).toBeNull();
+  });
+});
+
+/**
+ * The role probe behind RoleRoute. It is the only source of the answer "which
+ * role is this session?", so it must ask once, recover from an expired access
+ * cookie exactly once, and never confuse "nobody is signed in" with "the server
+ * could not be reached" — the first is a redirect, the second is a retry.
+ */
+describe("resolveSession", () => {
+  it("asks once per page and shares the answer with every guard", async () => {
+    const get = vi.spyOn(axios, "get").mockResolvedValue({ data: { role: "employer" } } as never);
+
+    const [first, second] = await Promise.all([resolveSession(), resolveSession()]);
+    const third = await resolveSession();
+
+    expect(first?.role).toBe("employer");
+    expect(second?.role).toBe("employer");
+    expect(third?.role).toBe("employer");
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(String(get.mock.calls[0][0])).toContain("/auth/session");
+  });
+
+  it("carries the worker profile, so booting a dashboard is not a second call", async () => {
+    vi.spyOn(axios, "get").mockResolvedValue({
+      data: { role: "worker", worker: { worker_id: "W-9", full_name: "Sita" } },
+    } as never);
+
+    const session = await resolveSession();
+    expect(session?.role).toBe("worker");
+    expect(session?.worker?.worker_id).toBe("W-9");
+  });
+
+  it("refreshes once for an expired access cookie, then answers", async () => {
+    const expired = new AxiosError(
+      "expired",
+      "401",
+      undefined,
+      {},
+      {
+        status: 401,
+        data: { code: "token_expired" },
+        statusText: "Unauthorized",
+        headers: {},
+        config: {} as never,
+      },
+    );
+    const get = vi
+      .spyOn(axios, "get")
+      .mockRejectedValueOnce(expired)
+      .mockResolvedValueOnce({ data: { role: "government" } } as never);
+    const post = vi.spyOn(axios, "post").mockResolvedValue({ data: { ok: true } } as never);
+
+    const session = await resolveSession();
+    expect(session?.role).toBe("government");
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports no session for an anonymous visitor without trying to refresh", async () => {
+    const anon = new AxiosError(
+      "anon",
+      "401",
+      undefined,
+      {},
+      {
+        status: 401,
+        data: { code: "no_token" },
+        statusText: "Unauthorized",
+        headers: {},
+        config: {} as never,
+      },
+    );
+    vi.spyOn(axios, "get").mockRejectedValue(anon);
+    const post = vi.spyOn(axios, "post");
+
+    expect(await resolveSession()).toBeNull();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("throws rather than reporting 'signed out' when the server is unreachable", async () => {
+    // A guard that redirected here would log a signed-in user out on a flaky
+    // train connection. The caller must be able to offer retry instead.
+    const get = vi
+      .spyOn(axios, "get")
+      .mockRejectedValue(new AxiosError("Network Error", "ERR_NETWORK"));
+
+    await expect(resolveSession()).rejects.toBeInstanceOf(AxiosError);
+    // Not cached: the next call tries again.
+    vi.mocked(get).mockResolvedValue({ data: { role: "citizen" } } as never);
+    expect((await resolveSession())?.role).toBe("citizen");
   });
 });

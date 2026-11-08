@@ -57,6 +57,10 @@ export default tseslint.config(
       "react-hooks/refs": "off",
       "react-hooks/static-components": "off",
       ...jsxA11y.flatConfigs.recommended.rules,
+      // `<RoleRoute role="worker">` passes a routing role to our own component,
+      // not an ARIA role to a DOM element. Without this the rule reads the prop
+      // name and flags every guarded route; `div role="..."` is still checked.
+      "jsx-a11y/aria-role": ["error", { ignoreNonDOM: true }],
       // Unused args are fine when they document a signature; unused vars are not.
       "@typescript-eslint/no-unused-vars": [
         "error",
