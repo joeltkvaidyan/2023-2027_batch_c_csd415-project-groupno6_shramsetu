@@ -88,9 +88,9 @@ export default function CitizenDashboardPage() {
     navigate("/citizen/login", { replace: true });
   }, [navigate]);
 
-  useEffect(() => {
-    if (!localStorage.getItem("citizen_token")) navigate("/citizen/login", { replace: true });
-  }, [navigate]);
+  // No localStorage gate: the session is a cookie (session.ts purges legacy
+  // token keys on load) and RoleRoute has already asked the server who this
+  // is. loadAll below handles 401/403 by signing out and returning to login.
 
   const loadAll = useCallback(async () => {
     setError("");

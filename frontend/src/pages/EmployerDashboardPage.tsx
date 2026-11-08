@@ -94,10 +94,10 @@ export default function EmployerDashboardPage() {
   const [ratingBusy, setRatingBusy] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("employer_token")) {
-      navigate("/employer/login", { replace: true });
-      return;
-    }
+    // No localStorage gate here: the session is a cookie (session.ts purges
+    // legacy token keys), and RoleRoute already asked the server who is
+    // reading. /auth/employer/me below is the real gate — a 401/403 signs out
+    // and returns to the login screen.
     // Refresh the acceptance status from the server on every visit —
     // localStorage snapshots go stale the moment the office decides.
     employerApi
@@ -149,7 +149,6 @@ export default function EmployerDashboardPage() {
 
   // My postings + their applicant counts, reloaded on demand.
   const loadMyJobs = useCallback(async () => {
-    if (!localStorage.getItem("employer_token")) return;
     try {
       const res = await employerApi.get("/jobs/posted");
       setMyJobs(res.data.jobs ?? []);
