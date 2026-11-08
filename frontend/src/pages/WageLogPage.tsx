@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CalendarCheck, Copy, FileWarning } from "lucide-react";
+import { CalendarCheck, Copy } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { WageCalendar, formatMonthLabel } from "../components/WageCalendar";
@@ -228,6 +228,28 @@ export default function WageLogPage() {
     });
   };
 
+  // The ONE way into the complaint form. Wherever the worker is on the page —
+  // summary, calendar or ledger — the sticky bar carries a single "Make
+  // complaint" button, and it cites what they are looking at: an unpaid day
+  // chosen on the calendar files that day; anything else files the month.
+  const selectedUnpaid =
+    (entries ?? []).find((e) => day(e.work_date) === workDate && e.agreed_amount > e.paid_amount) ??
+    null;
+
+  const makeComplaint = () => {
+    if (selectedUnpaid) {
+      fileGrievance({
+        amount: selectedUnpaid.agreed_amount - selectedUnpaid.paid_amount,
+        dates: [day(selectedUnpaid.work_date)],
+        days: 1,
+        date: day(selectedUnpaid.work_date),
+        employer: selectedUnpaid.employer_name,
+      });
+      return;
+    }
+    void fileUnpaidGrievance();
+  };
+
   /** Yesterday's entry, if there is one — the source for "same as yesterday". */
   const yesterdayEntry = (() => {
     const d = new Date();
@@ -287,7 +309,7 @@ export default function WageLogPage() {
               value={month}
               onChange={(e) => setMonth(e.target.value || currentMonth())}
               className="input-field !w-auto !py-1.5 text-sm"
-              aria-label={t("wages.month")}
+              aria-label={t("wages.selectMonth")}
             />
           </div>
           {summary === null ? (
@@ -307,21 +329,10 @@ export default function WageLogPage() {
           )}
           {summary && (
             <div className="flex gap-2 mt-3">
-              {summary.total_unpaid > 0 && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={fileUnpaidGrievance}
-                >
-                  <FileWarning className="h-4 w-4" aria-hidden="true" />
-                  {t("wages.fileGrievance")}
-                </Button>
-              )}
               <Button
                 variant="secondary"
                 size="sm"
-                className={summary.total_unpaid > 0 ? "flex-1" : "w-full"}
+                className="flex-1"
                 onClick={() => {
                   const headers = [
                     "work_date",
@@ -493,7 +504,7 @@ export default function WageLogPage() {
         {/* Monthly list */}
         <div>
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-            {t("wages.month")}
+            {t("wages.dayLog")}
           </h2>
           {loadError && (
             <p role="alert" className="text-sm text-red-700 dark:text-red-300 mb-2">
@@ -523,20 +534,10 @@ export default function WageLogPage() {
                         {t("wages.paidAmountShort")} {rupees(w.paid_amount)}
                       </p>
                       {w.agreed_amount > w.paid_amount && (
-                        <button
-                          onClick={() =>
-                            fileGrievance({
-                              amount: w.agreed_amount - w.paid_amount,
-                              dates: [day(w.work_date)],
-                              days: 1,
-                              date: day(w.work_date),
-                              employer: w.employer_name,
-                            })
-                          }
-                          className="mt-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                        >
-                          {t("wages.fileForDate", { date: day(w.work_date) })}
-                        </button>
+                        <p className="mt-1.5 text-xs font-semibold text-red-700 dark:text-red-400">
+                          {t("wages.unpaidOn", { date: day(w.work_date) })}:{" "}
+                          {rupees(w.agreed_amount - w.paid_amount)}
+                        </p>
                       )}
                     </div>
                     <Badge tone={STATUS_TONE[w.payment_status] ?? "neutral"}>
@@ -552,6 +553,10 @@ export default function WageLogPage() {
           {t("wages.selfReported")}
         </p>
 
+        {/* The single complaint entry point. It travels with the worker, shows
+            the balance it will cite — the chosen day's, when an unpaid day is
+            selected on the calendar, otherwise the month's — and opens the
+            pre-filled complaint form. */}
         {summary && summary.total_unpaid > 0 && (
           <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-2.5 shadow-lg">
             <CalendarCheck
@@ -559,12 +564,20 @@ export default function WageLogPage() {
               aria-hidden="true"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-ink-muted">{t("wages.summaryUnpaid")}</p>
+              <p className="text-xs text-ink-muted">
+                {selectedUnpaid
+                  ? t("wages.unpaidOn", { date: day(selectedUnpaid.work_date) })
+                  : t("wages.summaryUnpaid")}
+              </p>
               <p className="text-base font-bold tabular-nums text-red-800 dark:text-red-300">
-                {rupees(summary.total_unpaid)}
+                {rupees(
+                  selectedUnpaid
+                    ? selectedUnpaid.agreed_amount - selectedUnpaid.paid_amount
+                    : summary.total_unpaid,
+                )}
               </p>
             </div>
-            <Button size="sm" onClick={fileUnpaidGrievance} className="!w-auto shrink-0">
+            <Button size="sm" onClick={makeComplaint} className="!w-auto shrink-0">
               {t("wages.makeComplaint")}
             </Button>
           </div>

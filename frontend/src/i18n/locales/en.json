@@ -296,7 +296,8 @@
   "wages": {
     "title": "Wage Diary",
     "subtitle": "Your daily wage record",
-    "month": "Month",
+    "selectMonth": "Select month",
+    "dayLog": "Day log",
     "addEntry": "Add wage entry",
     "workDate": "Work date",
     "employer": "Employer name (optional)",
@@ -319,10 +320,8 @@
       "partial": "Partial"
     },
     "empty": "No wage entries for this month yet.",
-    "fileGrievance": "File unpaid wage complaint",
     "grievanceSubject": "Unpaid wages: {amount} pending",
     "grievanceDescription": "As per my wage diary, {amount} of my agreed wages remain unpaid for {days} day(s) of work in {period}. Unpaid work dates: {dates}. I have not received the full agreed wages for this work. Please help me recover the pending amount.",
-    "fileForDate": "File a complaint for {date}",
     "last90Days": "last 90 days",
     "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
     "exportCSV": "Export CSV",
@@ -331,6 +330,7 @@
     "cellLabel": "{date}: {status}, {agreed} agreed, {paid} paid",
     "cellEmpty": "{date}: no entry yet",
     "sameAsYesterday": "Same as yesterday",
+    "unpaidOn": "Unpaid on {date}",
     "makeComplaint": "Make complaint"
   },
   "errors": {

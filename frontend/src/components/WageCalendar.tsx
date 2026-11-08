@@ -52,6 +52,21 @@ export function formatMonthLabel(month: string, locale: string): string {
   );
 }
 
+/**
+ * "2026-11-08" -> "Sunday" (or empty when the date cannot be parsed).
+ *
+ * Calendar buttons are tapped by rows, not by column, and screen readers do
+ * not pair a cell with the header above it, so the weekday travels inside
+ * every button's own label as well.
+ */
+export function weekdayOf(iso: string, locale: string): string {
+  const y = Number(iso.slice(0, 4));
+  const m = Number(iso.slice(5, 7));
+  const d = Number(iso.slice(8, 10));
+  if (!y || !m || !d) return "";
+  return new Intl.DateTimeFormat(locale || "en", { weekday: "long" }).format(new Date(y, m - 1, d));
+}
+
 const STATUS_ICON = {
   paid: Check,
   partial: TriangleAlert,
@@ -97,14 +112,12 @@ export function WageCalendar({ month, entries, onSelectDay, selectedDay }: WageC
 
   return (
     <section aria-label={t("wages.calendarLabel", { month: monthLabel })}>
-      <div className="grid grid-cols-7 gap-1.5 text-center" role="grid">
+      <div className="grid grid-cols-7 gap-1.5 text-center">
+        {/* Plain text, not aria-hidden: a screen-reader user must hear the
+            column headers, and every day button repeats its weekday in its own
+            label so partial sweeps still carry the column meaning. */}
         {weekdays.map((name) => (
-          <div
-            key={name}
-            role="columnheader"
-            className="pb-1 text-xs font-medium text-ink-muted"
-            aria-hidden="true"
-          >
+          <div key={name} className="pb-1 text-xs font-medium text-ink-muted">
             {name}
           </div>
         ))}
@@ -114,14 +127,15 @@ export function WageCalendar({ month, entries, onSelectDay, selectedDay }: WageC
           const status = cell.entry?.payment_status;
           const Icon = status ? STATUS_ICON[status] : null;
           const isSelected = cell.iso === selectedDay;
+          const weekday = weekdayOf(cell.iso, i18n.language || "en");
           const label = cell.entry
             ? t("wages.cellLabel", {
-                date: cell.iso,
+                date: `${weekday} ${cell.iso}`.trim(),
                 status: t(`wages.status.${cell.entry.payment_status}`),
                 agreed: rupees(cell.entry.agreed_amount),
                 paid: rupees(cell.entry.paid_amount),
               })
-            : t("wages.cellEmpty", { date: cell.iso });
+            : t("wages.cellEmpty", { date: `${weekday} ${cell.iso}`.trim() });
 
           return (
             <button

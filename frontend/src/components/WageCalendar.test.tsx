@@ -159,6 +159,29 @@ describe("WageCalendar", () => {
     expect(onSelectDay).toHaveBeenCalledWith("2026-03-17");
   });
 
+  it("lets a screen reader hear the weekday headers instead of hiding them", () => {
+    render(<WageCalendar month={month} entries={[]} onSelectDay={() => {}} />);
+    // Every column header must be readable: naming the weekday once per row
+    // used to be worth nothing because the headers were aria-hidden.
+    for (const name of ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]) {
+      expect(screen.getByText(name)).not.toHaveAttribute("aria-hidden", "true");
+    }
+  });
+
+  it("carries the weekday inside each day button's own label", () => {
+    // 2026-03-05 falls on a Thursday, and a screen reader sweeping button by
+    // button never pairs a cell with the header above it.
+    render(
+      <WageCalendar
+        month={month}
+        entries={[entry("2026-03-05", "partial")]}
+        onSelectDay={() => {}}
+      />,
+    );
+    const cell = screen.getByRole("button", { name: /Thursday 2026-03-05/ });
+    expect(cell).toHaveAccessibleName(/₹600/);
+  });
+
   it("explains its icons in a legend, so the meaning is not colour-only", () => {
     render(<WageCalendar month={month} entries={[]} onSelectDay={() => {}} />);
     for (const status of ["paid", "partial", "unpaid"]) {
