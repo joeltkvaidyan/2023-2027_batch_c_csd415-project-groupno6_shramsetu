@@ -15,16 +15,19 @@
  *   /api/v1/government/notifications     — GET list
  *   /api/v1/government/audit-logs        — GET (superadmin)
  */
-import axios from "axios";
+import axios, { type AxiosInstance } from "axios";
+import { attachSession } from "./session";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 /**
  * The government session is an httpOnly cookie, so these calls carry no
  * Authorization header and no token argument: `withCredentials` lets the browser
- * attach the cookie, and the API checks the role on the server.
+ * attach the cookie, the API checks the role on the server, and attachSession
+ * (same interceptors as the other three clients) echoes the CSRF cookie on
+ * unsafe methods and refreshes an expired session once.
  */
-const govApi = axios.create({ baseURL: API_BASE, withCredentials: true });
+const govApi: AxiosInstance = attachSession(axios.create({ baseURL: API_BASE }));
 
 // ── Government auth ──────────────────────────────────────────────────
 
