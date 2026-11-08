@@ -114,7 +114,10 @@
     "jobMatches": "ജോലി പൊരുത്തങ്ങൾ",
     "employers": "തൊഴിലുടമകൾ",
     "unpaid": "ബാക്കി",
-    "heatSafety": "ചൂട് സുരക്ഷ"
+    "heatSafety": "ചൂട് സുരക്ഷ",
+    "unpaidWages": "കിട്ടാനുള്ള കൂലി",
+    "askQuestion": "ചോദ്യം ചോദിക്കൂ",
+    "myDocuments": "എന്റെ രേഖകൾ"
   },
   "documents": {
     "title": "ഡോക്യുമെന്റ് വാലറ്റ്",

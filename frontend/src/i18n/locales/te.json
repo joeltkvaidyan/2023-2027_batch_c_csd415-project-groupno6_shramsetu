@@ -114,7 +114,10 @@
     "jobMatches": "ఉద్యోగ సరిపోలికలు",
     "employers": "యజమానులు",
     "unpaid": "బకాయి",
-    "heatSafety": "వేడి నుండి సురక్షణ"
+    "heatSafety": "వేడి నుండి సురక్షణ",
+    "unpaidWages": "బాకీ కూలీ",
+    "askQuestion": "ప్రశ్న అడగండి",
+    "myDocuments": "నా పత్రాలు"
   },
   "documents": {
     "title": "డాక్యుమెంట్ వాలెట్",

@@ -114,7 +114,10 @@
     "jobMatches": "কাজের মিল",
     "employers": "নিয়োগকর্তা",
     "unpaid": "বাকি",
-    "heatSafety": "গরম থেকে সুরক্ষা"
+    "heatSafety": "গরম থেকে সুরক্ষা",
+    "unpaidWages": "বকেয়া মজুরি",
+    "askQuestion": "প্রশ্ন করুন",
+    "myDocuments": "আমার নথি"
   },
   "documents": {
     "title": "নথি ওয়ালেট",

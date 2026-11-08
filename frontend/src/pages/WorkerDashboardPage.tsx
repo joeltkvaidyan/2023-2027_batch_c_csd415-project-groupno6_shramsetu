@@ -19,7 +19,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../store/AuthContext";
 import { BottomNav } from "../components/BottomNav";
-import { Card, Badge, Avatar, SkeletonList } from "../components/ui";
+import { Card, Badge, Avatar, SkeletonList, BigActionCard } from "../components/ui";
 import { api } from "../api/client";
 import type { Employer, Grievance, JobMatch } from "../types";
 
@@ -266,32 +266,38 @@ export default function WorkerDashboardPage() {
           </div>
         </Card>
 
-        {/* Primary actions */}
-        <div className="grid grid-cols-2 gap-3.5 mt-5">
-          <ActionTile
-            Icon={FileText}
-            label={t("dashboard.documentWallet")}
-            onClick={() => navigate("/worker/documents")}
-            delay={60}
+        {/* The three things this app exists for, at full width: a half-tile
+            labelled "Wage Diary" assumed the worker already knew that is where
+            unpaid wages live. Each one is a whole row, a 48px minimum, and one
+            clear verb. The rest of the tools stay below as secondary tiles. */}
+        <div className="mt-5 space-y-3">
+          <BigActionCard
+            icon={IndianRupee}
+            tone="amber"
+            label={t("dashboard.unpaidWages")}
+            onClick={() => navigate("/worker/wages")}
           />
-          <ActionTile
-            Icon={Sparkles}
-            label={t("dashboard.aiChatbot")}
+          <BigActionCard
+            icon={Sparkles}
+            tone="brand"
+            label={t("dashboard.askQuestion")}
             onClick={() => navigate("/worker/chat")}
-            featured
-            delay={120}
           />
+          <BigActionCard
+            icon={FileText}
+            tone="blue"
+            label={t("dashboard.myDocuments")}
+            onClick={() => navigate("/worker/documents")}
+          />
+        </div>
+
+        {/* Secondary tools */}
+        <div className="grid grid-cols-2 gap-3.5 mt-4">
           <ActionTile
             Icon={Megaphone}
             label={t("grievance.title")}
             onClick={() => navigate("/worker/grievances")}
             delay={180}
-          />
-          <ActionTile
-            Icon={IndianRupee}
-            label={t("wages.title", "Wage Diary")}
-            onClick={() => navigate("/worker/wages")}
-            delay={240}
           />
           <ActionTile
             Icon={Briefcase}

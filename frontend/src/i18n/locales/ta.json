@@ -114,7 +114,10 @@
     "jobMatches": "வேலை பொருத்தங்கள்",
     "employers": "முதலாளிகள்",
     "unpaid": "நிலுவை",
-    "heatSafety": "வெப்பத்திலிருந்து பாதுகாப்பு"
+    "heatSafety": "வெப்பத்திலிருந்து பாதுகாப்பு",
+    "unpaidWages": "நிலுவை கூலி",
+    "askQuestion": "கேள்வி கேளுங்கள்",
+    "myDocuments": "என் ஆவணங்கள்"
   },
   "documents": {
     "title": "ஆவண பணப்பை",

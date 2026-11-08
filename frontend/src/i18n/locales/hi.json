@@ -114,7 +114,10 @@
     "jobMatches": "नौकरी मिलान",
     "employers": "नियोक्ता",
     "unpaid": "बकाया",
-    "heatSafety": "गर्मी से सुरक्षा"
+    "heatSafety": "गर्मी से सुरक्षा",
+    "unpaidWages": "बकाया मज़दूरी",
+    "askQuestion": "सवाल पूछें",
+    "myDocuments": "मेरे दस्तावेज़"
   },
   "documents": {
     "title": "दस्तावेज़ वॉलेट",

@@ -114,7 +114,10 @@
     "jobMatches": "Job matches",
     "employers": "Employers",
     "unpaid": "Unpaid",
-    "heatSafety": "Heat safety"
+    "heatSafety": "Heat safety",
+    "unpaidWages": "Unpaid wages",
+    "askQuestion": "Ask a question",
+    "myDocuments": "My documents"
   },
   "documents": {
     "title": "Document Wallet",
