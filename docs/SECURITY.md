@@ -16,7 +16,19 @@ Final-year project scope, stated plainly: what is enforced, what is not.
 ## Controls in place (with where to verify)
 
 **Authentication & sessions**
-- bcrypt password hashing; JWT with 12 h expiry.
+- bcrypt password hashing.
+- The browser holds **no token**. A sign-in sets three cookies: a 15-minute
+  access JWT (`st_access`, httpOnly), a 30-day opaque refresh token
+  (`st_refresh`, httpOnly, path-scoped to `/api/v1/auth`), and a readable CSRF
+  value (`st_csrf`). Every unsafe cookie-authenticated request must echo the
+  CSRF value in `X-CSRF-Token` (double submit), so a cross-site page cannot
+  drive the API with the worker's session.
+- Refresh tokens rotate on every use and only their SHA-256 is stored
+  (`models/Session.js`). Presenting an already-rotated token revokes the whole
+  chain — that is the signature of a copied cookie — and logout revokes
+  server-side, so a stolen token dies with the session instead of living out a
+  12-hour window. Bearer tokens still work for API clients and scripts; they
+  are not exposed to a browser page and cannot be forged cross-site.
 - OTPs: 6 digits, hashed at rest, expiring, resend cooldown, printed **only
   to the server terminal** in dev (`OTP_ECHO_ENABLED`); production boot
   refuses echo mode.

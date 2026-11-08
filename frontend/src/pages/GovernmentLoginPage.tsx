@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { govLogin } from "../api/governmentClient";
-import { apiErrorMessage, setGovToken } from "../api/client";
+import { apiErrorMessage } from "../api/client";
+import { declareSession } from "../api/session";
 
 export default function GovernmentLoginPage() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function GovernmentLoginPage() {
     setLoading(true);
     try {
       const res = await govLogin(employeeId, password);
-      setGovToken(res.access_token);
+      declareSession("government");
       localStorage.setItem("gov_user", JSON.stringify(res.government));
       navigate("/government/dashboard");
     } catch (err) {

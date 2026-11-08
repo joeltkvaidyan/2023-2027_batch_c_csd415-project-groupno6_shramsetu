@@ -26,7 +26,7 @@ import {
 export default function WorkerRegisterPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeLogin } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [phase, setPhase] = useState<"form" | "recovery" | "otp">("form");
@@ -199,7 +199,7 @@ export default function WorkerRegisterPage() {
         otp: otp,
       });
 
-      loginWithToken(res.data.access_token, res.data.worker);
+      completeLogin(res.data.worker);
       navigate("/worker/dashboard");
     } catch {
       setError(t("auth.otpInvalid"));

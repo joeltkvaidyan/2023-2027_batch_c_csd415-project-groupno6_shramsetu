@@ -2,7 +2,8 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Building2, CheckCircle, Lock, Phone, User } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setEmployerToken, apiErrorDetail, httpStatus } from "../api/client";
+import { api, apiErrorDetail, httpStatus } from "../api/client";
+import { declareSession } from "../api/session";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 
@@ -100,7 +101,7 @@ export default function EmployerRegisterPage() {
         mobile_number: mobile,
         otp: otp.replace(/\D/g, ""),
       });
-      setEmployerToken(res.data.access_token);
+      declareSession("employer");
       localStorage.setItem("employer_user", JSON.stringify(res.data.employer));
       navigate("/employer/dashboard", { replace: true });
     } catch (err) {

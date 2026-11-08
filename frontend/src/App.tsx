@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { getGovToken } from "./api/client";
+import { currentRole, refreshSession } from "./api/session";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -34,9 +35,37 @@ import CitizenLoginPage from "./pages/CitizenLoginPage";
 import CitizenDashboardPage from "./pages/CitizenDashboardPage";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
 
+// The government session is an httpOnly cookie now, so there is nothing to read
+// synchronously before rendering. The dashboard itself asks /government/me and
+// redirects on 401; this guard only keeps a worker session out of the tab.
 function GovernmentRoute({ children }: { children: React.ReactNode }) {
-  const token = getGovToken();
-  if (!token) return <Navigate to="/government/login" replace />;
+  const [checked, setChecked] = useState(false);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (currentRole() === "government") {
+        if (active) {
+          setAllowed(true);
+          setChecked(true);
+        }
+        return;
+      }
+      // A reload loses the in-memory role; the cookie may still be a live
+      // government session, so try one silent refresh before bouncing.
+      const refreshed = await refreshSession();
+      if (!active) return;
+      setAllowed(refreshed && currentRole() === "government");
+      setChecked(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!checked) return null;
+  if (!allowed) return <Navigate to="/government/login" replace />;
   return <>{children}</>;
 }
 

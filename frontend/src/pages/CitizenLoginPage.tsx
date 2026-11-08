@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, CheckCircle, Home, Loader2, Lock, Phone, User } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setCitizenToken, apiErrorDetail } from "../api/client";
+import { api, apiErrorDetail } from "../api/client";
+import { declareSession } from "../api/session";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 
@@ -42,7 +43,7 @@ export default function CitizenLoginPage() {
 
   const finishLogin = useCallback(
     (data: CitizenResponse) => {
-      setCitizenToken(data.access_token);
+      declareSession("citizen");
       localStorage.setItem("citizen_user", JSON.stringify(data.citizen));
       navigate("/citizen/dashboard", { replace: true });
     },

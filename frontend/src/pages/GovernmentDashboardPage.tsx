@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
-import { getGovToken, clearGovToken, httpStatus } from "../api/client";
+import { httpStatus } from "../api/client";
+import { signOut } from "../api/session";
 import NotificationsPanel from "../components/government/NotificationsPanel";
 import JobsPanel from "../components/government/JobsPanel";
 import ApprovalsPanel from "../components/government/ApprovalsPanel";
@@ -35,7 +36,6 @@ type Tab =
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
-  const token = getGovToken();
   const govUser = JSON.parse(localStorage.getItem("gov_user") || "{}");
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -51,63 +51,56 @@ export default function GovernmentDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const loadTabData = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     try {
       if (activeTab === "overview") {
-        setStats(await govGetStats(token));
+        setStats(await govGetStats());
       } else if (activeTab === "workers") {
-        const res = await govGetWorkers(token, searchQuery || undefined);
+        const res = await govGetWorkers(searchQuery || undefined);
         setWorkers(res.workers || []);
       } else if (activeTab === "grievances") {
         const res = await govGetGrievances(
-          token,
           grievanceStatusFilter || undefined,
           grievanceCategoryFilter || undefined,
         );
         setGrievances(res.grievances || []);
       } else if (activeTab === "notifications") {
-        const res = await govGetNotifications(token);
+        const res = await govGetNotifications();
         setNotifications(res.notifications || []);
       } else if (activeTab === "officials") {
-        const res = await govGetOfficials(token);
+        const res = await govGetOfficials();
         setOfficials(res.officials || []);
       } else if (activeTab === "audit") {
-        const res = await govGetAuditLogs(token);
+        const res = await govGetAuditLogs();
         setAuditLogs(res.logs || []);
       }
     } catch (err) {
       console.error("Failed to load:", err);
       if (httpStatus(err) === 401) {
-        clearGovToken();
+        void signOut();
         localStorage.removeItem("gov_user");
         navigate("/government/login");
       }
     } finally {
       setLoading(false);
     }
-  }, [activeTab, token, searchQuery, grievanceStatusFilter, grievanceCategoryFilter, navigate]);
+  }, [activeTab, searchQuery, grievanceStatusFilter, grievanceCategoryFilter, navigate]);
 
   useEffect(() => {
-    if (!token) {
-      navigate("/government/login");
-      return;
-    }
     void loadTabData();
-  }, [loadTabData, navigate, token]);
+  }, [loadTabData]);
 
   const handleUpdateGrievanceStatus = async (id: number, newStatus: string) => {
-    if (!token) return;
     try {
-      await govUpdateGrievanceStatus(token, id, newStatus);
+      await govUpdateGrievanceStatus(id, newStatus);
       loadTabData();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleLogout = () => {
-    clearGovToken();
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem("gov_user");
     navigate("/government/login");
   };
@@ -306,9 +299,9 @@ export default function GovernmentDashboardPage() {
         )}
 
         {/* ── Approvals Tab ───────────────────────────────────── */}
-        {!loading && activeTab === "approvals" && token && <ApprovalsPanel token={token} />}
+        {!loading && activeTab === "approvals" && <ApprovalsPanel />}
 
-        {!loading && activeTab === "employers" && token && <EmployerApprovalsPanel token={token} />}
+        {!loading && activeTab === "employers" && <EmployerApprovalsPanel />}
         {!loading && activeTab === "workers" && (
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -490,8 +483,8 @@ export default function GovernmentDashboardPage() {
         )}
 
         {/* ── Notifications Tab ──────────────────────────────── */}
-        {!loading && activeTab === "notifications" && token && (
-          <NotificationsPanel token={token} notifications={notifications} onSent={loadTabData} />
+        {!loading && activeTab === "notifications" && (
+          <NotificationsPanel notifications={notifications} onSent={loadTabData} />
         )}
 
         {/* ── Officials Tab (superadmin monitoring) ──────── */}
@@ -624,7 +617,7 @@ export default function GovernmentDashboardPage() {
           </div>
         )}
         {/* ── Job Listings Tab ───────────────────────────────── */}
-        {!loading && activeTab === "jobs" && <JobsPanel token={token} />}
+        {!loading && activeTab === "jobs" && <JobsPanel />}
       </main>
     </div>
   );

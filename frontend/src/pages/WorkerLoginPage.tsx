@@ -11,7 +11,7 @@ type LoginMode = "password" | "otp";
 export default function WorkerLoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeLogin } = useAuth();
 
   const [mode, setMode] = useState<LoginMode>("otp");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -70,7 +70,7 @@ export default function WorkerLoginPage() {
           mobile_number: sanitizedMobile,
           otp: otpVal,
         });
-        loginWithToken(res.data.access_token, res.data.worker);
+        completeLogin(res.data.worker);
         navigate("/worker/dashboard");
       } else {
         if (!passVal) {
@@ -82,7 +82,7 @@ export default function WorkerLoginPage() {
           mobile_number: sanitizedMobile,
           password: passVal,
         });
-        loginWithToken(res.data.access_token, res.data.worker);
+        completeLogin(res.data.worker);
         navigate("/worker/dashboard");
       }
     } catch (err) {

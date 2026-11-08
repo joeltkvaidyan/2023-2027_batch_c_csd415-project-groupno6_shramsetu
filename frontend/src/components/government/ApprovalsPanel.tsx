@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Search } from "lucide-react";
-import axios from "axios";
-import { apiErrorDetail } from "../../api/client";
+import { api, apiErrorDetail } from "../../api/client";
 
 /**
  * Government worker-acceptance queue. Every NEW worker registration lands
@@ -11,8 +10,6 @@ import { apiErrorDetail } from "../../api/client";
  * the platform's public surfaces. Scoped server-side: outside-jurisdiction
  * workers are invisible here, exactly like the grievance queue.
  */
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 interface ApprovalWorker {
   id: string;
@@ -32,7 +29,7 @@ interface QueueResponse {
   workers: ApprovalWorker[];
 }
 
-export default function ApprovalsPanel({ token }: { token: string }) {
+export default function ApprovalsPanel() {
   const [status, setStatus] = useState<"pending" | "accepted" | "rejected">("pending");
   const [search, setSearch] = useState("");
   const [data, setData] = useState<QueueResponse | null>(null);
@@ -46,27 +43,20 @@ export default function ApprovalsPanel({ token }: { token: string }) {
       try {
         const params = new URLSearchParams({ status: whichStatus });
         if (whichSearch.trim()) params.set("search", whichSearch.trim());
-        const res = await axios.get<QueueResponse>(`${API_BASE}/government/worker-approvals`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        });
+        const res = await api.get<QueueResponse>(`/government/worker-approvals`, { params });
         setData(res.data);
       } catch (err) {
         setError(apiErrorDetail(err) || "Could not load the acceptance queue.");
       }
     },
-    [token, status, search],
+    [status, search],
   );
 
   const decide = async (workerId: string, id: string, next: "accepted" | "rejected") => {
     setBusyId(id);
     setError(null);
     try {
-      await axios.patch(
-        `${API_BASE}/government/workers/${id}/approval`,
-        { status: next },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      await api.patch(`/government/workers/${id}/approval`, { status: next });
       await load(status, searchRef.current?.value ?? search);
     } catch (err) {
       setError(apiErrorDetail(err) || "Could not update the approval.");

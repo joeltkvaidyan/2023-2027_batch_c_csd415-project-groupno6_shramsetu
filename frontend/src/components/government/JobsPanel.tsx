@@ -46,7 +46,7 @@ function initials(name: string | null) {
     .join("");
 }
 
-export default function JobsPanel({ token }: { token: string | null }) {
+export default function JobsPanel() {
   const { t } = useTranslation();
 
   const [jobs, setJobs] = useState<GovJobPosting[] | null>(null);
@@ -73,16 +73,15 @@ export default function JobsPanel({ token }: { token: string | null }) {
   });
 
   const load = useCallback(async () => {
-    if (!token) return;
     try {
-      const res = await govGetPostedJobs(token);
+      const res = await govGetPostedJobs();
       setJobs(res.jobs);
       setError("");
     } catch {
       setJobs([]);
       setError(t("jobs.review.loadError", "Could not load your job listings."));
     }
-  }, [token, t]);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -103,10 +102,9 @@ export default function JobsPanel({ token }: { token: string | null }) {
     });
 
   const create = async () => {
-    if (!token) return;
     setSaving(true);
     try {
-      await govCreateJob(token, {
+      await govCreateJob({
         title: form.title,
         description: form.description,
         employer_name: form.employer_name,
@@ -135,9 +133,8 @@ export default function JobsPanel({ token }: { token: string | null }) {
   };
 
   const toggleStatus = async (job: GovJobPosting) => {
-    if (!token) return;
     try {
-      await govSetJobStatus(token, job.id, job.status === "open" ? "closed" : "open");
+      await govSetJobStatus(job.id, job.status === "open" ? "closed" : "open");
       await load();
     } catch {
       setError(t("jobs.review.statusError", "Could not update the listing."));
@@ -145,13 +142,12 @@ export default function JobsPanel({ token }: { token: string | null }) {
   };
 
   const openApplicants = async (job: GovJobPosting) => {
-    if (!token) return;
     if (openReview === job.id) {
       setOpenReview(null);
       return;
     }
     try {
-      const res = await govGetJobApplicants(token, job.id);
+      const res = await govGetJobApplicants(job.id);
       setApplicants((prev) => ({ ...prev, [job.id]: res.applications }));
       setCounts((prev) => ({ ...prev, [job.id]: res.counts }));
       setFilter("all");
@@ -162,11 +158,10 @@ export default function JobsPanel({ token }: { token: string | null }) {
   };
 
   const toggleShortlist = async (job: GovJobPosting, app: GovJobApplicant) => {
-    if (!token) return;
     setBusyApplicant(app.id);
     const next = app.shortlisted ? "submitted" : "shortlisted";
     try {
-      const updated = await govReviewJobApplicant(token, job.id, app.id, next);
+      const updated = await govReviewJobApplicant(job.id, app.id, next);
       setApplicants((prev) => ({
         ...prev,
         [job.id]: (prev[job.id] ?? []).map((a) => (a.id === updated.id ? updated : a)),

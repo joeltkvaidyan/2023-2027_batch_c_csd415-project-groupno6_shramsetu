@@ -71,9 +71,24 @@ export const config = {
   seedDemoData: bool(process.env.SEED_DEMO_DATA, false),
 
   jwtSecret: process.env.JWT_SECRET_KEY,
-  // Short-lived tokens: a stolen token expires fast, and the /authenticate
-  // re-check (see middleware/auth.js) catches disabled users sooner.
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
+  // Short-lived access tokens: a stolen one expires fast, and the liveness
+  // re-check (see middleware/auth.js) catches disabled users sooner. The
+  // browser refreshes silently through an httpOnly refresh cookie, so a short
+  // access token costs the worker nothing. JWT_EXPIRES_IN is honoured for
+  // deployments that already tuned it.
+  jwtExpiresIn: process.env.ACCESS_TOKEN_TTL || process.env.JWT_EXPIRES_IN || "15m",
+  // Refresh-session lifetime (rotating; see models/Session.js).
+  refreshTtlDays: int(process.env.REFRESH_TTL_DAYS, 30),
+  // Cookies are httpOnly and Lax by default, which is what a same-origin SPA
+  // (docker-compose nginx proxy) needs. A cross-site deployment (SPA on one
+  // origin, API on another, e.g. Render static site → API) must set
+  // COOKIE_SAMESITE=none, and browsers only accept that with Secure.
+  cookieSameSite: (process.env.COOKIE_SAMESITE || "lax").toLowerCase(),
+  cookieSecure: bool(
+    process.env.COOKIE_SECURE,
+    envName === "production" || (process.env.COOKIE_SAMESITE || "lax").toLowerCase() === "none"
+  ),
+  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
 
   otp: {
     echoEnabled: bool(process.env.OTP_ECHO_ENABLED, false), // DEV ONLY

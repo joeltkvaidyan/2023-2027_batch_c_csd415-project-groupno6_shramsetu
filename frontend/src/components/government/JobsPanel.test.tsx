@@ -119,7 +119,7 @@ beforeEach(() => {
 
 describe("JobsPanel applicant review", () => {
   it("shows the fit the server ranked by, in server order", async () => {
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
 
     const names = await screen.findAllByText(/Anil Kumar|Meena Selvam/);
@@ -138,7 +138,7 @@ describe("JobsPanel applicant review", () => {
   });
 
   it("does not invent a phone number the worker did not share", async () => {
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
 
     expect(
@@ -157,14 +157,14 @@ describe("JobsPanel applicant review", () => {
       reviewed_at: "2026-10-19T02:00:00.000Z",
     });
 
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
     // One button per applicant; the first card is the top-ranked applicant.
     const shortlistButtons = await screen.findAllByText("Shortlist");
     await userEvent.click(shortlistButtons[0]);
 
     await waitFor(() =>
-      expect(mocks.reviewJobApplicant).toHaveBeenCalledWith("t", "job-1", "app-1", "shortlisted"),
+      expect(mocks.reviewJobApplicant).toHaveBeenCalledWith("job-1", "app-1", "shortlisted"),
     );
     expect(await screen.findByText("Remove shortlist")).toBeTruthy();
   });
@@ -178,7 +178,7 @@ describe("JobsPanel applicant review", () => {
       counts: { total: 2, shortlisted: 1 },
     });
 
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
     await userEvent.click(await screen.findByRole("tab", { name: /Shortlisted \(1\)/ }));
 

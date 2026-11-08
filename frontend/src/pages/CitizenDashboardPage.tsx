@@ -14,7 +14,8 @@ import {
   Search,
   Star,
 } from "lucide-react";
-import { citizenApi, clearCitizenToken, apiErrorDetail, httpStatus } from "../api/client";
+import { citizenApi, apiErrorDetail, httpStatus } from "../api/client";
+import { signOut } from "../api/session";
 import { apiErrorMessage } from "../api/client";
 import type { PublicWorker, PublicWorkersResponse } from "../types";
 import { Button } from "../components/ui/Button";
@@ -82,7 +83,7 @@ export default function CitizenDashboardPage() {
   const [formBusy, setFormBusy] = useState(false);
 
   const logout = useCallback(() => {
-    clearCitizenToken();
+    void signOut();
     localStorage.removeItem("citizen_user");
     navigate("/citizen/login", { replace: true });
   }, [navigate]);

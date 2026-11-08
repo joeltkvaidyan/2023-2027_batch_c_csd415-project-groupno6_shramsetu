@@ -20,7 +20,7 @@ type Mode = "password" | "mobile";
 
 export default function AccountRecoveryPage() {
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeLogin } = useAuth();
 
   const [mode, setMode] = useState<Mode>("password");
   const [workerId, setWorkerId] = useState("");
@@ -77,7 +77,7 @@ export default function AccountRecoveryPage() {
           otp: otp.replace(/\D/g, ""),
         });
         const data = res.data as { access_token: string; worker: Worker };
-        loginWithToken(data.access_token, data.worker);
+        completeLogin(data.worker);
         navigate("/worker/dashboard");
         return;
       }

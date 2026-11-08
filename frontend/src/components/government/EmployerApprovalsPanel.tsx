@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Search } from "lucide-react";
-import axios from "axios";
-import { apiErrorDetail } from "../../api/client";
+import { api, apiErrorDetail } from "../../api/client";
 
 /**
  * Government EMPLOYER acceptance queue. A new employer account starts
@@ -11,8 +10,6 @@ import { apiErrorDetail } from "../../api/client";
  * workers — mirroring the worker gate. Acceptance is NOT a business
  * certification: the honest notice below is shown to the official too.
  */
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 interface ApprovalEmployer {
   id: string;
@@ -32,7 +29,7 @@ interface EmployerQueueResponse {
   notice?: string;
 }
 
-export default function EmployerApprovalsPanel({ token }: { token: string }) {
+export default function EmployerApprovalsPanel() {
   const [status, setStatus] = useState<"pending" | "accepted" | "rejected">("pending");
   const [search, setSearch] = useState("");
   const [data, setData] = useState<EmployerQueueResponse | null>(null);
@@ -46,30 +43,22 @@ export default function EmployerApprovalsPanel({ token }: { token: string }) {
       try {
         const params = new URLSearchParams({ status: whichStatus });
         if (whichSearch.trim()) params.set("search", whichSearch.trim());
-        const res = await axios.get<EmployerQueueResponse>(
-          `${API_BASE}/government/employer-approvals`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params,
-          },
-        );
+        const res = await api.get<EmployerQueueResponse>(`/government/employer-approvals`, {
+          params,
+        });
         setData(res.data);
       } catch (err) {
         setError(apiErrorDetail(err) || "Could not load the employer acceptance queue.");
       }
     },
-    [token, status, search],
+    [status, search],
   );
 
   const decide = async (label: string, id: string, next: "accepted" | "rejected") => {
     setBusyId(id);
     setError(null);
     try {
-      await axios.patch(
-        `${API_BASE}/government/employers/${id}/approval`,
-        { status: next },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      await api.patch(`/government/employers/${id}/approval`, { status: next });
       await load(status, searchRef.current?.value ?? search);
     } catch (err) {
       setError(apiErrorDetail(err) || "Could not update the approval.");

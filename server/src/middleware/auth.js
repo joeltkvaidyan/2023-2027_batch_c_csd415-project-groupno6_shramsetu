@@ -1,5 +1,11 @@
-import { config } from "../config.js";
 import { verifyToken } from "../utils/crypto.js";
+import {
+  ACCESS_COOKIE,
+  clearSessionCookies,
+  csrfValid,
+  isUnsafeMethod,
+  readCookie,
+} from "../utils/session.js";
 import { User } from "../models/User.js";
 import { AuditLog } from "../models/Document.js";
 
@@ -33,15 +39,32 @@ export function clearUserCache() {
   userCache.clear();
 }
 
+/**
+ * Authenticate from either an Authorization bearer token (API clients, tests,
+ * scripts) or the httpOnly access cookie (the browser).
+ *
+ * A cookie-authenticated unsafe request must also carry the double-submit CSRF
+ * header: cookies are attached by the browser automatically, so without this a
+ * page on another origin could drive the API with the worker's session. Bearer
+ * requests need no such check — a cross-site form cannot set that header.
+ */
 export async function authenticate(req, res, next) {
   const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  const payload = token ? verifyToken(token) : null;
+  const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
+  const cookieToken = bearer ? null : readCookie(req.headers.cookie, ACCESS_COOKIE);
+  const payload = verifyToken(bearer || cookieToken || "");
   if (!payload) {
-    return res.status(401).json({ detail: "Not authenticated" });
+    if (cookieToken) clearSessionCookies(res);
+    return res
+      .status(401)
+      .json({ detail: "Not authenticated", code: cookieToken ? "token_expired" : "no_token" });
+  }
+  if (cookieToken && isUnsafeMethod(req.method) && !csrfValid(req)) {
+    return res.status(403).json({ detail: "CSRF token missing or invalid", code: "csrf_failed" });
   }
   try {
     if (!(await userIsLive(payload.sub))) {
+      if (cookieToken) clearSessionCookies(res);
       return res.status(401).json({ detail: "Account disabled or removed." });
     }
   } catch (err) {

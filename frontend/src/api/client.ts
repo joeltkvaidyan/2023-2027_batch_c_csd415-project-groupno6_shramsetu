@@ -1,92 +1,32 @@
 import axios from "axios";
 import i18n from "../i18n";
+import { API_BASE_URL, attachSession } from "./session";
 
 /**
- * Single source of truth for token storage. All read/write/delete access
- * goes through this module — pages and components must never call
- * localStorage for tokens directly.
+ * Every request carries the cookie session, never a token.
+ *
+ * The three instances below exist because different screens were built at
+ * different times; they are now the same session with the same interceptors
+ * from `./session`, which also owns CSRF and the silent refresh. Nothing here
+ * reads or writes a token, so there is no longer anywhere in this app for a JWT
+ * to be stolen from.
  */
-const TOKEN_KEY = "shramsetu.token";
-const GOV_TOKEN_KEY = "gov_token";
-const EMPLOYER_TOKEN_KEY = "employer_token";
-const CITIZEN_TOKEN_KEY = "citizen_token";
+export { API_BASE_URL };
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
+export const api = attachSession(
+  axios.create({
+    // Absolute on Render static sites (VITE_API_BASE_URL is baked at build
+    // time, e.g. https://shramsetu-api.onrender.com/api/v1); relative behind
+    // the docker-compose nginx proxy where /api is same-origin.
+    baseURL: API_BASE_URL,
+  }),
+);
 
-export function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
+/** Signed-in employer screens. Same cookie session. */
+export const employerApi = attachSession(axios.create({ baseURL: API_BASE_URL }));
 
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-export function getGovToken(): string | null {
-  return localStorage.getItem(GOV_TOKEN_KEY);
-}
-
-export function setGovToken(token: string) {
-  localStorage.setItem(GOV_TOKEN_KEY, token);
-}
-
-export function clearGovToken() {
-  localStorage.removeItem(GOV_TOKEN_KEY);
-}
-
-export function getEmployerToken(): string | null {
-  return localStorage.getItem(EMPLOYER_TOKEN_KEY);
-}
-
-export function setEmployerToken(token: string) {
-  localStorage.setItem(EMPLOYER_TOKEN_KEY, token);
-}
-
-export function clearEmployerToken() {
-  localStorage.removeItem(EMPLOYER_TOKEN_KEY);
-}
-
-export function getCitizenToken(): string | null {
-  return localStorage.getItem(CITIZEN_TOKEN_KEY);
-}
-
-export function setCitizenToken(token: string) {
-  localStorage.setItem(CITIZEN_TOKEN_KEY, token);
-}
-
-export function clearCitizenToken() {
-  localStorage.removeItem(CITIZEN_TOKEN_KEY);
-}
-
-export const api = axios.create({
-  // Absolute on Render static sites (VITE_API_BASE_URL is baked at build
-  // time, e.g. https://shramsetu-api.onrender.com/api/v1); relative behind
-  // the docker-compose nginx proxy where /api is same-origin.
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
-});
-
-/** Separate axios session for signed-in employer accounts (own token store). */
-export const employerApi = axios.create({
-  baseURL: api.defaults.baseURL,
-});
-
-employerApi.interceptors.request.use((config) => {
-  const token = getEmployerToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-/** Citizen (general public / household) session — own token store. */
-export const citizenApi = axios.create({
-  baseURL: api.defaults.baseURL,
-});
-
-citizenApi.interceptors.request.use((config) => {
-  const token = getCitizenToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+/** Citizen (general public / household) screens. Same cookie session. */
+export const citizenApi = attachSession(axios.create({ baseURL: API_BASE_URL }));
 
 /**
  * Normalize an error into a display-safe string.
@@ -175,22 +115,7 @@ function safeT(key: string): string | null {
   }
 }
 
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (res) => res,
-  (error) => {
-    if (httpStatus(error) === 401) {
-      clearToken();
-      // Let the app-level auth context handle redirect on next render;
-      // avoid a hard reload loop here.
-    }
-    return Promise.reject(error);
-  },
-);
+// A 401 is handled in two places on purpose: `./session` refreshes an expired
+// access cookie and retries once, and AuthContext drops the signed-in worker
+// when the refresh itself fails. Nothing here deletes a token, because the page
+// no longer holds one.

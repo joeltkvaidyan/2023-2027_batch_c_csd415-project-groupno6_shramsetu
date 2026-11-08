@@ -91,6 +91,11 @@ services:
       #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
       - key: OTP_PEPPER
         sync: false
+      # The SPA is a static site on a different origin than this API, so the
+      # session cookies must be SameSite=None (Secure is implied). Same-origin
+      # deployments keep the safer Lax default.
+      - key: COOKIE_SAMESITE
+        value: none
 
   # ── 3. AI service (RAG + Groq LLM, fully local STT/TTS) ───────────────
   - type: web

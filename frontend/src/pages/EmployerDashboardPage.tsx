@@ -13,7 +13,8 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { employerApi, clearEmployerToken, apiErrorDetail, httpStatus } from "../api/client";
+import { employerApi, apiErrorDetail, httpStatus } from "../api/client";
+import { signOut } from "../api/session";
 import { apiErrorMessage } from "../api/client";
 import type { PublicWorker, PublicWorkersResponse } from "../types";
 import { Button } from "../components/ui/Button";
@@ -110,7 +111,7 @@ export default function EmployerDashboardPage() {
       .catch((err) => {
         const status = httpStatus(err);
         if (status === 401 || status === 403) {
-          clearEmployerToken();
+          void signOut();
           localStorage.removeItem("employer_user");
           navigate("/employer/login", { replace: true });
         }
@@ -239,7 +240,7 @@ export default function EmployerDashboardPage() {
   };
 
   const logout = () => {
-    clearEmployerToken();
+    void signOut();
     localStorage.removeItem("employer_user");
     navigate("/employer/login", { replace: true });
   };

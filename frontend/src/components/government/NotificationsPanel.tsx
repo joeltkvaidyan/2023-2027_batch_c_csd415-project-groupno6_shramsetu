@@ -9,16 +9,11 @@ import { apiErrorMessage } from "../../api/client";
 import { govSendNotification, type GovNotification } from "../../api/governmentClient";
 
 interface NotificationsPanelProps {
-  token: string;
   notifications: GovNotification[];
   onSent: () => void;
 }
 
-export default function NotificationsPanel({
-  token,
-  notifications,
-  onSent,
-}: NotificationsPanelProps) {
+export default function NotificationsPanel({ notifications, onSent }: NotificationsPanelProps) {
   // Notification form
   const [notifTitle, setNotifTitle] = useState("");
   const [notifMessage, setNotifMessage] = useState("");
@@ -36,7 +31,7 @@ export default function NotificationsPanel({
     setNotifSending(true);
     setNotifError("");
     try {
-      const result = await govSendNotification(token, {
+      const result = await govSendNotification({
         title: notifTitle,
         body: notifMessage,
         priority: notifPriority,

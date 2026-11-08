@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
-import { api, clearToken, getToken, setToken, httpStatus } from "../api/client";
+import { api, httpStatus } from "../api/client";
+import { declareSession, forgetSession, onSessionExpired, signOut } from "../api/session";
 import { clearAllCachedDocuments } from "../services/documentCache";
 import { lockWallet } from "../services/documentSecurity";
 import type { Worker } from "../types";
@@ -20,8 +21,8 @@ interface AuthContextValue {
   worker: Worker | null;
   loading: boolean;
   bootError: boolean;
-  loginWithToken: (token: string, worker: Worker) => void;
-  logout: () => void;
+  completeLogin: (worker: Worker) => void;
+  logout: () => Promise<void>;
   refreshMe: () => Promise<void>;
 }
 
@@ -32,13 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [bootError, setBootError] = useState(false);
 
+  // There is no token to check before asking: the session lives in an httpOnly
+  // cookie, so the only way to know whether one exists is to try. A signed-out
+  // visitor gets `no_token`, which is not an error worth surfacing.
   const refreshMe = useCallback(async () => {
-    if (!getToken()) {
-      setWorker(null);
-      setBootError(false);
-      setLoading(false);
-      return;
-    }
     try {
       const res = await api.get<Worker>("/auth/worker/me");
       setWorker(res.data);
@@ -49,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // the worker out and bounce them to the login screen — surface it
       // as a retryable error instead (see ProtectedRoute).
       if (httpStatus(err) === 401) {
-        clearToken();
+        forgetSession();
         purgeWallet();
         setWorker(null);
         setBootError(false);
@@ -65,19 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshMe();
   }, [refreshMe]);
 
-  const loginWithToken = (token: string, w: Worker) => {
-    setToken(token);
+  /** A login response has already set the cookies; this records the identity. */
+  const completeLogin = (w: Worker) => {
+    declareSession("worker");
     setWorker(w);
   };
 
-  const logout = () => {
-    clearToken();
+  const logout = async () => {
+    await signOut();
     purgeWallet();
     setWorker(null);
   };
 
+  // A refresh that fails (expired or revoked refresh token) ends the session
+  // without the page having to poll for it.
+  useEffect(() => {
+    return onSessionExpired(() => setWorker(null));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ worker, loading, bootError, loginWithToken, logout, refreshMe }}>
+    <AuthContext.Provider value={{ worker, loading, bootError, completeLogin, logout, refreshMe }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,7 +11,8 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setEmployerToken, apiErrorDetail } from "../api/client";
+import { api, apiErrorDetail } from "../api/client";
+import { declareSession } from "../api/session";
 import { Card } from "../components/ui/Card";
 
 type Mode = "password" | "otp";
@@ -41,7 +42,7 @@ export default function EmployerLoginPage() {
 
   const finishLogin = useCallback(
     (data: EmployerResponse) => {
-      setEmployerToken(data.access_token);
+      declareSession("employer");
       localStorage.setItem("employer_user", JSON.stringify(data.employer));
       navigate("/employer/dashboard", { replace: true });
     },

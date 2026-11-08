@@ -5,7 +5,16 @@ import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { OtpCode } from "../models/Document.js";
-import { hashPassword, verifyPassword, signToken, sha256, hashOtp, randomOtp } from "../utils/crypto.js";
+import { hashPassword, verifyPassword, sha256, hashOtp, randomOtp } from "../utils/crypto.js";
+import {
+  REFRESH_COOKIE,
+  clearSessionCookies,
+  csrfValid,
+  readCookie,
+  revokeSession,
+  rotateSession,
+  startSession,
+} from "../utils/session.js";
 import { validateDocumentFile } from "../utils/fileValidation.js";
 import { config } from "../config.js";
 import { send } from "../services/smsAdapter.js";
@@ -319,7 +328,7 @@ router.post("/worker/otp/verify", otpVerifyLimiter, async (req, res) => {
 
     worker.is_phone_verified = true;
     await worker.save();
-    res.json({ access_token: signToken(worker), token_type: "bearer", worker: worker.toWorkerJSON() });
+    res.json({ access_token: await startSession(req, res, worker), token_type: "bearer", worker: worker.toWorkerJSON() });
   } catch (err) {
     console.error("[auth/otp/verify]", err);
     res.status(500).json({ detail: "Verification failed. Please try again." });
@@ -362,7 +371,7 @@ router.post("/worker/login/otp", otpVerifyLimiter, async (req, res) => {
       await worker.save();
     }
     if (!worker.is_active) return res.status(403).json({ detail: "Account disabled." });
-    res.json({ access_token: signToken(worker), token_type: "bearer", worker: worker.toWorkerJSON() });
+    res.json({ access_token: await startSession(req, res, worker), token_type: "bearer", worker: worker.toWorkerJSON() });
   } catch (err) {
     console.error("[auth/otp/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -388,7 +397,7 @@ router.post("/worker/login", workerLoginLimiter, async (req, res) => {
     if (!worker.is_phone_verified) {
       return res.status(403).json({ detail: "Account not verified. Please complete registration with the OTP sent to your mobile." });
     }
-    res.json({ access_token: signToken(worker), token_type: "bearer", worker: worker.toWorkerJSON() });
+    res.json({ access_token: await startSession(req, res, worker), token_type: "bearer", worker: worker.toWorkerJSON() });
   } catch (err) {
     console.error("[auth/worker/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -425,7 +434,14 @@ router.post("/worker/recovery-key/rotate", workerLoginLimiter, authenticate, req
   }
 });
 
-router.post("/worker/logout", authenticate, (req, res) => res.json({ detail: "Logged out" }));
+// Signing out must end the session on the server, not just forget a token on
+// one device. /auth/logout is the cookie-aware endpoint; this one is kept for
+// clients that were calling it and does the same revocation.
+router.post("/worker/logout", authenticate, async (req, res) => {
+  await revokeSession(readCookie(req.headers.cookie, REFRESH_COOKIE));
+  clearSessionCookies(res);
+  res.json({ detail: "Logged out" });
+});
 
 // ── Worker recovery: lost password → reset with recovery key ──────────
 // The recovery key alone proves identity (it was printed once at
@@ -517,7 +533,7 @@ router.post("/worker/recover/mobile/confirm", otpVerifyLimiter, async (req, res)
       actorRole: "worker", actorIdentifier: workerId, action: "worker.recover.mobile",
       resourceType: "user", resourceId: String(worker._id), ip: req.ip, success: true,
     });
-    res.json({ access_token: signToken(worker), token_type: "bearer", worker: worker.toWorkerJSON() });
+    res.json({ access_token: await startSession(req, res, worker), token_type: "bearer", worker: worker.toWorkerJSON() });
   } catch (err) {
     console.error("[auth/recover/mobile/confirm]", err);
     res.status(500).json({ detail: "Recovery failed. Please try again." });
@@ -614,7 +630,7 @@ router.post("/employer/otp/verify", otpVerifyLimiter, async (req, res) => {
     if (!employer) return res.status(404).json({ detail: "Registration not found." });
     employer.is_phone_verified = true;
     await employer.save();
-    res.json({ access_token: signToken(employer), token_type: "bearer", employer: employer.toEmployerJSON() });
+    res.json({ access_token: await startSession(req, res, employer), token_type: "bearer", employer: employer.toEmployerJSON() });
   } catch (err) {
     console.error("[auth/employer/otp/verify]", err);
     res.status(500).json({ detail: "Verification failed. Please try again." });
@@ -651,7 +667,7 @@ router.post("/employer/login/otp", otpVerifyLimiter, async (req, res) => {
       employer.is_phone_verified = true;
       await employer.save();
     }
-    res.json({ access_token: signToken(employer), token_type: "bearer", employer: employer.toEmployerJSON() });
+    res.json({ access_token: await startSession(req, res, employer), token_type: "bearer", employer: employer.toEmployerJSON() });
   } catch (err) {
     console.error("[auth/employer/otp/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -675,7 +691,7 @@ router.post("/employer/login", workerLoginLimiter, async (req, res) => {
     if (!employer.is_phone_verified) {
       return res.status(403).json({ detail: "Account not verified. Complete registration with the OTP sent to your mobile." });
     }
-    res.json({ access_token: signToken(employer), token_type: "bearer", employer: employer.toEmployerJSON() });
+    res.json({ access_token: await startSession(req, res, employer), token_type: "bearer", employer: employer.toEmployerJSON() });
   } catch (err) {
     console.error("[auth/employer/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -750,7 +766,7 @@ router.post("/citizen/otp/verify", otpVerifyLimiter, async (req, res) => {
     if (!citizen) return res.status(404).json({ detail: "Registration not found." });
     citizen.is_phone_verified = true;
     await citizen.save();
-    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+    res.json({ access_token: await startSession(req, res, citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
   } catch (err) {
     console.error("[auth/citizen/otp/verify]", err);
     res.status(500).json({ detail: "Verification failed. Please try again." });
@@ -785,7 +801,7 @@ router.post("/citizen/login/otp", otpVerifyLimiter, async (req, res) => {
       citizen.is_phone_verified = true;
       await citizen.save();
     }
-    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+    res.json({ access_token: await startSession(req, res, citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
   } catch (err) {
     console.error("[auth/citizen/otp/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -808,7 +824,7 @@ router.post("/citizen/login", workerLoginLimiter, async (req, res) => {
     if (!citizen.is_phone_verified) {
       return res.status(403).json({ detail: "Account not verified. Complete registration with the OTP sent to your mobile." });
     }
-    res.json({ access_token: signToken(citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
+    res.json({ access_token: await startSession(req, res, citizen), token_type: "bearer", citizen: citizen.toCitizenJSON() });
   } catch (err) {
     console.error("[auth/citizen/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
@@ -845,11 +861,57 @@ router.post("/government/login", governmentLoginLimiter, async (req, res) => {
       actorRole: "government", actorIdentifier: employeeId, action: "government.login",
       resourceType: "user", resourceId: String(official._id), ip: req.ip, success: true,
     });
-    res.json({ access_token: signToken(official), token_type: "bearer", government: official.toGovernmentJSON() });
+    res.json({ access_token: await startSession(req, res, official), token_type: "bearer", government: official.toGovernmentJSON() });
   } catch (err) {
     console.error("[auth/gov/login]", err);
     res.status(500).json({ detail: "Login failed. Please try again." });
   }
+});
+
+// ── Session refresh ──────────────────────────────────────────────────
+// The access cookie lives 15 minutes, so the SPA silently trades its refresh
+// cookie for a new pair. Rotation makes a copied refresh token detectable: the
+// second use of a rotated token revokes the whole chain instead of minting a
+// second live session.
+router.post("/refresh", async (req, res) => {
+  const token = readCookie(req.headers.cookie, REFRESH_COOKIE);
+  // Double-submit: this endpoint sets cookies, so a cross-site caller must not
+  // be able to drive it. Browsers send the CSRF cookie automatically too, so
+  // the header is the part an attacker cannot supply.
+  if (!csrfValid(req)) {
+    return res.status(403).json({ detail: "CSRF token missing or invalid", code: "csrf_failed" });
+  }
+  try {
+    const result = await rotateSession(req, res, token);
+    if (!result.ok) {
+      clearSessionCookies(res);
+      const detail = result.reason === "reused" ? "Session revoked. Please sign in again." : "Not authenticated";
+      return res.status(401).json({ detail, code: result.reason === "reused" ? "session_reused" : "no_token" });
+    }
+    const user = await User.findById(result.userId).select("is_active").lean();
+    if (!user || !user.is_active) {
+      clearSessionCookies(res);
+      return res.status(401).json({ detail: "Account disabled or removed.", code: "account_disabled" });
+    }
+    res.json({ ok: true, role: result.role });
+  } catch (err) {
+    console.error("[auth/refresh]", err);
+    res.status(500).json({ detail: "Session refresh failed." });
+  }
+});
+
+// ── Logout ───────────────────────────────────────────────────────────
+// Revokes the presented refresh session server-side and clears all three
+// cookies. A logout that only deleted a client token left the session working
+// for anyone who had already copied it.
+router.post("/logout", async (req, res) => {
+  try {
+    await revokeSession(readCookie(req.headers.cookie, REFRESH_COOKIE));
+  } catch (err) {
+    console.error("[auth/logout]", err);
+  }
+  clearSessionCookies(res);
+  res.json({ ok: true });
 });
 
 // ── Government: me ───────────────────────────────────────────────────
