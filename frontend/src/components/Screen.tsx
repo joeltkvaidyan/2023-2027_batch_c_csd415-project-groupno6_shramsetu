@@ -23,7 +23,7 @@ export function Screen({
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
       {(title || handleBack) && (
-        <header className="glass sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b border-gray-200/70 dark:border-gray-700/60">
+        <header className="bg-white dark:bg-gray-950 sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
           {handleBack && (
             <button
               onClick={handleBack}

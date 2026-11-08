@@ -5,9 +5,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // One Latin face, five script faces, all self-hosted. The browser picks
+        // per glyph, and the unicode-range blocks in fonts.css mean a Hindi
+        // reader never downloads Tamil or Malayalam.
         sans: [
           "Inter",
-          "Noto Sans",
           "Noto Sans Devanagari",
           "Noto Sans Bengali",
           "Noto Sans Telugu",
@@ -16,11 +18,10 @@ export default {
           "system-ui",
           "sans-serif",
         ],
-        // Display face for headings/hero numerals — sharper, more editorial.
+        // Headings keep Inter: a second display face was 40 kB of download for
+        // a distinction most readers never noticed.
         display: [
-          "Plus Jakarta Sans",
           "Inter",
-          "Noto Sans",
           "Noto Sans Devanagari",
           "Noto Sans Bengali",
           "Noto Sans Telugu",
@@ -113,18 +114,9 @@ export default {
           from: { backgroundPosition: "200% 0" },
           to: { backgroundPosition: "-200% 0" },
         },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-8px)" },
-        },
         "pulse-soft": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.55" },
-        },
-        "aurora-shift": {
-          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
-          "33%": { transform: "translate(24px, -18px) scale(1.08)" },
-          "66%": { transform: "translate(-18px, 14px) scale(0.95)" },
         },
         "pop-in": {
           "0%": { opacity: "0", transform: "scale(0.9) translateY(6px)" },
@@ -133,14 +125,12 @@ export default {
         },
       },
       animation: {
-        "fade-up": "fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
-        "fade-in": "fade-in 0.3s ease-out both",
-        "scale-in": "scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "fade-up": "fade-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "fade-in": "fade-in 0.2s ease-out both",
+        "scale-in": "scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both",
         shimmer: "shimmer 1.8s linear infinite",
-        float: "float 5s ease-in-out infinite",
         "pulse-soft": "pulse-soft 2.2s ease-in-out infinite",
-        "aurora-shift": "aurora-shift 14s ease-in-out infinite",
-        "pop-in": "pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "pop-in": "pop-in 0.2s cubic-bezier(0.2, 0.8, 0.3, 1) both",
       },
     },
   },

@@ -125,7 +125,7 @@ export default function GovernmentDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
-      <header className="glass bg-slate-900/80 border-b border-slate-800 px-4 py-3 sticky top-0 z-20">
+      <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 sticky top-0 z-20">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-teal-600 rounded-xl flex items-center justify-center shadow-glow-brand ring-1 ring-white/10">

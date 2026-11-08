@@ -29,20 +29,10 @@ export default function GovernmentLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Backdrop orbs */}
-      <div
-        className="orb w-[28rem] h-[28rem] -top-40 -right-28 bg-blue-600/20 blur-3xl animate-aurora-shift"
-        aria-hidden="true"
-      />
-      <div
-        className="orb w-96 h-96 -bottom-32 -left-24 bg-indigo-500/15 blur-3xl animate-aurora-shift [animation-delay:-7s]"
-        aria-hidden="true"
-      />
-
-      <div className="w-full max-w-md relative">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8 animate-fade-up">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-glow-brand-lg mb-4 animate-float ring-1 ring-white/20">
+          <div className="w-20 h-20 mx-auto bg-blue-600 rounded-3xl flex items-center justify-center mb-4 ring-1 ring-white/20">
             <span className="text-4xl">🛡️</span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">ShramSetu</h1>

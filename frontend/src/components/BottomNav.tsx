@@ -43,10 +43,11 @@ export function BottomNav() {
       aria-label="Primary"
       className="fixed bottom-0 left-0 right-0 z-20 pointer-events-none safe-area-bottom"
     >
-      {/* Floating glass dock */}
+      {/* Floating dock. Opaque on purpose: it sits over scrolling cards, and
+          a translucent bar let the text underneath read as overlapping text. */}
       <div className="max-w-md mx-auto px-4 pb-3">
         <div
-          className="pointer-events-auto glass shadow-dock border border-white/60 dark:border-white/10
+          className="pointer-events-auto bg-white dark:bg-gray-900 shadow-dock border border-gray-200 dark:border-gray-800
             rounded-[1.75rem] flex justify-around px-2 py-2"
         >
           {items.map(({ to, Icon, key, short, badge }) => (

@@ -76,12 +76,8 @@ export default function NotificationInboxPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-32">
       {/* Header — brand gradient with decorative glow */}
-      <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-10 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
-        <div
-          className="absolute -top-16 -right-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none animate-aurora-shift"
-          aria-hidden="true"
-        />
-        <div className="flex items-center justify-between relative">
+      <header className="bg-brand-700 text-white px-5 pt-8 pb-10 rounded-b-[2rem] animate-fade-in">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/worker/dashboard")}

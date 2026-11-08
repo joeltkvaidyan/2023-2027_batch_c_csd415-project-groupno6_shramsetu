@@ -151,17 +151,8 @@ export default function WorkerDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-36">
       {/* Header — brand gradient with real avatar + greeting */}
-      <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-12 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
-        {/* Subtle decorative glow */}
-        <div
-          className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none animate-aurora-shift"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-emerald-300/10 blur-2xl pointer-events-none animate-float"
-          aria-hidden="true"
-        />
-        <div className="flex items-center gap-4 relative">
+      <header className="bg-brand-700 text-white px-5 pt-8 pb-12 rounded-b-[2rem] animate-fade-in">
+        <div className="flex items-center gap-4">
           <Avatar name={worker.full_name} size="lg" className="ring-2 ring-white/30" />
           <div className="min-w-0">
             <p className="text-brand-100 text-sm">{t(greetingKey, "Welcome,")}</p>
