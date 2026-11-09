@@ -183,18 +183,25 @@ button.btn-secondary:disabled {
 }
 
 /* ── Inputs: soft inset field with brand focus ──────────────────────── */
-.input-field {
-  @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80
-    px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400
-    shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/60
-    focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)];
-}
+/* In `components`, not at the top level. Unlayered CSS outranks every layered
+   utility in Tailwind, so while this sat outside the layers its `px-4` silently
+   beat the `pl-10`/`pr-14` that pages add to make room for a `+91` prefix or a
+   mic button — the prefix and the placeholder then drew in the same pixels, and
+   a typed value slid underneath the icon. Utilities must be able to win here. */
+@layer components {
+  .input-field {
+    @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80
+      px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400
+      shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/60
+      focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)];
+  }
 
-/* Selects get a custom chevron instead of the native one */
-select.input-field {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  padding-right: 2.5rem;
+  /* Selects get a custom chevron instead of the native one */
+  select.input-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.5rem;
+  }
 }

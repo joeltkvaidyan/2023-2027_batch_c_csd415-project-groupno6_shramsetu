@@ -218,7 +218,7 @@ export default function EmployerRegisterPage() {
                     id="emp-mobile"
                     type="text"
                     inputMode="numeric"
-                    className="input-field w-full pl-10"
+                    className="input-field w-full pl-12"
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(digitsOnly(e.target.value))}
                     placeholder="9876543210"
