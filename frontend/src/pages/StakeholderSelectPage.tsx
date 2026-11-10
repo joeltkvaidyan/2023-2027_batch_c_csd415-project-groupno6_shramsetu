@@ -48,34 +48,6 @@ export default function StakeholderSelectPage() {
           </button>
         ))}
       </div>
-
-      {/* Hiring side — a household signs in to see nearby workers' numbers,
-          or posts a request and lets a worker call back. */}
-      <div className="mt-8 animate-fade-up">
-        <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">
-          Need help at home?
-        </p>
-        <div className="grid grid-cols-1 gap-3">
-          <button
-            onClick={() => navigate("/citizen/login")}
-            className="card flex items-center gap-4 py-4 w-full active:scale-[0.98] transition-all duration-200 text-left hover:shadow-card-hover hover:-translate-y-0.5 hover:border-brand-200 dark:hover:border-brand-800 group"
-          >
-            <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-2xl shadow-md transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
-              🏠
-            </span>
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              I need a worker near me
-            </span>
-            <span className="ml-auto text-gray-300 dark:text-gray-600 text-xl transition-transform duration-200 group-hover:translate-x-1 group-hover:text-brand-500">
-              ›
-            </span>
-          </button>
-        </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">
-          Sign in with a household account to see nearby workers' numbers and call them — or post a
-          request and let a matching worker call you. Numbers are never shown without signing in.
-        </p>
-      </div>
     </Screen>
   );
 }
