@@ -117,7 +117,8 @@
     "heatSafety": "Heat safety",
     "unpaidWages": "Unpaid wages",
     "askQuestion": "Ask a question",
-    "myDocuments": "My documents"
+    "myDocuments": "My documents",
+    "viewIdCard": "Open ID card"
   },
   "documents": {
     "title": "Document Wallet",
@@ -258,7 +259,8 @@
     "viewAll": "View all",
     "delete": "Delete",
     "rename": "Rename",
-    "download": "Download"
+    "download": "Download",
+    "notProvided": "Not provided"
   },
   "notifications": {
     "title": "Alerts",
@@ -567,5 +569,41 @@
   "a11y": {
     "dismiss": "Dismiss",
     "close": "Close"
+  },
+  "idCard": {
+    "title": "Worker ID card",
+    "subtitle": "Your identity card for employers and labour-office checks. Print it, or save it as a PDF.",
+    "loadFailed": "Could not load your ID card.",
+    "notIssuedTitle": "This card is not issued yet",
+    "notIssuedBody": "A labour-office official must accept your registration before the card can be verified. You can print it, but the QR will not verify until then.",
+    "issuer": "ShramSetu · Labour Department",
+    "cardType": "Worker Identity Card",
+    "accepted": "Verified worker",
+    "pending": "Awaiting approval",
+    "qrLabel": "Verification QR code",
+    "scanToVerify": "Scan to verify",
+    "occupation": "Work",
+    "experience": "Experience",
+    "years": "{count} years",
+    "place": "Place",
+    "registeredOn": "Registered on",
+    "name": "Name",
+    "footer": "This card confirms a registration accepted by a labour office. It is not a background check. Anyone can verify it by scanning the QR code.",
+    "print": "Print / Save as PDF"
+  },
+  "verify": {
+    "title": "Check a worker card",
+    "checking": "Checking this card...",
+    "validTitle": "This is a verified worker card",
+    "validBody": "ShramSetu issued this card and a labour office accepted the registration.",
+    "workerId": "Worker ID",
+    "checkedAt": "Checked",
+    "notice": "This confirms the registration and its acceptance. It is not a background check, and it says nothing about a specific employer or wage.",
+    "malformedTitle": "This is not a ShramSetu card code",
+    "malformedBody": "The link looks incomplete. Scan the QR code on the card again instead of typing it.",
+    "invalidTitle": "This card could not be verified",
+    "invalidBody": "No accepted, active registration matches this card. It may be a copy, an old card, or a registration that was rejected.",
+    "invalidBadge": "Not verified",
+    "errorBody": "Could not reach the server. Check your connection and try again."
   }
 }
