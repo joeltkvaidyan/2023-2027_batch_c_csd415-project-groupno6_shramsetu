@@ -35,6 +35,7 @@ interface CardData {
   registered_on: string | null;
   status: "pending" | "accepted" | "rejected";
   issued: boolean;
+  verify_code: string | null;
   verify_url: string | null;
 }
 
@@ -54,6 +55,21 @@ function useFormattedDate() {
       return date.toISOString().slice(0, 10);
     }
   };
+}
+
+/**
+ * Where a scanned QR should land: the SPA origin, which this page is running on.
+ *
+ * The server's own `verify_url` is built from PUBLIC_APP_URL or the API's origin,
+ * and the API is frequently a different host from the app (dev: :8000 vs :5180;
+ * production: api.example.org vs app.example.org). Since the card is printed
+ * from the app, window.location.origin is the one origin that is always right.
+ * The server value stays as the fallback for non-browser consumers.
+ */
+function verifyUrlFor(card: CardData): string | null {
+  if (!card.verify_code) return null;
+  const origin = typeof window !== "undefined" ? window.location.origin : null;
+  return origin ? `${origin}/verify/${card.verify_code}` : card.verify_url;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -80,7 +96,8 @@ export default function WorkerIdCardPage() {
         if (alive) setCard(res.data);
       })
       .catch((err) => {
-        if (alive) setError(apiErrorMessage(err, t("idCard.loadFailed", "Could not load your ID card.")));
+        if (alive)
+          setError(apiErrorMessage(err, t("idCard.loadFailed", "Could not load your ID card.")));
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -89,9 +106,10 @@ export default function WorkerIdCardPage() {
       alive = false;
     };
   }, [t]);
-
   const place =
-    [card?.district, card?.state].filter(Boolean).join(", ") || t("common.notProvided", "Not provided");
+    [card?.district, card?.state].filter(Boolean).join(", ") ||
+    t("common.notProvided", "Not provided");
+  const verifyUrl = card ? verifyUrlFor(card) : null;
 
   return (
     <Screen title={t("idCard.title", "Worker ID card")} onBack={true}>
@@ -104,9 +122,7 @@ export default function WorkerIdCardPage() {
         </p>
       </div>
 
-      {loading && (
-        <p className="mt-4 text-sm text-gray-500">{t("common.loading", "Loading...")}</p>
-      )}
+      {loading && <p className="mt-4 text-sm text-gray-500">{t("common.loading", "Loading...")}</p>}
 
       {error && (
         <Card className="mt-4 border-red-200 dark:border-red-900">
@@ -118,7 +134,10 @@ export default function WorkerIdCardPage() {
         <>
           {!card.issued && (
             <Card className="mt-4 flex items-start gap-3 border-amber-200 dark:border-amber-900">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+              <AlertTriangle
+                className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
                   {t("idCard.notIssuedTitle", "This card is not issued yet")}
@@ -164,11 +183,11 @@ export default function WorkerIdCardPage() {
                 </div>
               </div>
 
-              {card.verify_url && (
+              {verifyUrl && (
                 <div className="shrink-0 text-center">
                   <span className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-600">
                     <QRCodeSVG
-                      value={card.verify_url}
+                      value={verifyUrl}
                       size={78}
                       level="M"
                       aria-label={t("idCard.qrLabel", "Verification QR code")}
@@ -191,12 +210,15 @@ export default function WorkerIdCardPage() {
                 label={t("idCard.experience", "Experience")}
                 value={
                   card.years_of_experience != null
-                    ? t("idCard.years", "{{count}} years", { count: card.years_of_experience })
+                    ? t("idCard.years", "{count} years", { count: card.years_of_experience })
                     : t("common.notProvided", "Not provided")
                 }
               />
               <Row label={t("idCard.place", "Place")} value={place} />
-              <Row label={t("idCard.registeredOn", "Registered on")} value={formatDate(card.registered_on)} />
+              <Row
+                label={t("idCard.registeredOn", "Registered on")}
+                value={formatDate(card.registered_on)}
+              />
             </dl>
 
             <div className="border-t border-gray-100 px-4 py-2.5 dark:border-gray-800">
@@ -213,9 +235,9 @@ export default function WorkerIdCardPage() {
             <Button onClick={() => window.print()} className="w-full" disabled={loading}>
               <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
               {t("idCard.print", "Print / Save as PDF")}
-            </Button>
-            {card.verify_url && (
-              <p className="mt-3 break-all text-center text-[11px] text-gray-400">{card.verify_url}</p>
+            </Button>{" "}
+            {verifyUrl && (
+              <p className="mt-3 break-all text-center text-[11px] text-gray-400">{verifyUrl}</p>
             )}
           </div>
         </>

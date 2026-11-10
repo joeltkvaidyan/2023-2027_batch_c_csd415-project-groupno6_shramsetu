@@ -56,7 +56,11 @@ export default function VerifyWorkerPage() {
         // well-formed but does not verify. Both are "not a valid card" to the
         // person holding the phone, but only the 400 can be described as
         // malformed rather than "unknown".
-        setState(status === 400 ? { kind: "invalid", malformed: true } : { kind: "invalid", malformed: false });
+        setState(
+          status === 400
+            ? { kind: "invalid", malformed: true }
+            : { kind: "invalid", malformed: false },
+        );
       });
     return () => {
       alive = false;
@@ -68,7 +72,11 @@ export default function VerifyWorkerPage() {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return "—";
     try {
-      return date.toLocaleDateString(i18n.language, { day: "2-digit", month: "short", year: "numeric" });
+      return date.toLocaleDateString(i18n.language, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
     } catch {
       return date.toISOString().slice(0, 10);
     }
@@ -194,7 +202,10 @@ export default function VerifyWorkerPage() {
       {state.kind === "error" && (
         <Card className="border-red-200 dark:border-red-900">
           <p className="text-sm text-red-700 dark:text-red-300">
-            {t("verify.errorBody", "Could not reach the server. Check your connection and try again.")}
+            {t(
+              "verify.errorBody",
+              "Could not reach the server. Check your connection and try again.",
+            )}
           </p>
         </Card>
       )}
