@@ -99,7 +99,7 @@ export default function WorkerRequestsPage() {
 
   return (
     <Screen title={t("requests.title", "House requests")} onBack={true}>
-      <main className="p-4 pb-40 space-y-6 max-w-lg mx-auto">
+      <div className="p-4 pb-40 space-y-6 max-w-lg mx-auto">
         {error && (
           <Card className="border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-4">
             <div className="flex items-start gap-3">
@@ -274,7 +274,7 @@ export default function WorkerRequestsPage() {
             "Safety: meet in public where possible, agree the day's rate before starting, and report problems through Grievances.",
           )}
         </p>
-      </main>
+      </div>
       <BottomNav />
     </Screen>
   );
