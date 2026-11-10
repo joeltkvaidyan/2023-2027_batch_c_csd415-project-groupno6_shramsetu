@@ -15,9 +15,7 @@ import { httpStatus } from "../api/client";
 import { readJson } from "../utils/storage";
 import { signOut } from "../api/session";
 import NotificationsPanel from "../components/government/NotificationsPanel";
-import JobsPanel from "../components/government/JobsPanel";
-import ApprovalsPanel from "../components/government/ApprovalsPanel";
-import EmployerApprovalsPanel from "../components/government/EmployerApprovalsPanel";
+import ReviewQueue from "../components/government/ReviewQueue";
 import {
   govGetStats,
   govGetWorkers,
@@ -37,15 +35,7 @@ import {
 } from "../api/governmentClient";
 
 type Tab =
-  | "overview"
-  | "approvals"
-  | "employers"
-  | "grievances"
-  | "workers"
-  | "jobs"
-  | "notifications"
-  | "officials"
-  | "audit";
+  "overview" | "review" | "grievances" | "workers" | "notifications" | "officials" | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -151,11 +141,9 @@ export default function GovernmentDashboardPage() {
 
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: "overview", icon: "📊", label: "Overview" },
-    { key: "approvals", icon: "✅", label: "Approvals" },
-    { key: "employers", icon: "🏢", label: "Employers" },
+    { key: "review", icon: "✅", label: "Review" },
     { key: "grievances", icon: "📢", label: "Grievances" },
     { key: "workers", icon: "👷", label: "Workers" },
-    { key: "jobs", icon: "🧰", label: "Job Listings" },
     { key: "notifications", icon: "🔔", label: "Notifications" },
     // Officials monitoring is superadmin-only — hidden here and 403-guarded
     // server-side, so ordinary state/district officials never see the tab.
@@ -342,10 +330,9 @@ export default function GovernmentDashboardPage() {
           </div>
         )}
 
-        {/* ── Approvals Tab ───────────────────────────────────── */}
-        {!loading && activeTab === "approvals" && <ApprovalsPanel />}
+        {/* ── Review Tab (workers, employers, job listings) ────── */}
+        {!loading && activeTab === "review" && <ReviewQueue />}
 
-        {!loading && activeTab === "employers" && <EmployerApprovalsPanel />}
         {!loading && activeTab === "workers" && (
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -687,8 +674,6 @@ export default function GovernmentDashboardPage() {
             )}
           </div>
         )}
-        {/* ── Job Listings Tab ───────────────────────────────── */}
-        {!loading && activeTab === "jobs" && <JobsPanel />}
       </main>
     </div>
   );
