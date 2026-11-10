@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { VoiceRecorder } from "../components/VoiceRecorder";
+import { Check } from "lucide-react";
 import { api, apiErrorDetail, httpStatus, isNetworkFailure } from "../api/client";
 import { addToSyncQueue } from "../services/offlineStorage";
 import { submitOnce } from "../api/idempotency";
@@ -57,6 +58,13 @@ export default function GrievanceFormPage() {
   const [fieldErrors, setFieldErrors] = useState<{ subject?: string; description?: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [queuedOffline, setQueuedOffline] = useState(false);
+  // Three short screens beat one long scroll on a cheap phone: a worker sees
+  // one decision at a time, and the draft is already being written to
+  // IndexedDB between keystrokes (see the debounce below).
+  const [step, setStep] = useState(0);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const TOTAL_STEPS = 3;
 
   useEffect(() => {
     // Load draft if no prefill state
@@ -85,10 +93,24 @@ export default function GrievanceFormPage() {
           incident_location: incidentLocation,
           incident_date: incidentDate,
         });
+        setDraftSaved(true);
       }
     }, 500);
     return () => clearTimeout(timer);
   }, [category, subject, description, employerName, incidentLocation, incidentDate]);
+
+  // Move focus to the new screen's heading so a screen-reader user (and the
+  // browser's scroll position) follows the visible step change.
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+    stepHeadingRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [step]);
+
+  const validateField = (field: "subject" | "description") => {
+    const empty = field === "subject" ? !subject.trim() : !description.trim();
+    setFieldErrors((f) => ({ ...f, [field]: empty ? t("common.required") : undefined }));
+    return !empty;
+  };
 
   const validate = () => {
     const errs: { subject?: string; description?: string } = {};
@@ -97,6 +119,14 @@ export default function GrievanceFormPage() {
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
+
+  const goNext = () => {
+    if (step === 0 && !validateField("subject")) return;
+    if (step === 1 && !validateField("description")) return;
+    setStep((s) => Math.min(TOTAL_STEPS - 1, s + 1));
+  };
+
+  const goBack = () => setStep((s) => Math.max(0, s - 1));
 
   // One key per submission: a retry after a lost reply must not file the same
   // complaint twice. It is cleared only by a successful response.
@@ -121,6 +151,7 @@ export default function GrievanceFormPage() {
       setEmployerName("");
       setIncidentLocation("");
       setIncidentDate("");
+      setDraftSaved(false);
       setQueuedOffline(true);
     } catch {
       // IndexedDB unavailable (private mode): the complaint cannot be kept, so
@@ -133,7 +164,11 @@ export default function GrievanceFormPage() {
     e.preventDefault();
     setError(null);
     setQueuedOffline(false);
-    if (!validate()) return;
+    if (!validate()) {
+      // Take the worker to the screen that still needs an answer.
+      setStep(!subject.trim() ? 0 : 1);
+      return;
+    }
     setSubmitting(true);
     // Declared outside the try so a network failure in the catch can queue the
     // very same body the request would have carried.
@@ -202,133 +237,182 @@ export default function GrievanceFormPage() {
   return (
     <Screen title={t("grievance.fileNew")} onBack={true}>
       <form onSubmit={handleSubmit} noValidate className="space-y-4 mt-4 pb-10">
+        {/* Step rail: one decision per screen, position announced politely */}
         <div>
-          <label
-            htmlFor="grievance-category"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            {t("grievance.category")}
-          </label>
-          <select
-            id="grievance-category"
-            className="input-field"
-            value={category}
-            onChange={(e) => setCategory(e.target.value as GrievanceCategory)}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {t(`grievance.categories.${c}`)}
-              </option>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400" aria-live="polite">
+            {t("grievance.stepOf", { current: step + 1, total: TOTAL_STEPS })}
+          </p>
+          <ol className="mt-2 flex gap-1.5" aria-hidden="true">
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+              <li
+                key={i}
+                className={`h-1.5 flex-1 rounded-full ${
+                  i <= step ? "bg-brand-600" : "bg-gray-200 dark:bg-gray-700"
+                }`}
+              />
             ))}
-          </select>
+          </ol>
         </div>
 
-        <div>
-          <label
-            htmlFor="grievance-subject"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            {t("grievance.subject")}
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="grievance-subject"
-              maxLength={200}
-              aria-invalid={!!fieldErrors.subject}
-              aria-describedby={fieldErrors.subject ? "subject-error" : undefined}
-              className={`input-field flex-1 ${fieldErrors.subject ? "input-error" : ""}`}
-              placeholder={t("grievance.subjectPlaceholder")}
-              value={subject}
+        <h2
+          ref={stepHeadingRef}
+          tabIndex={-1}
+          className="text-lg font-semibold text-gray-900 dark:text-gray-100 focus:outline-none"
+        >
+          {step === 0
+            ? t("grievance.stepWhat")
+            : step === 1
+              ? t("grievance.stepDetails")
+              : t("grievance.stepWhere")}
+        </h2>
+
+        {step === 0 && (
+          <>
+            <div>
+              <label
+                htmlFor="grievance-category"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                {t("grievance.category")}
+              </label>
+              <select
+                id="grievance-category"
+                className="input-field"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as GrievanceCategory)}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`grievance.categories.${c}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="grievance-subject"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                {t("grievance.subject")}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="grievance-subject"
+                  maxLength={200}
+                  aria-invalid={!!fieldErrors.subject}
+                  aria-describedby={fieldErrors.subject ? "subject-error" : undefined}
+                  className={`input-field flex-1 ${fieldErrors.subject ? "input-error" : ""}`}
+                  placeholder={t("grievance.subjectPlaceholder")}
+                  value={subject}
+                  onChange={(e) => {
+                    setSubject(e.target.value);
+                    if (fieldErrors.subject) setFieldErrors((f) => ({ ...f, subject: undefined }));
+                  }}
+                />
+                <VoiceRecorder language={i18n.language} onTranscript={handleVoiceSubject} />
+              </div>
+              {fieldErrors.subject && (
+                <p id="subject-error" role="alert" className="field-error">
+                  {fieldErrors.subject}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {step === 1 && (
+          <div>
+            <label
+              htmlFor="grievance-description"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              {t("grievance.description")}
+            </label>
+            <textarea
+              id="grievance-description"
+              rows={7}
+              aria-invalid={!!fieldErrors.description}
+              aria-describedby={fieldErrors.description ? "description-error" : undefined}
+              className={`input-field resize-none ${fieldErrors.description ? "input-error" : ""}`}
+              placeholder={t("grievance.descriptionPlaceholder")}
+              value={description}
               onChange={(e) => {
-                setSubject(e.target.value);
-                if (fieldErrors.subject) setFieldErrors((f) => ({ ...f, subject: undefined }));
+                setDescription(e.target.value);
+                if (fieldErrors.description)
+                  setFieldErrors((f) => ({ ...f, description: undefined }));
               }}
             />
-            <VoiceRecorder language={i18n.language} onTranscript={handleVoiceSubject} />
+            {fieldErrors.description && (
+              <p id="description-error" role="alert" className="field-error">
+                {fieldErrors.description}
+              </p>
+            )}
+            <div className="flex justify-end mt-1">
+              <VoiceRecorder language={i18n.language} onTranscript={handleVoiceDescription} />
+            </div>
           </div>
-          {fieldErrors.subject && (
-            <p id="subject-error" role="alert" className="field-error">
-              {fieldErrors.subject}
-            </p>
-          )}
-        </div>
+        )}
 
-        <div>
-          <label
-            htmlFor="grievance-description"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            {t("grievance.description")}
-          </label>
-          <textarea
-            id="grievance-description"
-            rows={5}
-            aria-invalid={!!fieldErrors.description}
-            aria-describedby={fieldErrors.description ? "description-error" : undefined}
-            className={`input-field resize-none ${fieldErrors.description ? "input-error" : ""}`}
-            placeholder={t("grievance.descriptionPlaceholder")}
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              if (fieldErrors.description)
-                setFieldErrors((f) => ({ ...f, description: undefined }));
-            }}
-          />
-          {fieldErrors.description && (
-            <p id="description-error" role="alert" className="field-error">
-              {fieldErrors.description}
-            </p>
-          )}
-          <div className="flex justify-end mt-1">
-            <VoiceRecorder language={i18n.language} onTranscript={handleVoiceDescription} />
-          </div>
-        </div>
+        {step === 2 && (
+          <>
+            <div>
+              <label
+                htmlFor="grievance-employer-name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                {t("grievance.employerNameOptional")}
+              </label>
+              <input
+                id="grievance-employer-name"
+                className="input-field"
+                value={employerName}
+                onChange={(e) => setEmployerName(e.target.value)}
+              />
+            </div>
 
-        <div>
-          <label
-            htmlFor="grievance-employer-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            {t("grievance.employerNameOptional")}
-          </label>
-          <input
-            id="grievance-employer-name"
-            className="input-field"
-            value={employerName}
-            onChange={(e) => setEmployerName(e.target.value)}
-          />
-        </div>
+            <div>
+              <label
+                htmlFor="grievance-incident-location"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                {t("grievance.incidentLocationOptional")}
+              </label>
+              <input
+                id="grievance-incident-location"
+                className="input-field"
+                value={incidentLocation}
+                onChange={(e) => setIncidentLocation(e.target.value)}
+              />
+            </div>
 
-        <div>
-          <label
-            htmlFor="grievance-incident-location"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            {t("grievance.incidentLocationOptional")}
-          </label>
-          <input
-            id="grievance-incident-location"
-            className="input-field"
-            value={incidentLocation}
-            onChange={(e) => setIncidentLocation(e.target.value)}
-          />
-        </div>
+            <div>
+              <label
+                htmlFor="grievance-incident-date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                {t("grievance.incidentDateOptional")}
+              </label>
+              <input
+                id="grievance-incident-date"
+                type="date"
+                className="input-field"
+                value={incidentDate}
+                onChange={(e) => setIncidentDate(e.target.value)}
+              />
+            </div>
+          </>
+        )}
 
-        <div>
-          <label
-            htmlFor="grievance-incident-date"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        {draftSaved && !queuedOffline && (
+          <p
+            role="status"
+            className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
           >
-            {t("grievance.incidentDateOptional")}
-          </label>
-          <input
-            id="grievance-incident-date"
-            type="date"
-            className="input-field"
-            value={incidentDate}
-            onChange={(e) => setIncidentDate(e.target.value)}
-          />
-        </div>
+            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("grievance.draftSaved")}
+          </p>
+        )}
 
         {queuedOffline && (
           <p
@@ -348,9 +432,22 @@ export default function GrievanceFormPage() {
           </p>
         )}
 
-        <button type="submit" disabled={submitting} className="btn-primary mt-2">
-          {submitting ? t("grievance.submitting") : t("grievance.submit")}
-        </button>
+        <div className="flex gap-3 mt-2">
+          {step > 0 && (
+            <button type="button" onClick={goBack} className="btn-secondary flex-1 !w-auto">
+              {t("common.back")}
+            </button>
+          )}
+          {step < TOTAL_STEPS - 1 ? (
+            <button type="button" onClick={goNext} className="btn-primary flex-1 !w-auto">
+              {t("grievance.next")}
+            </button>
+          ) : (
+            <button type="submit" disabled={submitting} className="btn-primary flex-1 !w-auto">
+              {submitting ? t("grievance.submitting") : t("grievance.submit")}
+            </button>
+          )}
+        </div>
       </form>
     </Screen>
   );
