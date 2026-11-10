@@ -162,6 +162,11 @@
     "historyLoadError": "നിങ്ങളുടെ ചാറ്റ് ചരിത്രം ലോഡ് ചെയ്യാനായില്ല.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
+    "sourceAuthority": "പുറപ്പെടുവിച്ച അധികാര സ്ഥാപനം",
+    "sourceVerified": "സ്ഥിരീകരിച്ച തീയതി",
+    "sourceVersion": "പതിപ്പ്",
+    "sourceOpen": "ഔദ്യോഗിക സ്രോതസ്സ് തുറക്കുക",
+    "sourceDetailsLabel": "{title} വിശദാംശങ്ങൾ",
     "askPlaceholderVoice": "നിങ്ങളുടെ ചോദ്യം ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സംസാരിക്കുക",
     "heatPrefillQuestion": "തീവ്രമായ ചൂടിൽ സുരക്ഷിതമായിരിക്കാൻ ഞാൻ എന്ത് ചെയ്യണം?"
   },

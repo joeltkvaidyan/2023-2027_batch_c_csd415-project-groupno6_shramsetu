@@ -162,6 +162,11 @@
     "historyLoadError": "మీ చాట్ చరిత్రను లోడ్ చేయలేకపోయాము.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
+    "sourceAuthority": "జారీ చేసిన అధికార సంస్థ",
+    "sourceVerified": "ధృవీకరణ తేదీ",
+    "sourceVersion": "వెర్షన్",
+    "sourceOpen": "అధికారిక మూలాన్ని తెరవండి",
+    "sourceDetailsLabel": "{title} వివరాలు",
     "askPlaceholderVoice": "మీ ప్రశ్నను టైప్ చేయండి లేదా మాట్లాడండి",
     "heatPrefillQuestion": "తీవ్ర వేడి నుండి సురక్షితంగా ఉండటానికి నేను ఏమి చేయాలి?"
   },

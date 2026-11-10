@@ -162,6 +162,11 @@
     "historyLoadError": "আপনার চ্যাট ইতিহাস লোড করা যায়নি।",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
+    "sourceAuthority": "জারিকর্তা কর্তৃপক্ষ",
+    "sourceVerified": "যাচাইয়ের তারিখ",
+    "sourceVersion": "সংস্করণ",
+    "sourceOpen": "সরকারি সূত্র খুলুন",
+    "sourceDetailsLabel": "{title}-এর বিবরণ",
     "askPlaceholderVoice": "আপনার প্রশ্ন লিখুন বা বলুন",
     "heatPrefillQuestion": "প্রচণ্ড গরমে নিরাপদ থাকতে আমার কী করা উচিত?"
   },

@@ -162,6 +162,11 @@
     "historyLoadError": "உங்கள் அரட்டை வரலாற்றை ஏற்ற முடியவில்லை.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
+    "sourceAuthority": "வெளியிட்ட அதிகார அமைப்பு",
+    "sourceVerified": "சரிபார்ப்பு தேதி",
+    "sourceVersion": "பதிப்பு",
+    "sourceOpen": "அதிகாரப்பூர்வ ஆதாரத்தைத் திற",
+    "sourceDetailsLabel": "{title} விவரங்கள்",
     "askPlaceholderVoice": "உங்கள் கேள்வியை தட்டச்சு செய்யுங்கள் அல்லது பேசுங்கள்",
     "heatPrefillQuestion": "அதிக வெப்பத்தில் பாதுகாப்பாக இருக்க என்ன செய்ய வேண்டும்?"
   },
