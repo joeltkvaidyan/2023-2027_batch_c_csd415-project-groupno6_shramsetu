@@ -28,7 +28,7 @@ export default function LanguageSelectPage() {
           🤝
         </div>
         <h1 className="text-4xl font-bold text-white tracking-tight">ShramSetu</h1>
-        <p className="text-emerald-100/80 mt-2 text-base">Your welfare journey, in your language</p>
+        <p className="text-brand-100/80 mt-2 text-base">Your welfare journey, in your language</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-8 relative">
@@ -53,11 +53,11 @@ export default function LanguageSelectPage() {
 
       <button
         onClick={handleContinue}
-        className="btn-primary bg-white !text-brand-800 hover:!bg-emerald-50 shadow-glow-brand-lg relative animate-fade-up [animation-delay:400ms]"
+        className="btn-primary !bg-white !text-brand-800 hover:!bg-brand-50 shadow-glow-brand-lg relative animate-fade-up [animation-delay:400ms]"
       >
         Continue →
       </button>
-      <p className="text-center text-emerald-100/60 text-sm mt-4 relative animate-fade-in [animation-delay:600ms]">
+      <p className="text-center text-brand-100/60 text-sm mt-4 relative animate-fade-in [animation-delay:600ms]">
         You can change this anytime in Settings
       </p>
     </div>

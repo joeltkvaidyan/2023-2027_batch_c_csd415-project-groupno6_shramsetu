@@ -486,8 +486,8 @@ export default function GovernmentDashboardPage() {
                     className="bg-slate-800/50 border border-slate-700 rounded-xl p-4"
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span
                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                               g.status === "submitted"
@@ -507,9 +507,11 @@ export default function GovernmentDashboardPage() {
                           <span className="text-slate-600 text-xs">
                             • {g.category?.replace(/_/g, " ")}
                           </span>
-                        </div>
-                        <h3 className="font-medium text-white">{g.subject}</h3>
-                        <p className="text-slate-400 text-sm mt-1 line-clamp-2">{g.description}</p>
+                        </div>{" "}
+                        <h3 className="font-medium text-white break-words">{g.subject}</h3>
+                        <p className="text-slate-400 text-sm mt-1 line-clamp-2 break-words">
+                          {g.description}
+                        </p>
                         {g.employer_name && (
                           <p className="text-slate-500 text-xs mt-1">Employer: {g.employer_name}</p>
                         )}
@@ -517,7 +519,7 @@ export default function GovernmentDashboardPage() {
                           Filed: {g.created_at ? new Date(g.created_at).toLocaleDateString() : "-"}
                         </p>
                       </div>
-                      <div className="ml-4 flex flex-col gap-2">
+                      <div className="ml-4 flex shrink-0 flex-col gap-2">
                         {g.status === "submitted" && (
                           <button
                             onClick={() => handleUpdateGrievanceStatus(g.id, "under_review")}
