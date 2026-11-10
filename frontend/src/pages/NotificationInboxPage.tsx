@@ -158,13 +158,16 @@ export default function NotificationInboxPage() {
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
+                  {/* min-w-0: a flex child defaults to min-width:auto, so a long
+                      title or an unbroken URL pushed this row 72px past the
+                      card and gave the whole page a sideways scroll. */}
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {!notif.is_read && (
                         <span className="w-2 h-2 bg-brand-500 rounded-full flex-shrink-0" />
                       )}
                       <h3
-                        className={`font-semibold text-sm ${
+                        className={`font-semibold text-sm break-words ${
                           notif.is_read
                             ? "text-gray-600 dark:text-gray-400"
                             : "text-gray-900 dark:text-white"
@@ -173,8 +176,12 @@ export default function NotificationInboxPage() {
                         {notif.title}
                       </h3>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{notif.body}</p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-500">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1 break-words">
+                      {notif.body}
+                    </p>
+                    {/* Wrap, don't widen: sender + department + date is more
+                        text than a 320px card holds on one line. */}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
                       <span>
                         {t("notifications.from")}: {notif.sender_name}
                       </span>
@@ -190,7 +197,7 @@ export default function NotificationInboxPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(
                         notif.priority,

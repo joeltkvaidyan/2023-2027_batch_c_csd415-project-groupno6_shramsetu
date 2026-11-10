@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Check,
+  IdCard,
   Clock,
   IndianRupee,
   Briefcase,
@@ -220,6 +221,16 @@ export default function WorkerDashboardPage() {
                   role="img"
                 />
               </span>
+              {/* The printable, QR-verifiable card. The QR above is an offline
+                  identity helper; this one is the credential people can check. */}
+              <button
+                onClick={() => navigate("/worker/id-card")}
+                className="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition"
+                aria-label={t("dashboard.viewIdCard", "Open ID card")}
+                title={t("dashboard.viewIdCard", "Open ID card")}
+              >
+                <IdCard className="h-4 w-4" />
+              </button>
               <button
                 onClick={copyWorkerId}
                 className="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition"

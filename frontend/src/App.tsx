@@ -34,6 +34,8 @@ import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import CitizenLoginPage from "./pages/CitizenLoginPage";
 import CitizenDashboardPage from "./pages/CitizenDashboardPage";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
+import WorkerIdCardPage from "./pages/WorkerIdCardPage";
+import VerifyWorkerPage from "./pages/VerifyWorkerPage";
 
 export default function App() {
   return (
@@ -46,11 +48,22 @@ export default function App() {
         <Route path="/" element={<LanguageSelectPage />} />
         <Route path="/language" element={<LanguageSelectPage />} />
         <Route path="/roles" element={<StakeholderSelectPage />} />
+        {/* Public on purpose: the QR on a printed worker card is scanned by
+            employers, inspectors and police who are not signed in. */}
+        <Route path="/verify/:code" element={<VerifyWorkerPage />} />
 
         {/* Worker routes */}
         <Route path="/worker/login" element={<WorkerLoginPage />} />
         <Route path="/worker/register" element={<WorkerRegisterPage />} />
         <Route path="/worker/recover" element={<AccountRecoveryPage />} />
+        <Route
+          path="/worker/id-card"
+          element={
+            <RoleRoute role="worker">
+              <WorkerIdCardPage />
+            </RoleRoute>
+          }
+        />
         <Route
           path="/worker/dashboard"
           element={

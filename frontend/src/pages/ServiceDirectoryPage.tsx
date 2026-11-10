@@ -77,7 +77,10 @@ export default function ServiceDirectoryPage() {
 
   return (
     <Screen title={t("services.title", "Verified Services Directory")} onBack={true}>
-      <div className="space-y-4 mt-4 pb-10 px-4">
+      {/* No extra px-4/pb here: Screen already pads the page (px-4 pt-5 pb-28).
+          The doubled gutter cost 32px of a 320px screen and helped push the
+          cards into a sideways scroll. */}
+      <div className="space-y-4">
         <Card className="!p-3">
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setFilter("all")} className="cursor-pointer">
@@ -96,16 +99,16 @@ export default function ServiceDirectoryPage() {
         <div className="space-y-3">
           {filtered.map((entry) => (
             <Card key={entry.id} className="!p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <h3 className="min-w-0 flex-1 break-words font-semibold text-gray-900 dark:text-gray-100">
                   {entry.title}
                 </h3>
-                <Badge tone={StatusTone(entry.status)}>
+                <Badge tone={StatusTone(entry.status)} className="shrink-0">
                   <StatusIcon status={entry.status} />
                   <span className="ml-1 capitalize">{entry.status}</span>
                 </Badge>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-3">
+              <div className="mb-3 space-y-1 break-words text-sm text-gray-600 dark:text-gray-400">
                 <div>
                   Category: <span className="capitalize">{entry.category}</span>
                 </div>
@@ -113,13 +116,15 @@ export default function ServiceDirectoryPage() {
                 <div>Verified: {entry.verified_at}</div>
               </div>
               {entry.notes && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">{entry.notes}</p>
+                <p className="mb-3 break-words text-sm text-gray-700 dark:text-gray-300">
+                  {entry.notes}
+                </p>
               )}
               <a
                 href={entry.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                className="inline-flex items-center gap-1 break-all text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
               >
                 Official source <ExternalLink className="h-3 w-3" />
               </a>

@@ -125,6 +125,11 @@ export const config = {
   // Document-wallet master key (32 bytes, base64). Wraps per-file AES keys.
   docMasterKeyRaw: process.env.DOC_MASTER_KEY,
 
+  // Public origin of the SPA (e.g. https://shramsetu.example.org). Only used to
+  // build the QR/verification URL printed on a worker identity card; when unset
+  // the route falls back to the origin the request came from.
+  publicAppUrl: process.env.PUBLIC_APP_URL || "",
+
   corsOrigins: (process.env.CORS_ORIGINS || "")
     .split(",")
     .map((s) => s.trim())
