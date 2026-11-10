@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { api, apiErrorDetail } from "../../api/client";
 
@@ -51,6 +51,10 @@ export default function ApprovalsPanel() {
     },
     [status, search],
   );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const decide = async (workerId: string, id: string, next: "accepted" | "rejected") => {
     setBusyId(id);

@@ -51,7 +51,7 @@ export interface GovLoginResponse {
 }
 
 export async function govLogin(employee_id: string, password: string): Promise<GovLoginResponse> {
-  const { data } = await govApi.post(`${API_BASE}/auth/government/login`, {
+  const { data } = await govApi.post(`/auth/government/login`, {
     employee_id,
     password,
   });
@@ -59,7 +59,7 @@ export async function govLogin(employee_id: string, password: string): Promise<G
 }
 
 export async function govGetMe(): Promise<GovernmentUser> {
-  const { data } = await govApi.get(`${API_BASE}/auth/government/me`);
+  const { data } = await govApi.get(`/auth/government/me`);
   return data;
 }
 
@@ -88,7 +88,7 @@ export interface DashboardStats {
 }
 
 export async function govGetStats(): Promise<DashboardStats> {
-  const { data } = await govApi.get(`${API_BASE}/government/dashboard/stats`);
+  const { data } = await govApi.get(`/government/dashboard/stats`);
   return data;
 }
 
@@ -113,7 +113,7 @@ export interface WorkersResponse {
 export async function govGetWorkers(search?: string): Promise<WorkersResponse> {
   const params: Record<string, string> = {};
   if (search) params.search = search;
-  const { data } = await govApi.get(`${API_BASE}/government/workers`, {
+  const { data } = await govApi.get(`/government/workers`, {
     params,
   });
   return data;
@@ -148,7 +148,7 @@ export async function govGetGrievances(
   const params: Record<string, string> = {};
   if (statusFilter) params.status_filter = statusFilter;
   if (category) params.category = category;
-  const { data } = await govApi.get(`${API_BASE}/government/grievances`, {
+  const { data } = await govApi.get(`/government/grievances`, {
     params,
   });
   return data;
@@ -189,7 +189,7 @@ export interface GovGrievanceDetail {
 }
 
 export async function govGetGrievanceDetail(grievanceId: number): Promise<GovGrievanceDetail> {
-  const { data } = await govApi.get(`${API_BASE}/government/grievances/${grievanceId}`);
+  const { data } = await govApi.get(`/government/grievances/${grievanceId}`);
   return data;
 }
 
@@ -199,7 +199,7 @@ export async function govUpdateGrievanceStatus(
   note?: string,
 ): Promise<{ detail: string; old_status: string; new_status: string }> {
   const { data } = await govApi.post(
-    `${API_BASE}/government/grievances/${grievanceId}/status`,
+    `/government/grievances/${grievanceId}/status`,
     { status: newStatus, note },
     undefined,
   );
@@ -212,7 +212,7 @@ export async function govAddComment(
   isInternal: boolean = false,
 ) {
   const { data } = await govApi.post(
-    `${API_BASE}/government/grievances/${grievanceId}/comment`,
+    `/government/grievances/${grievanceId}/comment`,
     { content, is_internal: isInternal },
     undefined,
   );
@@ -246,12 +246,12 @@ export async function govSendNotification(payload: {
   target_value?: string;
   is_broadcast?: boolean;
 }): Promise<{ detail: string; notification_id: number; sent_count: number }> {
-  const { data } = await govApi.post(`${API_BASE}/government/notifications/send`, payload, {});
+  const { data } = await govApi.post(`/government/notifications/send`, payload, {});
   return data;
 }
 
 export async function govGetNotifications(): Promise<NotificationsResponse> {
-  const { data } = await govApi.get(`${API_BASE}/government/notifications`);
+  const { data } = await govApi.get(`/government/notifications`);
   return data;
 }
 
@@ -275,7 +275,7 @@ export interface OfficialsResponse {
 
 /** Superadmin only — the server answers 403 for any other official. */
 export async function govGetOfficials(): Promise<OfficialsResponse> {
-  const { data } = await govApi.get(`${API_BASE}/government/officials`);
+  const { data } = await govApi.get(`/government/officials`);
   return data;
 }
 
@@ -299,7 +299,7 @@ export interface AuditLogsResponse {
 }
 
 export async function govGetAuditLogs(): Promise<AuditLogsResponse> {
-  const { data } = await govApi.get(`${API_BASE}/government/audit-logs`);
+  const { data } = await govApi.get(`/government/audit-logs`);
   return data;
 }
 
@@ -366,7 +366,7 @@ export interface GovJobApplicant {
 }
 
 export async function govGetPostedJobs(): Promise<{ jobs: GovJobPosting[] }> {
-  const { data } = await govApi.get(`${API_BASE}/jobs/posted`);
+  const { data } = await govApi.get(`/jobs/posted`);
   return data;
 }
 
@@ -384,7 +384,7 @@ export async function govCreateJob(payload: {
   openings?: number;
   contact_phone?: string | null;
 }): Promise<GovJobPosting> {
-  const { data } = await govApi.post(`${API_BASE}/jobs`, payload, {});
+  const { data } = await govApi.post(`/jobs`, payload, {});
   return data;
 }
 
@@ -392,7 +392,7 @@ export async function govSetJobStatus(
   jobId: string,
   status: "open" | "closed",
 ): Promise<GovJobPosting> {
-  const { data } = await govApi.patch(`${API_BASE}/jobs/${jobId}/status`, { status }, undefined);
+  const { data } = await govApi.patch(`/jobs/${jobId}/status`, { status }, undefined);
   return data;
 }
 
@@ -403,7 +403,7 @@ export interface JobApplicantsResponse {
 }
 
 export async function govGetJobApplicants(jobId: string): Promise<JobApplicantsResponse> {
-  const { data } = await govApi.get(`${API_BASE}/jobs/${jobId}/applications`);
+  const { data } = await govApi.get(`/jobs/${jobId}/applications`);
   return data;
 }
 
@@ -418,7 +418,7 @@ export async function govReviewJobApplicant(
   status: "submitted" | "shortlisted",
 ): Promise<GovJobApplicant> {
   const { data } = await govApi.patch(
-    `${API_BASE}/jobs/${jobId}/applications/${applicationId}`,
+    `/jobs/${jobId}/applications/${applicationId}`,
     { status },
     undefined,
   );
