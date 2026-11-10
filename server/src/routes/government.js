@@ -7,6 +7,8 @@ import { PushNotification, WorkerNotification } from "../models/Notification.js"
 import { AuditLog } from "../models/Document.js";
 import { authenticate, requireGovernment, audit } from "../middleware/auth.js";
 import { toCsv, sendCsv, datedFilename } from "../utils/csv.js";
+import { InsurancePolicy } from "../models/InsurancePolicy.js";
+import { policyStatus, maskPolicyNumber } from "../utils/insurance.js";
 import {
   grievanceScopeFilter,
   officialCanSeeGrievance,
@@ -714,6 +716,118 @@ router.get("/audit-logs", authenticate, requireGovernment, async (req, res) => {
   } catch (err) {
     console.error("[gov/audit-logs]", err);
     res.status(500).json({ detail: "Could not load audit logs." });
+  }
+});
+
+// ── Insurance verification queue ─────────────────────────────────────
+// A worker's self-declared policy is only worth showing to a household once an
+// official has checked it against the insurer or the scheme enrolment list.
+// This is that queue, scoped exactly like the worker lists: an official can
+// only verify workers inside their own jurisdiction.
+const MAX_INSURANCE_ROWS = 200;
+
+function insuranceRow(policy, worker, now) {
+  return {
+    id: String(policy._id),
+    worker: worker
+      ? {
+          id: String(worker._id),
+          worker_id: worker.worker_id ?? null,
+          full_name: worker.full_name ?? null,
+          district: worker.current_district ?? null,
+          state: worker.current_state ?? null,
+        }
+      : null,
+    provider: policy.provider,
+    // Officials need the real number to check it with the insurer; the public
+    // verify page only ever shows the last four digits.
+    policy_number: policy.policy_number,
+    coverage: policy.coverage ?? "accident",
+    sum_insured: policy.sum_insured ?? null,
+    valid_from: policy.valid_from ? new Date(policy.valid_from).toISOString() : null,
+    valid_to: policy.valid_to ? new Date(policy.valid_to).toISOString() : null,
+    verification: policy.verification,
+    verified_at: policy.verified_at ? new Date(policy.verified_at).toISOString() : null,
+    status: policyStatus(policy, now),
+    masked_number: maskPolicyNumber(policy.policy_number),
+  };
+}
+
+router.get("/insurance", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const scopedWorkers = await User.find(workerScopeFilter(official))
+      .select("_id full_name worker_id current_district current_state")
+      .lean();
+    const byId = new Map(scopedWorkers.map((w) => [String(w._id), w]));
+
+    const filter = { worker_id: { $in: [...byId.keys()] } };
+
+    const wanted = String(req.query.verification || "").trim();
+    if (wanted === "self_declared" || wanted === "office_verified") {
+      filter.verification = wanted;
+    }
+
+    const policies = await InsurancePolicy.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(MAX_INSURANCE_ROWS)
+      .lean();
+
+    const now = new Date();
+    const status = String(req.query.status || "").trim();
+    const rows = policies
+      .map((p) => insuranceRow(p, byId.get(String(p.worker_id)), now))
+      .filter((row) => (status ? row.status === status : true));
+
+    res.set("Cache-Control", "no-store");
+    res.json({ policies: rows, count: rows.length });
+  } catch (err) {
+    console.error("[gov/insurance]", err);
+    res.status(500).json({ detail: "Could not load insurance records." });
+  }
+});
+
+router.post("/insurance/:id/verify", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ detail: "No such insurance record." });
+    }
+
+    const policy = await InsurancePolicy.findById(req.params.id);
+    if (!policy) return res.status(404).json({ detail: "No such insurance record." });
+
+    // Scope check by re-reading the worker through the jurisdiction filter: a
+    // policy in another district must behave as though it does not exist.
+    const worker = await User.findOne({
+      _id: policy.worker_id,
+      ...workerScopeFilter(official),
+    });
+    if (!worker) return res.status(403).json({ detail: "This worker is outside your jurisdiction." });
+
+    policy.verification = "office_verified";
+    policy.verified_by = official._id;
+    policy.verified_at = new Date();
+    await policy.save();
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: req.userId,
+      action: "insurance.verify",
+      resourceType: "insurance_policy",
+      resourceId: String(policy._id),
+      ip: req.ip,
+      success: true,
+    });
+
+    res.json({ policy: insuranceRow(policy, worker, new Date()) });
+  } catch (err) {
+    console.error("[gov/insurance/verify]", err);
+    res.status(500).json({ detail: "Could not verify this policy." });
   }
 });
 

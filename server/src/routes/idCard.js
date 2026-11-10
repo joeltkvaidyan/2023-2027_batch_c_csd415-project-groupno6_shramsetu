@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { User } from "../models/User.js";
+import { InsurancePolicy } from "../models/InsurancePolicy.js";
+import { pickCurrentPolicy, policyStatus } from "../utils/insurance.js";
 import { authenticate, requireWorker } from "../middleware/auth.js";
 import { config } from "../config.js";
 import { cardCode } from "../utils/cardToken.js";
@@ -44,6 +46,13 @@ router.get("/", authenticate, requireWorker, async (req, res) => {
     const status = worker.gov_approve_status ?? "pending";
     const code = worker.worker_id ? cardCode(worker.worker_id) : null;
 
+    // Insurance on the card is a claim made at print time, so it is derived
+    // from the policy dates rather than a stored flag: a card printed today can
+    // only carry cover that is in force today.
+    const policies = await InsurancePolicy.find({ worker_id: req.userId }).lean();
+    const now = new Date();
+    const current = pickCurrentPolicy(policies, now);
+
     res.set("Cache-Control", "no-store");
     res.json({
       worker_id: worker.worker_id ?? null,
@@ -59,6 +68,35 @@ router.get("/", authenticate, requireWorker, async (req, res) => {
       issued: status === "accepted" && Boolean(code),
       verify_code: code,
       verify_url: code ? `${appBaseUrl(req)}/verify/${code}` : null,
+      insurance: current
+        ? {
+            covered: true,
+            status: "active",
+            provider: current.provider,
+            policy_number: current.policy_number,
+            coverage: current.coverage ?? "accident",
+            sum_insured: current.sum_insured ?? null,
+            valid_to: current.valid_to ? new Date(current.valid_to).toISOString() : null,
+            verification: current.verification,
+          }
+        : {
+            covered: false,
+            status:
+              policies.length > 0
+                ? policyStatus(
+                    policies.reduce((a, b) =>
+                      new Date(b.valid_to).getTime() > new Date(a.valid_to).getTime() ? b : a,
+                    ),
+                    now,
+                  )
+                : "none",
+            provider: null,
+            policy_number: null,
+            coverage: null,
+            sum_insured: null,
+            valid_to: null,
+            verification: null,
+          },
     });
   } catch (err) {
     console.error("[id-card]", err);

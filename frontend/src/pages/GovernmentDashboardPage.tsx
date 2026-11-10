@@ -33,9 +33,17 @@ import {
   type GovNotification,
   type AuditLog,
 } from "../api/governmentClient";
+import { govListInsurance, govVerifyInsurance, type OfficePolicy } from "../api/insuranceClient";
 
 type Tab =
-  "overview" | "review" | "grievances" | "workers" | "notifications" | "officials" | "audit";
+  | "overview"
+  | "review"
+  | "grievances"
+  | "workers"
+  | "insurance"
+  | "notifications"
+  | "officials"
+  | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
@@ -49,6 +57,7 @@ export default function GovernmentDashboardPage() {
   const [notifications, setNotifications] = useState<GovNotification[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [officials, setOfficials] = useState<GovernmentOfficial[]>([]);
+  const [insurancePolicies, setInsurancePolicies] = useState<OfficePolicy[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [grievanceStatusFilter, setGrievanceStatusFilter] = useState("");
   const [grievanceCategoryFilter, setGrievanceCategoryFilter] = useState("");
@@ -92,6 +101,8 @@ export default function GovernmentDashboardPage() {
       } else if (activeTab === "workers") {
         const res = await govGetWorkers(searchQuery || undefined);
         setWorkers(res.workers || []);
+      } else if (activeTab === "insurance") {
+        setInsurancePolicies(await govListInsurance());
       } else if (activeTab === "grievances") {
         const res = await govGetGrievances(
           grievanceStatusFilter || undefined,
@@ -144,6 +155,7 @@ export default function GovernmentDashboardPage() {
     { key: "review", icon: "✅", label: "Review" },
     { key: "grievances", icon: "📢", label: "Grievances" },
     { key: "workers", icon: "👷", label: "Workers" },
+    { key: "insurance", icon: "🛡️", label: "Insurance" },
     { key: "notifications", icon: "🔔", label: "Notifications" },
     // Officials monitoring is superadmin-only — hidden here and 403-guarded
     // server-side, so ordinary state/district officials never see the tab.
@@ -160,9 +172,14 @@ export default function GovernmentDashboardPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-teal-600 rounded-xl flex items-center justify-center shadow-glow-brand ring-1 ring-white/10">
               <span className="text-xl">🛡️</span>
             </div>
-            <div>
-              <h1 className="font-bold text-lg">ShramSetu Government Portal</h1>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
+            {/* min-w-0 + wrapping: at 320px the department and jurisdiction
+                line is wider than the space left by the sign-out button, and
+                without this the whole page gains a horizontal scrollbar. */}
+            <div className="min-w-0">
+              <h1 className="font-bold text-base break-words sm:text-lg">
+                ShramSetu Government Portal
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400 sm:text-sm">
                 <span>
                   {govUser.is_superadmin ? "Super Admin" : govUser.department || "Official"}
                 </span>
@@ -611,6 +628,85 @@ export default function GovernmentDashboardPage() {
               above. Counts are live totals for that scope — the same numbers they see when they
               sign in.
             </p>
+          </div>
+        )}
+
+        {/* ── Insurance Tab ──────────────────────────────────── */}
+        {!loading && activeTab === "insurance" && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold">🛡️ Worker insurance</h2>
+              <p className="text-slate-400 text-sm mt-1">
+                Policies workers entered themselves. Check the number against the insurer or the
+                scheme enrolment list, then verify — only a verified policy is shown to a household
+                as checked. Policies for workers outside your jurisdiction never appear here.
+              </p>
+            </div>
+
+            {insurancePolicies.length === 0 ? (
+              <p className="text-slate-500 text-center py-8">No insurance records in your area</p>
+            ) : (
+              <div className="space-y-3">
+                {insurancePolicies.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold break-words">
+                          {p.worker?.full_name ?? "Unknown worker"}{" "}
+                          <span className="font-mono text-xs text-slate-400">
+                            {p.worker?.worker_id ?? ""}
+                          </span>
+                        </p>
+                        <p className="text-sm text-slate-300 mt-1 break-words">
+                          {p.provider} · {p.coverage} · ₹{p.sum_insured?.toLocaleString("en-IN")}
+                        </p>
+                        <p className="font-mono text-xs text-slate-400 mt-1 break-all">
+                          {p.policy_number}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Valid {p.valid_from?.slice(0, 10) ?? "—"} to{" "}
+                          {p.valid_to?.slice(0, 10) ?? "—"} · {p.worker?.district ?? "—"},{" "}
+                          {p.worker?.state ?? "—"}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            p.status === "active"
+                              ? "bg-green-500/20 text-green-400"
+                              : p.status === "upcoming"
+                                ? "bg-amber-500/20 text-amber-400"
+                                : "bg-red-500/20 text-red-400"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                        {p.verification === "office_verified" ? (
+                          <span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-300">
+                            verified
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await govVerifyInsurance(p.id);
+                              setInsurancePolicies(await govListInsurance());
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-xs font-semibold"
+                          >
+                            Mark verified
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

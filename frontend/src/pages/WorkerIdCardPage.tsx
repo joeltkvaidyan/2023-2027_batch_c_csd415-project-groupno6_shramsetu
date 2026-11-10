@@ -4,7 +4,9 @@ import { QRCodeSVG } from "qrcode.react";
 import { Printer, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Screen } from "../components/Screen";
 import { Button, Card, Badge } from "../components/ui";
+import { InsurancePanel } from "../components/InsurancePanel";
 import { api, apiErrorMessage } from "../api/client";
+import { getMyInsurance, type OwnInsurance } from "../api/insuranceClient";
 
 /**
  * Printable worker identity card.
@@ -23,7 +25,22 @@ import { api, apiErrorMessage } from "../api/client";
  * The QR encodes a verification URL carrying a keyed token (see
  * server/src/utils/cardToken.js), not the worker code by itself: worker codes
  * are sequential, so a bare-code URL would let anyone enumerate the registry.
+ *
+ * The insurance line is the one claim on the card that is not an identity fact:
+ * it is derived from the policy dates server-side, so the printed card can only
+ * carry cover that was in force the day it was printed.
  */
+interface CardInsurance {
+  covered: boolean;
+  status: "active" | "expired" | "upcoming" | "none";
+  provider: string | null;
+  policy_number: string | null;
+  coverage: string | null;
+  sum_insured: number | null;
+  valid_to: string | null;
+  verification: "self_declared" | "office_verified" | null;
+}
+
 interface CardData {
   worker_id: string | null;
   full_name: string;
@@ -37,6 +54,7 @@ interface CardData {
   issued: boolean;
   verify_code: string | null;
   verify_url: string | null;
+  insurance?: CardInsurance | null;
 }
 
 function useFormattedDate() {
@@ -53,6 +71,22 @@ function useFormattedDate() {
       });
     } catch {
       return date.toISOString().slice(0, 10);
+    }
+  };
+}
+
+function useFormattedMoney() {
+  const { i18n } = useTranslation();
+  return (amount: number | null) => {
+    if (amount == null) return "—";
+    try {
+      return new Intl.NumberFormat(i18n.language === "en" ? "en-IN" : i18n.language, {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `₹${amount}`;
     }
   };
 }
@@ -84,9 +118,31 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function WorkerIdCardPage() {
   const { t } = useTranslation();
   const formatDate = useFormattedDate();
+  const formatMoney = useFormattedMoney();
   const [card, setCard] = useState<CardData | null>(null);
+  const [insurance, setInsurance] = useState<OwnInsurance | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // The panel's own list is reloaded after an add or a removal, but the card
+  // must reload with it: the card is the thing the new policy changes.
+  useEffect(() => {
+    if (reloadKey === 0) return;
+    let alive = true;
+    Promise.all([api.get<CardData>("/id-card"), getMyInsurance()])
+      .then(([cardRes, ins]) => {
+        if (!alive) return;
+        setCard(cardRes.data);
+        setInsurance(ins);
+      })
+      .catch(() => {
+        /* the initial load's error state already covers a dead server */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [reloadKey]);
 
   useEffect(() => {
     let alive = true;
@@ -106,6 +162,20 @@ export default function WorkerIdCardPage() {
       alive = false;
     };
   }, [t]);
+
+  useEffect(() => {
+    let alive = true;
+    getMyInsurance()
+      .then((ins) => {
+        if (alive) setInsurance(ins);
+      })
+      .catch(() => {
+        /* the ID card request above already reports a connection failure */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const place =
     [card?.district, card?.state].filter(Boolean).join(", ") ||
     t("common.notProvided", "Not provided");
@@ -219,6 +289,39 @@ export default function WorkerIdCardPage() {
                 label={t("idCard.registeredOn", "Registered on")}
                 value={formatDate(card.registered_on)}
               />
+              <div className="col-span-2 py-1.5">
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  {t("idCard.insurance", "Insurance")}
+                </dt>
+                {card.insurance?.covered ? (
+                  <dd className="mt-0.5 space-y-1">
+                    <p className="text-sm font-medium break-words text-gray-900 dark:text-gray-100">
+                      {t(
+                        "idCard.insuranceLine",
+                        "{provider} · cover {amount} · valid until {date}",
+                        {
+                          provider: card.insurance.provider ?? "—",
+                          amount: formatMoney(card.insurance.sum_insured),
+                          date: formatDate(card.insurance.valid_to),
+                        },
+                      )}
+                    </p>
+                    <Badge
+                      tone={
+                        card.insurance.verification === "office_verified" ? "success" : "neutral"
+                      }
+                    >
+                      {card.insurance.verification === "office_verified"
+                        ? t("idCard.insuranceVerified", "Checked by a labour office")
+                        : t("idCard.insuranceDeclared", "Declared by worker · not verified")}
+                    </Badge>
+                  </dd>
+                ) : (
+                  <dd className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {t("idCard.noInsurance", "No cover on record")}
+                  </dd>
+                )}
+              </div>
             </dl>
 
             <div className="border-t border-gray-100 px-4 py-2.5 dark:border-gray-800">
@@ -240,6 +343,8 @@ export default function WorkerIdCardPage() {
               <p className="mt-3 break-all text-center text-[11px] text-gray-400">{verifyUrl}</p>
             )}
           </div>
+
+          <InsurancePanel data={insurance} onChanged={() => setReloadKey((k) => k + 1)} />
         </>
       )}
     </Screen>

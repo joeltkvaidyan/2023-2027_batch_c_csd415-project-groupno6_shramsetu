@@ -3,6 +3,8 @@ import { OCCUPATIONS } from "../utils/occupations.js";
 import { listDirectoryWorkers, parseDirectoryPaging } from "../utils/workerDirectory.js";
 import { User } from "../models/User.js";
 import { parseCardCode, tokenMatches } from "../utils/cardToken.js";
+import { InsurancePolicy } from "../models/InsurancePolicy.js";
+import { publicInsuranceView } from "../utils/insurance.js";
 import { cardVerifyLimiter } from "../middleware/rateLimit.js";
 
 /**
@@ -83,6 +85,15 @@ router.get("/verify/worker/:code", cardVerifyLimiter, async (req, res) => {
       return res.status(404).json(notFound);
     }
 
+    // Insurance is the one addition to this page, and it is deliberately
+    // narrow: whether cover is in force today, who provides it, what it pays,
+    // and whether a labour office checked it. The policy number is masked to
+    // its last four digits — enough for a household to match against a policy
+    // document the worker shows them, not enough to be replayed elsewhere.
+    const policies = await InsurancePolicy.find({ worker_id: worker._id })
+      .select("provider policy_number coverage sum_insured valid_from valid_to verification")
+      .lean();
+
     res.set("Cache-Control", "no-store");
     res.json({
       valid: true,
@@ -93,8 +104,9 @@ router.get("/verify/worker/:code", cardVerifyLimiter, async (req, res) => {
       state: worker.current_state ?? null,
       registered_on: worker.createdAt ? new Date(worker.createdAt).toISOString() : null,
       checked_at: new Date().toISOString(),
+      insurance: publicInsuranceView(policies),
       notice:
-        "This confirms the worker's registration and labour-office acceptance. It is not a background check, and it says nothing about a specific employer or wage.",
+        "This confirms the worker's registration and labour-office acceptance. It is not a background check, and it says nothing about a specific employer or wage. Insurance cover is shown as recorded here; whether a particular claim is paid is the insurer's decision.",
     });
   } catch (err) {
     console.error("[public/verify/worker]", err);

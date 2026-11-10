@@ -600,7 +600,12 @@
     "registeredOn": "Registered on",
     "name": "Name",
     "footer": "This card confirms a registration accepted by a labour office. It is not a background check. Anyone can verify it by scanning the QR code.",
-    "print": "Print / Save as PDF"
+    "print": "Print / Save as PDF",
+    "insurance": "Insurance",
+    "insuranceLine": "{provider} · cover {amount} · valid until {date}",
+    "insuranceVerified": "Checked by a labour office",
+    "insuranceDeclared": "Declared by worker · not verified",
+    "noInsurance": "No cover on record"
   },
   "verify": {
     "title": "Check a worker card",
@@ -615,6 +620,50 @@
     "invalidTitle": "This card could not be verified",
     "invalidBody": "No accepted, active registration matches this card. It may be a copy, an old card, or a registration that was rejected.",
     "invalidBadge": "Not verified",
-    "errorBody": "Could not reach the server. Check your connection and try again."
+    "errorBody": "Could not reach the server. Check your connection and try again.",
+    "insuranceVerified": "Accident cover, checked by a labour office",
+    "insuranceDeclared": "Cover declared by the worker, not yet checked by an office",
+    "insuranceExpired": "Insurance on record has expired",
+    "insuranceNone": "No insurance on record",
+    "insuranceDetail": "{provider} · cover {amount} · valid until {date}",
+    "insuranceEnded": "Cover ended {date}.",
+    "insuranceCaveat": "Cover is shown as recorded here. Whether a specific claim is paid is the insurer's decision, not ShramSetu's.",
+    "insuranceAsk": "Ask the worker to show their policy before they start work."
+  },
+  "insurance": {
+    "title": "Insurance",
+    "subtitle": "Accident and health cover, shown on your card once a labour office checks it.",
+    "addCta": "Add policy",
+    "none": "No policy is on record yet.",
+    "until": "until {date}",
+    "coverageLabel": "What it covers",
+    "coverage": {
+      "accident": "Accident",
+      "hospitalisation": "Hospital stay",
+      "disability": "Disability",
+      "death": "Death"
+    },
+    "provider": "Insurance company",
+    "providerPlaceholder": "As printed on the policy",
+    "policyNumber": "Policy number",
+    "policyNumberPlaceholder": "e.g. NIC/KA/2026/0099231",
+    "policyNumberHint": "Only the last four digits are shown to anyone who scans your card.",
+    "sumInsured": "Cover amount (₹)",
+    "validFrom": "Starts",
+    "validTo": "Ends",
+    "save": "Save policy",
+    "saving": "Saving...",
+    "statusActive": "In force",
+    "statusUpcoming": "Starts later",
+    "statusExpired": "Expired",
+    "verified": "Checked by an office",
+    "unverified": "Not yet verified",
+    "remove": "Remove",
+    "errProvider": "Enter the insurance company's name.",
+    "errPolicyNumber": "Enter the policy number from the policy document.",
+    "errAmount": "Enter the amount the policy covers, in rupees.",
+    "errDates": "Enter the start and end date of the policy.",
+    "saveFailed": "Could not save this policy. Try again.",
+    "removeFailed": "Could not remove this policy."
   }
 }

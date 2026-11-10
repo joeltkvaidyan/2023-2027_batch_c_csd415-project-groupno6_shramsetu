@@ -19,6 +19,18 @@ import { api, httpStatus } from "../api/client";
  * that an employer, a police officer or a labour inspector can check it on the
  * spot.
  */
+interface VerifyInsurance {
+  covered: boolean;
+  status: "active" | "expired" | "upcoming" | "none";
+  provider: string | null;
+  coverage: string | null;
+  sum_insured: number | null;
+  valid_to: string | null;
+  verification: "self_declared" | "office_verified" | null;
+  policy_number_masked: string | null;
+  on_record: boolean;
+}
+
 interface VerifyResult {
   valid: true;
   worker_id: string;
@@ -28,6 +40,7 @@ interface VerifyResult {
   state: string | null;
   registered_on: string | null;
   checked_at: string;
+  insurance?: VerifyInsurance | null;
 }
 
 type State =
@@ -66,6 +79,21 @@ export default function VerifyWorkerPage() {
       alive = false;
     };
   }, [code]);
+
+  const ins = state.kind === "valid" ? (state.result.insurance ?? null) : null;
+
+  const formatMoney = (amount: number | null) => {
+    if (amount == null) return "—";
+    try {
+      return new Intl.NumberFormat(i18n.language === "en" ? "en-IN" : i18n.language, {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } catch {
+      return `₹${amount}`;
+    }
+  };
 
   const formatDate = (iso: string | null) => {
     if (!iso) return "—";
@@ -160,6 +188,87 @@ export default function VerifyWorkerPage() {
               </div>
             </div>
           </dl>
+
+          {ins && (
+            <div
+              className={`mt-3 rounded-xl border p-3 ${
+                ins.covered && ins.verification === "office_verified"
+                  ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/20"
+                  : ins.covered
+                    ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/20"
+                    : "border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/60"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                {ins.covered && ins.verification === "office_verified" ? (
+                  <ShieldCheck
+                    className="mt-0.5 h-4 w-4 shrink-0 text-green-700 dark:text-green-400"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ShieldAlert
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${
+                      ins.covered ? "text-amber-600" : "text-gray-500"
+                    }`}
+                    aria-hidden="true"
+                  />
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                    {ins.covered && ins.verification === "office_verified"
+                      ? t("verify.insuranceVerified", "Accident cover, checked by a labour office")
+                      : ins.covered
+                        ? t(
+                            "verify.insuranceDeclared",
+                            "Cover declared by the worker, not yet checked by an office",
+                          )
+                        : ins.on_record
+                          ? t("verify.insuranceExpired", "Insurance on record has expired")
+                          : t("verify.insuranceNone", "No insurance on record")}
+                  </p>
+
+                  {ins.covered && (
+                    <p className="mt-1 text-xs break-words text-gray-700 dark:text-gray-300">
+                      {t(
+                        "verify.insuranceDetail",
+                        "{provider} · cover {amount} · valid until {date}",
+                        {
+                          provider: ins.provider ?? "—",
+                          amount: formatMoney(ins.sum_insured),
+                          date: formatDate(ins.valid_to),
+                        },
+                      )}
+                      {ins.policy_number_masked && (
+                        <span className="ml-1 font-mono text-[11px] text-gray-500">
+                          ({ins.policy_number_masked})
+                        </span>
+                      )}
+                    </p>
+                  )}
+
+                  {!ins.covered && ins.on_record && ins.valid_to && (
+                    <p className="mt-1 text-xs text-gray-700 dark:text-gray-300">
+                      {t("verify.insuranceEnded", "Cover ended {date}.", {
+                        date: formatDate(ins.valid_to),
+                      })}
+                    </p>
+                  )}
+
+                  <p className="mt-1 text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">
+                    {ins.covered
+                      ? t(
+                          "verify.insuranceCaveat",
+                          "Cover is shown as recorded here. Whether a specific claim is paid is the insurer's decision, not ShramSetu's.",
+                        )
+                      : t(
+                          "verify.insuranceAsk",
+                          "Ask the worker to show their policy before they start work.",
+                        )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <p className="mt-3 border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-500 dark:border-gray-800 dark:text-gray-400">
             {t(
