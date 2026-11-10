@@ -64,7 +64,7 @@ export default function GovernmentDashboardPage() {
   // Which export is in flight (the browser blocks while the blob downloads) and
   // a one-line failure note — a silently dead download button is worse than
   // the clutter of an error message.
-  const [exporting, setExporting] = useState<null | "workers" | "grievances">(null);
+  const [exporting, setExporting] = useState<null | "workers" | "grievances" | "insurance">(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
   /**
@@ -74,8 +74,14 @@ export default function GovernmentDashboardPage() {
    */
   const runExport = useCallback(
     async (
-      kind: "workers" | "grievances",
-      params: { search?: string; status_filter?: string; category?: string },
+      kind: "workers" | "grievances" | "insurance",
+      params: {
+        search?: string;
+        status_filter?: string;
+        category?: string;
+        status?: string;
+        verification?: string;
+      },
     ) => {
       setExportError(null);
       setExporting(kind);
@@ -634,14 +640,27 @@ export default function GovernmentDashboardPage() {
         {/* ── Insurance Tab ──────────────────────────────────── */}
         {!loading && activeTab === "insurance" && (
           <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-bold">🛡️ Worker insurance</h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Policies workers entered themselves. Check the number against the insurer or the
-                scheme enrolment list, then verify — only a verified policy is shown to a household
-                as checked. Policies for workers outside your jurisdiction never appear here.
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold">🛡️ Worker insurance</h2>
+                <p className="text-slate-400 text-sm mt-1">
+                  Policies workers entered themselves. Check the number against the insurer or the
+                  scheme enrolment list, then verify — only a verified policy is shown to a
+                  household as checked. Policies for workers outside your jurisdiction never appear
+                  here.
+                </p>
+              </div>
+              <button
+                onClick={() => runExport("insurance", {})}
+                disabled={exporting !== null}
+                title="Download this register as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60 shrink-0"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "insurance" ? "Preparing…" : "CSV"}
+              </button>
             </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
 
             {insurancePolicies.length === 0 ? (
               <p className="text-slate-500 text-center py-8">No insurance records in your area</p>

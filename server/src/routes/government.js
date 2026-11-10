@@ -753,39 +753,116 @@ function insuranceRow(policy, worker, now) {
   };
 }
 
+/**
+ * Policies for the officials' own jurisdiction, shaped for the console and the
+ * CSV. Shared by both so a downloaded row can never describe something the
+ * on-screen list would hide.
+ */
+async function collectInsuranceRows(official, { verification, status, limit } = {}) {
+  const scopedWorkers = await User.find(workerScopeFilter(official))
+    .select("_id full_name worker_id current_district current_state")
+    .lean();
+  const byId = new Map(scopedWorkers.map((w) => [String(w._id), w]));
+
+  const filter = { worker_id: { $in: [...byId.keys()] } };
+  if (verification === "self_declared" || verification === "office_verified") {
+    filter.verification = verification;
+  }
+
+  const policies = await InsurancePolicy.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(limit ?? MAX_INSURANCE_ROWS)
+    .lean();
+
+  const now = new Date();
+  return policies
+    .map((p) => insuranceRow(p, byId.get(String(p.worker_id)), now))
+    .filter((row) => (status ? row.status === status : true));
+}
+
 router.get("/insurance", authenticate, requireGovernment, async (req, res) => {
   try {
     const official = await User.findById(req.userId);
     if (!official) return res.status(401).json({ detail: "Sign in again." });
 
-    const scopedWorkers = await User.find(workerScopeFilter(official))
-      .select("_id full_name worker_id current_district current_state")
-      .lean();
-    const byId = new Map(scopedWorkers.map((w) => [String(w._id), w]));
-
-    const filter = { worker_id: { $in: [...byId.keys()] } };
-
-    const wanted = String(req.query.verification || "").trim();
-    if (wanted === "self_declared" || wanted === "office_verified") {
-      filter.verification = wanted;
-    }
-
-    const policies = await InsurancePolicy.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(MAX_INSURANCE_ROWS)
-      .lean();
-
-    const now = new Date();
-    const status = String(req.query.status || "").trim();
-    const rows = policies
-      .map((p) => insuranceRow(p, byId.get(String(p.worker_id)), now))
-      .filter((row) => (status ? row.status === status : true));
+    const rows = await collectInsuranceRows(official, {
+      verification: String(req.query.verification || "").trim(),
+      status: String(req.query.status || "").trim(),
+      limit: MAX_INSURANCE_ROWS,
+    });
 
     res.set("Cache-Control", "no-store");
     res.json({ policies: rows, count: rows.length });
   } catch (err) {
     console.error("[gov/insurance]", err);
     res.status(500).json({ detail: "Could not load insurance records." });
+  }
+});
+
+// The register a district office actually needs on paper: which workers are
+// covered, by whom, until when, and whether anyone checked. Scoped and audited
+// like the worker and grievance exports — a bulk copy of insurance records is
+// a bulk copy of worker data.
+router.get("/export/insurance.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const rows = await collectInsuranceRows(official, {
+      verification: String(req.query.verification || "").trim(),
+      status: String(req.query.status || "").trim(),
+      limit: EXPORT_ROW_CAP,
+    });
+
+    const csv = toCsv(
+      rows.map((row) => ({
+        worker_id: row.worker?.worker_id ?? "",
+        worker_name: row.worker?.full_name ?? "",
+        district: row.worker?.district ?? "",
+        state: row.worker?.state ?? "",
+        provider: row.provider,
+        policy_number: row.policy_number,
+        coverage: row.coverage,
+        sum_insured: row.sum_insured ?? "",
+        // Date-only: an ISO timestamp sorts as text anyway and is unreadable
+        // in a printed register.
+        valid_from: row.valid_from ? row.valid_from.slice(0, 10) : "",
+        valid_to: row.valid_to ? row.valid_to.slice(0, 10) : "",
+        status: row.status,
+        verification: row.verification,
+        verified_at: row.verified_at ? row.verified_at.slice(0, 10) : "",
+      })),
+      [
+        { key: "worker_id", header: "Worker ID" },
+        { key: "worker_name", header: "Worker" },
+        { key: "district", header: "District" },
+        { key: "state", header: "State" },
+        { key: "provider", header: "Insurer" },
+        { key: "policy_number", header: "Policy number" },
+        { key: "coverage", header: "Coverage" },
+        { key: "sum_insured", header: "Sum insured (INR)" },
+        { key: "valid_from", header: "Valid from" },
+        { key: "valid_to", header: "Valid to" },
+        { key: "status", header: "Status" },
+        { key: "verification", header: "Verification" },
+        { key: "verified_at", header: "Verified on" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.insurance_csv",
+      resourceType: "insurance_policy",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("insurance"), csv);
+  } catch (err) {
+    console.error("[gov/export/insurance]", err);
+    res.status(500).json({ detail: "Could not build the insurance export." });
   }
 });
 

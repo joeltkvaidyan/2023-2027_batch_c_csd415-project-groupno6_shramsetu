@@ -437,8 +437,14 @@ export async function govReviewJobApplicant(
  * every browser, none of which agree on Content-Disposition parsing.
  */
 export async function govDownloadCsv(
-  kind: "workers" | "grievances",
-  params: { search?: string; status_filter?: string; category?: string } = {},
+  kind: "workers" | "grievances" | "insurance",
+  params: {
+    search?: string;
+    status_filter?: string;
+    category?: string;
+    status?: string;
+    verification?: string;
+  } = {},
 ): Promise<void> {
   const { data } = await govApi.get(`/government/export/${kind}.csv`, {
     params,

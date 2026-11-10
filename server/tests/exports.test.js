@@ -17,6 +17,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import app from "../src/app.js";
 import { User } from "../src/models/User.js";
 import { Grievance } from "../src/models/Grievance.js";
+import { InsurancePolicy } from "../src/models/InsurancePolicy.js";
 import { hashPassword, signToken } from "../src/utils/crypto.js";
 import { toCsv } from "../src/utils/csv.js";
 
@@ -90,6 +91,27 @@ beforeAll(async () => {
     incident_location: "Whitefield",
     incident_date: new Date(),
   });
+  const day = 24 * 60 * 60 * 1000;
+  await InsurancePolicy.create({
+    worker_id: inScope._id,
+    provider: "National Insurance Co.",
+    policy_number: "NIC/KA/2026/0001",
+    coverage: "accident",
+    sum_insured: 200000,
+    valid_from: new Date(Date.now() - 10 * day),
+    valid_to: new Date(Date.now() + 300 * day),
+    verification: "office_verified",
+  });
+  await InsurancePolicy.create({
+    worker_id: outOfScope._id,
+    provider: "Oriental Insurance",
+    policy_number: "OIC/KL/2026/0002",
+    coverage: "hospitalisation",
+    sum_insured: 100000,
+    valid_from: new Date(Date.now() - 10 * day),
+    valid_to: new Date(Date.now() + 300 * day),
+  });
+
   await Grievance.create({
     complaint_number: "GR-EXP-002",
     owner_id: outOfScope._id,
@@ -201,5 +223,43 @@ describe("GET /api/v1/government/export/grievances.csv", () => {
       .expect(200);
 
     expect(res.text).not.toContain("GR-EXP-001");
+  });
+});
+
+describe("GET /api/v1/government/export/insurance.csv", () => {
+  it("exports only the official's jurisdiction", async () => {
+    const res = await api
+      .get("/api/v1/government/export/insurance.csv")
+      .set("Authorization", `Bearer ${tokens.official}`)
+      .expect(200);
+
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.text).toContain("SS-700001");
+    expect(res.text).toContain("NIC/KA/2026/0001");
+    expect(res.text).toContain("office_verified");
+    // The policy of a worker in another state must not reach the file.
+    expect(res.text).not.toContain("OIC/KL/2026/0002");
+    expect(res.text).not.toContain("Other State Worker");
+  });
+
+  it("honours the verification filter", async () => {
+    const res = await api
+      .get("/api/v1/government/export/insurance.csv")
+      .query({ verification: "self_declared" })
+      .set("Authorization", `Bearer ${tokens.official}`)
+      .expect(200);
+
+    expect(res.text).not.toContain("NIC/KA/2026/0001");
+  });
+
+  it("refuses non-government accounts", async () => {
+    await api
+      .get("/api/v1/government/export/insurance.csv")
+      .set("Authorization", `Bearer ${tokens.employer}`)
+      .expect(403);
+  });
+
+  it("requires a session", async () => {
+    await api.get("/api/v1/government/export/insurance.csv").expect(401);
   });
 });
