@@ -6,6 +6,7 @@ import { Grievance, GRIEVANCE_STATUSES } from "../models/Grievance.js";
 import { PushNotification, WorkerNotification } from "../models/Notification.js";
 import { AuditLog } from "../models/Document.js";
 import { authenticate, requireGovernment, audit } from "../middleware/auth.js";
+import { toCsv, sendCsv, datedFilename } from "../utils/csv.js";
 import {
   grievanceScopeFilter,
   officialCanSeeGrievance,
@@ -305,6 +306,125 @@ router.get("/workers", authenticate, requireGovernment, async (req, res) => {
   } catch (err) {
     console.error("[gov/workers]", err);
     res.status(500).json({ detail: "Could not load workers." });
+  }
+});
+
+// ── CSV exports (scoped) ─────────────────────────────────────────────
+// The Flask reference app let a labour-office admin download the worker and
+// grievance lists as CSV. Both exports below reuse the same scope filters as
+// the on-screen lists, so an official can never download a row they cannot
+// already see, and every export is written to the audit log — a bulk copy of
+// worker data is exactly the kind of read that should leave a trace.
+const EXPORT_ROW_CAP = 5000;
+
+router.get("/export/workers.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const filter = workerScopeFilter(official);
+    const search = String(req.query.search || "").trim();
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ full_name: rx }, { worker_id: rx }, { occupation: rx }];
+    }
+
+    const rows = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(EXPORT_ROW_CAP)
+      .lean();
+
+    // Dates are normalised to ISO before serialising: a raw Date reaches the
+    // CSV as "Thu Oct 22 2026 11:55:19 GMT+0530 (India Standard Time)", which
+    // is both unreadable in Excel and full of commas.
+    const csv = toCsv(
+      rows.map((w) => ({
+        ...w,
+        createdAt: w.createdAt ? new Date(w.createdAt).toISOString() : "",
+      })),
+      [
+        { key: "worker_id", header: "Worker ID" },
+        { key: "full_name", header: "Name" },
+        { key: "mobile_number", header: "Mobile" },
+        { key: "occupation", header: "Occupation" },
+        { key: "years_of_experience", header: "Experience (years)" },
+        { key: "current_village_or_city", header: "Village / city" },
+        { key: "current_district", header: "District" },
+        { key: "current_state", header: "State" },
+        { key: "gov_approve_status", header: "Approval" },
+        { key: "is_active", header: "Active" },
+        { key: "createdAt", header: "Registered" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.workers_csv",
+      resourceType: "user",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("workers"), csv);
+  } catch (err) {
+    console.error("[gov/export/workers]", err);
+    res.status(500).json({ detail: "Could not build the worker export." });
+  }
+});
+
+router.get("/export/grievances.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const { grievanceFilter } = await grievanceScopeFilter(official);
+    const filter = { ...grievanceFilter };
+    if (req.query.status_filter) filter.status = String(req.query.status_filter);
+    if (req.query.category) filter.category = String(req.query.category);
+
+    const rows = await Grievance.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(EXPORT_ROW_CAP)
+      .populate("owner_id")
+      .lean();
+
+    const csv = toCsv(
+      rows.map((g) => ({
+        ...g,
+        worker_id: g.owner_id?.worker_id ?? "",
+        worker_name: g.owner_id?.full_name ?? "",
+        createdAt: g.createdAt ? new Date(g.createdAt).toISOString() : "",
+        incident_date: g.incident_date ? new Date(g.incident_date).toISOString() : "",
+        resolved_at: g.resolved_at ? new Date(g.resolved_at).toISOString() : "",
+      })),
+      [
+        { key: "complaint_number", header: "Complaint no." },
+        { key: "createdAt", header: "Filed" },
+        { key: "category", header: "Category" },
+        { key: "subject", header: "Subject" },
+        { key: "status", header: "Status" },
+        { key: "priority", header: "Priority" },
+        { key: "worker_id", header: "Worker ID" },
+        { key: "worker_name", header: "Worker" },
+        { key: "employer_name", header: "Employer" },
+        { key: "incident_location", header: "Incident location" },
+        { key: "incident_date", header: "Incident date" },
+        { key: "resolved_at", header: "Resolved" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.grievances_csv",
+      resourceType: "grievance",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("grievances"), csv);
+  } catch (err) {
+    console.error("[gov/export/grievances]", err);
+    res.status(500).json({ detail: "Could not build the grievance export." });
   }
 });
 

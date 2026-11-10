@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
+import {
+  LogOut,
+  Search,
+  Users,
+  UserCheck,
+  Megaphone,
+  Flag,
+  Building2,
+  Clock,
+  Download,
+} from "lucide-react";
 import { httpStatus } from "../api/client";
 import { readJson } from "../utils/storage";
 import { signOut } from "../api/session";
@@ -16,6 +26,7 @@ import {
   govGetNotifications,
   govGetOfficials,
   govGetAuditLogs,
+  govDownloadCsv,
   type GovernmentOfficial,
   type GovernmentUser,
   type DashboardStats,
@@ -51,6 +62,36 @@ export default function GovernmentDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [grievanceStatusFilter, setGrievanceStatusFilter] = useState("");
   const [grievanceCategoryFilter, setGrievanceCategoryFilter] = useState("");
+  // Which export is in flight (the browser blocks while the blob downloads) and
+  // a one-line failure note — a silently dead download button is worse than
+  // the clutter of an error message.
+  const [exporting, setExporting] = useState<null | "workers" | "grievances">(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * Export the current view as CSV. The server re-applies the official's
+   * jurisdiction scope (the same filter as the list on screen), so passing the
+   * on-screen search/filters here can only narrow the file, never widen it.
+   */
+  const runExport = useCallback(
+    async (
+      kind: "workers" | "grievances",
+      params: { search?: string; status_filter?: string; category?: string },
+    ) => {
+      setExportError(null);
+      setExporting(kind);
+      try {
+        await govDownloadCsv(kind, params);
+      } catch {
+        setExportError(
+          "Could not build the export. Nothing was downloaded — check your connection and try again.",
+        );
+      } finally {
+        setExporting(null);
+      }
+    },
+    [],
+  );
   const [loading, setLoading] = useState(true);
 
   const loadTabData = useCallback(async () => {
@@ -322,7 +363,17 @@ export default function GovernmentDashboardPage() {
               >
                 <Search className="h-4 w-4" aria-hidden="true" /> Search
               </button>
+              <button
+                onClick={() => runExport("workers", { search: searchQuery })}
+                disabled={exporting !== null}
+                title="Download these rows as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "workers" ? "Preparing…" : "CSV"}
+              </button>
             </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -409,7 +460,22 @@ export default function GovernmentDashboardPage() {
               >
                 Apply Filters
               </button>
+              <button
+                onClick={() =>
+                  runExport("grievances", {
+                    status_filter: grievanceStatusFilter,
+                    category: grievanceCategoryFilter,
+                  })
+                }
+                disabled={exporting !== null}
+                title="Download these rows as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "grievances" ? "Preparing…" : "CSV"}
+              </button>
             </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
             {grievances.length === 0 ? (
               <p className="text-slate-500 text-center py-8">No grievances found</p>
             ) : (

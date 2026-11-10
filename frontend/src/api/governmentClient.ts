@@ -424,3 +424,33 @@ export async function govReviewJobApplicant(
   );
   return data;
 }
+
+// ── CSV exports ──────────────────────────────────────────────────────
+
+/**
+ * Download a scoped CSV export.
+ *
+ * The server decides which rows an official may export (same jurisdiction
+ * scope as the on-screen lists) and writes the file with a UTF-8 BOM so Excel
+ * reads Indic names correctly. The browser only turns the response into a save
+ * dialog — the filename is built here so the download is named identically in
+ * every browser, none of which agree on Content-Disposition parsing.
+ */
+export async function govDownloadCsv(
+  kind: "workers" | "grievances",
+  params: { search?: string; status_filter?: string; category?: string } = {},
+): Promise<void> {
+  const { data } = await govApi.get(`/government/export/${kind}.csv`, {
+    params,
+    responseType: "blob",
+  });
+
+  const url = URL.createObjectURL(data as Blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${kind}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
