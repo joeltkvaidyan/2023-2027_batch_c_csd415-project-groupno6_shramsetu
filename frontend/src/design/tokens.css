@@ -33,46 +33,55 @@
   --motion-base: 200ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Light theme */
-  --color-surface: #ffffff;
-  --color-surface-raised: #f5f7f9;
-  --color-surface-sunken: #eef1f4;
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-muted: #5f6b7a;
-  --color-border: #d5dae0;
-  --color-border-strong: #6b7280;
-  --color-brand: #047857;
-  --color-brand-hover: #065f46;
-  --color-on-brand: #ffffff;
-  --color-danger: #b91c1c;
+  /* Light theme — limewash, sand and fired brick.
+     The palette comes from the site, not from a brand deck: the surfaces are
+     a lime-washed wall (#fffcf7) and dry sand (#f7f0e4), the ink is wet clay,
+     and the accent is the brick a mason actually lays (#7e3213, light enough
+     for text at 8.7:1 on the surface, dark enough for white button labels at
+     6.4:1). Danger/success/warning stay recognisably red/green/ochre, tuned to
+     sit with the warm neutrals instead of fighting them. */
+  --color-surface: #fffcf7;
+  --color-surface-raised: #f7f0e4;
+  --color-surface-sunken: #efe5d5;
+  --color-text-primary: #231a14;
+  --color-text-secondary: #574639;
+  --color-text-muted: #6a5646;
+  --color-border: #dfd2be;
+  --color-border-strong: #7c6a57;
+  --color-brand: #7e3213;
+  --color-brand-hover: #65280f;
+  --color-on-brand: #fff8f1;
+  --color-danger: #a32020;
   --color-on-danger: #ffffff;
-  --color-success: #15803d;
+  --color-success: #2e6b2f;
   --color-on-success: #ffffff;
-  --color-warning: #92400e;
+  --color-warning: #8a5a00;
   --color-on-warning: #ffffff;
-  --color-focus: #0369a1;
+  --color-focus: #1e5f8a;
 }
 
 .dark {
-  --color-surface: #0f172a;
-  --color-surface-raised: #1e293b;
-  --color-surface-sunken: #020617;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #a3aebd;
-  --color-border: #334155;
-  --color-border-strong: #94a3b8;
-  --color-brand: #34d399;
-  --color-brand-hover: #6ee7b7;
-  --color-on-brand: #052e21;
-  --color-danger: #fca5a5;
-  --color-on-danger: #450a0a;
-  --color-success: #86efac;
-  --color-on-success: #052e16;
-  --color-warning: #fcd34d;
-  --color-on-warning: #451a03;
-  --color-focus: #7dd3fc;
+  /* Night on site: charcoal cement, sand-coloured ink, and the brick step
+     carried up to #f0a277 — the same hue, lifted until it reads on a dark
+     surface (9:1), with the button label inverting to burnt brown. */
+  --color-surface: #17120f;
+  --color-surface-raised: #221b16;
+  --color-surface-sunken: #0d0a08;
+  --color-text-primary: #f7efe4;
+  --color-text-secondary: #d8c8b6;
+  --color-text-muted: #b49f8b;
+  --color-border: #3a302a;
+  --color-border-strong: #a08c77;
+  --color-brand: #f0a277;
+  --color-brand-hover: #f6bc9a;
+  --color-on-brand: #2a1207;
+  --color-danger: #ff9e8a;
+  --color-on-danger: #2a0505;
+  --color-success: #96d9a1;
+  --color-on-success: #04220c;
+  --color-warning: #f5c86b;
+  --color-on-warning: #2a1a00;
+  --color-focus: #8cc8f0;
 }
 
 /* High contrast is a layer on top, not a third choice: it keeps the light/dark
@@ -87,12 +96,12 @@
   --color-text-muted: #e5e5e5;
   --color-border: #ffffff;
   --color-border-strong: #ffffff;
-  --color-brand: #7cffc4;
-  --color-brand-hover: #b6ffdd;
+  --color-brand: #ffc48a;
+  --color-brand-hover: #ffd9b5;
   --color-on-brand: #000000;
   --color-danger: #ff9a9a;
   --color-on-danger: #000000;
-  --color-success: #8dff9e;
+  --color-success: #8dffa8;
   --color-on-success: #000000;
   --color-warning: #ffe066;
   --color-on-warning: #000000;
