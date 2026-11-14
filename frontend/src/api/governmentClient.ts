@@ -154,6 +154,41 @@ export async function govGetGrievances(
   return data;
 }
 
+// ── Overdue escalations ──────────────────────────────────────────────
+
+/** One open complaint that has outlived its SLA deadline. */
+export interface GovEscalation {
+  id: string;
+  complaint_number: string;
+  category: string;
+  subject: string;
+  status: string;
+  priority: string;
+  sla_deadline: string | null;
+  days_overdue: number | null;
+  /** 0 = nobody told yet, 1 = district office told, 2 = state office told. */
+  escalation_level: number;
+  escalated_at: string | null;
+  state_escalated_at: string | null;
+  district: string | null;
+  state: string | null;
+  worker: { worker_id: string | null; full_name: string | null } | null;
+}
+
+export interface EscalationsResponse {
+  total: number;
+  escalations: GovEscalation[];
+}
+
+/**
+ * Complaints past their deadline and still open, for this official's
+ * jurisdiction, oldest breach first.
+ */
+export async function govGetEscalations(): Promise<EscalationsResponse> {
+  const { data } = await govApi.get(`/government/escalations`);
+  return data;
+}
+
 export interface GovGrievanceDetail {
   id: number;
   complaint_number: string;

@@ -20,6 +20,7 @@ import {
   govGetStats,
   govGetWorkers,
   govGetGrievances,
+  govGetEscalations,
   govUpdateGrievanceStatus,
   govGetNotifications,
   govGetOfficials,
@@ -30,6 +31,7 @@ import {
   type DashboardStats,
   type WorkerRecord,
   type GovGrievance,
+  type GovEscalation,
   type GovNotification,
   type AuditLog,
 } from "../api/governmentClient";
@@ -39,6 +41,7 @@ type Tab =
   | "overview"
   | "review"
   | "grievances"
+  | "escalations"
   | "workers"
   | "insurance"
   | "notifications"
@@ -54,6 +57,7 @@ export default function GovernmentDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [workers, setWorkers] = useState<WorkerRecord[]>([]);
   const [grievances, setGrievances] = useState<GovGrievance[]>([]);
+  const [escalations, setEscalations] = useState<GovEscalation[]>([]);
   const [notifications, setNotifications] = useState<GovNotification[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [officials, setOfficials] = useState<GovernmentOfficial[]>([]);
@@ -109,6 +113,9 @@ export default function GovernmentDashboardPage() {
         setWorkers(res.workers || []);
       } else if (activeTab === "insurance") {
         setInsurancePolicies(await govListInsurance());
+      } else if (activeTab === "escalations") {
+        const res = await govGetEscalations();
+        setEscalations(res.escalations || []);
       } else if (activeTab === "grievances") {
         const res = await govGetGrievances(
           grievanceStatusFilter || undefined,
@@ -160,6 +167,7 @@ export default function GovernmentDashboardPage() {
     { key: "overview", icon: "📊", label: "Overview" },
     { key: "review", icon: "✅", label: "Review" },
     { key: "grievances", icon: "📢", label: "Grievances" },
+    { key: "escalations", icon: "⏰", label: "Overdue" },
     { key: "workers", icon: "👷", label: "Workers" },
     { key: "insurance", icon: "🛡️", label: "Insurance" },
     { key: "notifications", icon: "🔔", label: "Notifications" },
@@ -430,6 +438,93 @@ export default function GovernmentDashboardPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* ── Overdue Tab (SLA escalations) ─────────────────── */}
+        {!loading && activeTab === "escalations" && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold">⏰ Overdue complaints</h2>
+              <p className="text-slate-400 text-sm mt-1">
+                Every complaint here has passed the deadline its priority promised. The ladder is
+                automatic: the deadline passing tells the district office, and seven more days
+                without an answer tells the state office. Oldest breach first — it is the one a
+                worker has been waiting on longest.
+              </p>
+            </div>
+
+            {escalations.length === 0 ? (
+              <p className="text-center py-8 text-slate-500">
+                No complaint is past its deadline in your jurisdiction
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-slate-300">
+                  <span className="font-semibold text-red-400">{escalations.length}</span> past
+                  their deadline ·{" "}
+                  <span className="font-semibold text-amber-400">
+                    {escalations.filter((e) => e.escalation_level === 1).length}
+                  </span>{" "}
+                  with the district office ·{" "}
+                  <span className="font-semibold text-red-400">
+                    {escalations.filter((e) => e.escalation_level >= 2).length}
+                  </span>{" "}
+                  with the state office
+                </p>
+
+                <div className="space-y-3">
+                  {escalations.map((e) => (
+                    <div
+                      key={e.id}
+                      className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold break-words">{e.subject}</p>
+                          <p className="mt-1 font-mono text-xs text-slate-400">
+                            {e.complaint_number} · {e.priority} priority
+                          </p>
+                          <p className="mt-1 text-sm text-slate-300 break-words">
+                            {e.worker?.full_name ?? "Unknown worker"}{" "}
+                            <span className="font-mono text-xs text-slate-400">
+                              {e.worker?.worker_id ?? ""}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {e.district ?? "—"}, {e.state ?? "—"} · deadline{" "}
+                            {e.sla_deadline ? new Date(e.sla_deadline).toLocaleDateString() : "—"}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
+                            {e.days_overdue === null
+                              ? "overdue"
+                              : e.days_overdue === 1
+                                ? "1 day late"
+                                : `${e.days_overdue} days late`}
+                          </span>
+                          {e.escalation_level >= 2 ? (
+                            <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-300">
+                              State office notified
+                            </span>
+                          ) : e.escalation_level === 1 ? (
+                            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">
+                              District office notified
+                            </span>
+                          ) : (
+                            <span className="rounded bg-slate-500/20 px-2 py-0.5 text-xs text-slate-300">
+                              Awaiting escalation
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 

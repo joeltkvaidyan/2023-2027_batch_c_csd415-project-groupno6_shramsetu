@@ -165,6 +165,13 @@ flowchart TD
    decision — not ours.* The **CSV** button on that tab downloads the register
    for the official's jurisdiction only.
 
+   Then open the **⏰ Overdue** tab. Every complaint here has blown the deadline
+   its priority promised, oldest first, each tagged **"District office
+   notified"** — the escalation is automatic, not a thing an official has to
+   remember, and a restart cannot escalate the same complaint twice. Seven days
+   later, or on a backdated row, the same rung moves to **"State office
+   notified"**.
+
 8. **Jurisdiction scoping** — log in as the **Ernakulam district official** →
    worker list shows **only the 3 Ernakulam workers**; open a Coimbatore
    grievance → **not found**. Then log in as the **superadmin** → Overview shows
@@ -185,7 +192,7 @@ flowchart TD
 Run it. These are the numbers as of this commit:
 
 ```bash
-cd server    && npm test    # 321 passed — scoping, ownership, upload crypto, rate limits, insurance
+cd server    && npm test    # 329 passed — scoping, ownership, upload crypto, rate limits, insurance, SLA escalation
 cd frontend  && npm test    # 184 passed — wallet PIN lockout, auth gate, i18n bundle parity
 cd ai-service && venv/Scripts/python -m pytest   # 103 passed — corpus, RAG, PII, injection, cold start
 cd server    && npm run verify                  # 34 live checks across BOTH services

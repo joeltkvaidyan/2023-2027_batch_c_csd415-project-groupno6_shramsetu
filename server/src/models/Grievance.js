@@ -54,6 +54,17 @@ const GrievanceSchema = new Schema(
 
     sla_deadline: { type: Date, default: null },
     escalated: { type: Boolean, default: false },
+
+    // How far up the ladder this complaint has climbed after its deadline:
+    //   0  nothing yet (or it was resolved in time)
+    //   1  the deadline passed and the district office was told
+    //   2  it stayed open through the grace window and the state office was told
+    // Each step is taken by an atomic claim filtered on the current level, so a
+    // restart or a second API instance cannot escalate the same complaint twice.
+    escalation_level: { type: Number, default: 0, min: 0, max: 2, index: true },
+    escalated_at: { type: Date, default: null },
+    state_escalated_at: { type: Date, default: null },
+
     resolved_at: { type: Date, default: null },
 
     worker_rating: { type: Number, min: 1, max: 5, default: null },
@@ -122,6 +133,9 @@ GrievanceSchema.methods.toJSON = function () {
     status: this.status,
     priority: this.priority,
     escalated: this.escalated,
+    escalation_level: this.escalation_level ?? 0,
+    escalated_at: this.escalated_at ?? null,
+    state_escalated_at: this.state_escalated_at ?? null,
     sla_deadline: this.sla_deadline,
     employer_name: this.populateRef?.worker ?? null, // filled by toListJSON when joined
     incident_location: this.incident_location,

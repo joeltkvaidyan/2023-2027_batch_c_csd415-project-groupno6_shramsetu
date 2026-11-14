@@ -160,7 +160,7 @@ production database created by this code.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 321 tests: scoping, ownership, upload crypto, document-wallet PIN (scrypt, lockout, wallet tokens), cookie sessions (httpOnly, CSRF, refresh rotation/reuse, logout revocation, one role probe, idempotent grievance/wage submissions), rate limits, trust proxy, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules, insurance records (expiry-derived status, masking, jurisdiction-scoped verification, one warning per policy, CSV scope) |
+| Server unit/security | `cd server && npm test` | 329 tests: scoping, ownership, upload crypto, document-wallet PIN (scrypt, lockout, wallet tokens), cookie sessions (httpOnly, CSRF, refresh rotation/reuse, logout revocation, one role probe, idempotent grievance/wage submissions), rate limits, trust proxy, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules, insurance records (expiry-derived status, masking, jurisdiction-scoped verification, one warning per policy, CSV scope), SLA escalation (one rung per sweep, no duplicate escalation, grace window, scoped overdue view) |
 | Frontend unit/component | `cd frontend && npm test` | 184 tests: idempotency keys (retry reuses, success resets), offline queue replay decisions, session module (CSRF echo, single silent refresh, one role probe, no token storage), role guard states, wallet unlock/idle-lock behaviour, offline-cache AES-GCM round trip and LRU, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
@@ -247,6 +247,32 @@ official cannot already see.
 This is a record of cover, not a live insurer feed: connecting to an IRDAI
 licensed insurer's API needs partner credentials this project does not hold, and
 the code does not pretend otherwise.
+
+### When a deadline is missed
+
+Every grievance carries a deadline derived from its priority — `urgent 7 ·
+high 14 · medium 30 · low 45` days. A promise nobody enforces is worse than no
+promise, so the deadline drives a two-rung ladder
+(`server/src/utils/slaEscalation.js`):
+
+| Rung | When | Told |
+|---|---|---|
+| 1 | the deadline passes and the complaint is still open | the district labour office |
+| 2 | it is still open 7 days later | the state labour office |
+
+Each rung is taken by an atomic claim filtered on the level the sweep expects
+to find (`escalation_level: {$lt: 1}` / `=== 1`), so a restart or a second API
+instance cannot escalate the same complaint twice, and the worker's timeline
+gains exactly one entry per rung, so the worker is told rather than left
+guessing.
+Every escalation writes a `grievance.escalate` / `grievance.escalate_state`
+audit entry.
+
+Only open grievances climb. A complaint closed on day 40 of a 14-day SLA was
+late, but escalating a closed file tells nobody anything actionable, so it is
+left alone. The console's **Overdue** tab lists breaches in the official's
+jurisdiction — oldest deadline first, with days late and which office has
+already been told — using the same scope filter as every other government list.
 
 ### Evidence reaching a complaint, and how a rating is labelled
 

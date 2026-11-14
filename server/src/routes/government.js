@@ -9,6 +9,7 @@ import { authenticate, requireGovernment, audit } from "../middleware/auth.js";
 import { toCsv, sendCsv, datedFilename } from "../utils/csv.js";
 import { InsurancePolicy } from "../models/InsurancePolicy.js";
 import { policyStatus, maskPolicyNumber } from "../utils/insurance.js";
+import { daysOverdue, OPEN_GRIEVANCE_STATUSES } from "../utils/slaEscalation.js";
 import {
   grievanceScopeFilter,
   officialCanSeeGrievance,
@@ -469,6 +470,62 @@ router.get("/grievances", authenticate, requireGovernment, async (req, res) => {
   } catch (err) {
     console.error("[gov/grievances]", err);
     res.status(500).json({ detail: "Could not load grievances." });
+  }
+});
+
+// ── Overdue escalations (scoped) ─────────────────────────────────────
+// What the labour office owes an answer on, oldest breach first. Scoped by the
+// same filter as the grievance list, so an official never sees a complaint
+// outside their jurisdiction — and the escalation level says how far up the
+// ladder it has already gone (1 = district told, 2 = state told).
+router.get("/escalations", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const { grievanceFilter } = await grievanceScopeFilter(official);
+    const now = new Date();
+    const filter = {
+      ...grievanceFilter,
+      status: { $in: OPEN_GRIEVANCE_STATUSES },
+      sla_deadline: { $ne: null, $lt: now },
+    };
+
+    const total = await Grievance.countDocuments(filter);
+    const rows = await Grievance.find(filter)
+      .sort({ sla_deadline: 1 })
+      .limit(200)
+      .populate("owner_id")
+      .lean();
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      total,
+      escalations: rows.map((g) => ({
+        id: String(g._id),
+        complaint_number: g.complaint_number,
+        category: g.category,
+        subject: g.subject,
+        status: g.status,
+        priority: g.priority,
+        sla_deadline: g.sla_deadline,
+        days_overdue: daysOverdue(g.sla_deadline, now),
+        escalation_level: g.escalation_level ?? 0,
+        escalated_at: g.escalated_at ?? null,
+        state_escalated_at: g.state_escalated_at ?? null,
+        district: g.owner_district ?? g.owner_id?.current_district ?? null,
+        state: g.owner_state ?? g.owner_id?.current_state ?? null,
+        worker: g.owner_id
+          ? {
+              worker_id: g.owner_id.worker_id ?? null,
+              full_name: g.owner_id.full_name ?? null,
+            }
+          : null,
+      })),
+    });
+  } catch (err) {
+    console.error("[gov/escalations]", err);
+    res.status(500).json({ detail: "Could not load overdue complaints." });
   }
 });
 
