@@ -6,8 +6,10 @@ secure encrypted document wallet, grievance filing with tracking, a
 jurisdiction-scoped government dashboard with notifications and audit logs,
 and a **multilingual AI welfare assistant** — RAG over curated government
 scheme documents — with **voice in/out**. The worker dashboard also carries a
-**QR digital ID card** and a **wage diary** that can pre-fill an unpaid-wages
-grievance (a day already recorded as fully paid is locked from further edits).
+**QR digital ID card** — which states whether the worker is insured today, and
+whether a labour office checked that policy — and a **wage diary** that can
+pre-fill an unpaid-wages grievance (a day already recorded as fully paid is
+locked from further edits).
 
 Trust is gated on both sides of the work: **new WORKER and EMPLOYER accounts
 both start pending and a jurisdiction labour office must accept them** before
@@ -158,8 +160,8 @@ production database created by this code.
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 272 tests: scoping, ownership, upload crypto, document-wallet PIN (scrypt, lockout, wallet tokens), cookie sessions (httpOnly, CSRF, refresh rotation/reuse, logout revocation, one role probe, idempotent grievance/wage submissions), rate limits, trust proxy, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
-| Frontend unit/component | `cd frontend && npm test` | 106 tests: idempotency keys (retry reuses, success resets), offline queue replay decisions, session module (CSRF echo, single silent refresh, one role probe, no token storage), role guard states, wallet unlock/idle-lock behaviour, offline-cache AES-GCM round trip and LRU, auth-gate routing, status badge a11y, i18n bundle parity |
+| Server unit/security | `cd server && npm test` | 321 tests: scoping, ownership, upload crypto, document-wallet PIN (scrypt, lockout, wallet tokens), cookie sessions (httpOnly, CSRF, refresh rotation/reuse, logout revocation, one role probe, idempotent grievance/wage submissions), rate limits, trust proxy, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules, insurance records (expiry-derived status, masking, jurisdiction-scoped verification, one warning per policy, CSV scope) |
+| Frontend unit/component | `cd frontend && npm test` | 184 tests: idempotency keys (retry reuses, success resets), offline queue replay decisions, session module (CSRF echo, single silent refresh, one role probe, no token storage), role guard states, wallet unlock/idle-lock behaviour, offline-cache AES-GCM round trip and LRU, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
 | RAG eval harness | `venv/Scripts/python eval/run_eval.py` | hit@1/hit@3, retrieval refusals, per-language → `eval/RESULTS.md` |
@@ -201,6 +203,50 @@ as "not recorded". Nothing is invented to fill a statutory box.
 The Form IX attendance-cum-muster roll is built only from engagements whose shift
 was confirmed as worked: `GET /api/v1/records/muster-roll?month=2027-03` (JSON) or
 `…/muster-roll/print` (printable HTML).
+
+### Insurance on the ID card, and what it does not claim
+
+A worker can record accident, hospital, disability or death cover on their ID
+card: insurer, policy number, sum insured and validity dates. The card and the
+page behind its QR code then answer one narrow question — **is this person
+covered today** — and say who vouched for the answer.
+
+There is deliberately no `is_insured` flag. Status is recomputed from
+`valid_from`/`valid_to` on every read (`server/src/utils/insurance.js`), so a
+card printed last week cannot keep claiming cover that lapsed on Tuesday.
+
+Two levels of trust, and the difference is printed rather than implied:
+
+| Shown to a household | Where it comes from |
+|---|---|
+| "Cover declared by the worker, not yet checked by an office" (amber) | the worker typed it in |
+| "Checked by a labour office" (green) | an official verified it in the console |
+
+`GET /api/v1/public/verify/worker/:code` returns the insurer, coverage, sum
+insured, end date and **only the last four digits** of the policy number; the
+full number is visible to the worker and to a jurisdiction-scoped official, who
+needs it to check the policy with the insurer. Every verification writes an
+`insurance.verify` audit entry, an official can only verify workers inside their
+own jurisdiction (403 otherwise), and a verified policy cannot be deleted by the
+worker (409). The page states plainly that whether a particular claim is paid is
+the insurer's decision, not ShramSetu's.
+
+A sweep (`server/src/utils/insuranceReminders.js`) runs at boot and every 12
+hours: a worker whose cover ends within 30 days, or ended within the last 30
+days, gets one in-app notification per policy. The claim on the notification is
+an atomic update filtered on `reminder_sent_at: null`, so a restart or a second
+API instance cannot send the same warning twice. The worker's own panel also
+shows "cover ends in N days" directly, because an inbox a worker never opens is
+not a reminder.
+
+The labour office gets an **Insurance** tab: scoped policy rows, a **Mark
+verified** action and a CSV export of the register that re-uses the same scope
+helper as the on-screen list, so a download can never contain a worker the
+official cannot already see.
+
+This is a record of cover, not a live insurer feed: connecting to an IRDAI
+licensed insurer's API needs partner credentials this project does not hold, and
+the code does not pretend otherwise.
 
 ### Evidence reaching a complaint, and how a rating is labelled
 

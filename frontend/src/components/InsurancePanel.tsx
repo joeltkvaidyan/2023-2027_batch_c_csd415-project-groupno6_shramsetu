@@ -31,6 +31,21 @@ function statusTone(status: OwnPolicy["status"]): "success" | "warning" | "dange
   return "danger";
 }
 
+/**
+ * Days of cover left, or null when the policy is not in force today. The card
+ * page and the server both derive this from the dates, but the warning a worker
+ * sees has to be loud in the last month, not buried in an inbox they may never
+ * open.
+ */
+const REMINDER_WINDOW_DAYS = 30;
+
+function daysOfCoverLeft(validTo: string | null, now = Date.now()): number | null {
+  if (!validTo) return null;
+  const end = new Date(validTo).getTime();
+  if (Number.isNaN(end)) return null;
+  return Math.ceil((end - now) / (24 * 60 * 60 * 1000));
+}
+
 function useFormatters() {
   const { t, i18n } = useTranslation();
   const date = (iso: string | null) => {
@@ -190,6 +205,31 @@ export function InsurancePanel({
                 <p className="mt-0.5 font-mono text-[11px] break-all text-gray-500">
                   {p.policy_number}
                 </p>
+                {(() => {
+                  const left = daysOfCoverLeft(p.valid_to);
+                  if (p.status !== "active" || left === null || left > REMINDER_WINDOW_DAYS) {
+                    return null;
+                  }
+                  return (
+                    <p className="mt-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      {left <= 0
+                        ? t(
+                            "insurance.expiringToday",
+                            "Cover ends today — renew it to stay covered.",
+                          )
+                        : left === 1
+                          ? t(
+                              "insurance.expiringTomorrow",
+                              "Cover ends tomorrow — renew it to stay covered.",
+                            )
+                          : t(
+                              "insurance.expiringSoon",
+                              "Cover ends in {days} days — renew it to stay covered.",
+                              { days: left },
+                            )}
+                    </p>
+                  );
+                })()}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <Badge tone={statusTone(p.status)}>
                     {p.status === "active"

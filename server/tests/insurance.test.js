@@ -19,6 +19,8 @@ import { AuditLog } from "../src/models/Document.js";
 import { hashPassword, signToken } from "../src/utils/crypto.js";
 import { cardCode } from "../src/utils/cardToken.js";
 import { policyStatus, pickCurrentPolicy } from "../src/utils/insurance.js";
+import { sendExpiryReminders } from "../src/utils/insuranceReminders.js";
+import { PushNotification, WorkerNotification } from "../src/models/Notification.js";
 
 const api = supertest(app);
 let mongod;
@@ -311,5 +313,89 @@ describe("labour-office verification", () => {
       .delete(`/api/v1/insurance/${policy._id}`)
       .set("Authorization", `Bearer ${t.worker}`)
       .expect(409);
+  });
+});
+
+describe("insurance expiry reminders", () => {
+  let reminderWorker;
+
+  beforeAll(async () => {
+    reminderWorker = await makeUser({
+      full_name: "Reminder Worker",
+      fields: {
+        worker_id: "SS-800009",
+        occupation: "Painter",
+        current_state: "Karnataka",
+        current_district: "Bengaluru Urban",
+        gov_approve_status: "accepted",
+      },
+    });
+  });
+
+  /** A policy for the reminder worker that ends `days` from now. */
+  async function policyEndingIn(days, over = {}) {
+    return InsurancePolicy.create({
+      worker_id: reminderWorker._id,
+      provider: "National Insurance Co.",
+      policy_number: `REM/2026/${crypto.randomInt(100000, 999999)}`,
+      coverage: "accident",
+      sum_insured: 150000,
+      valid_from: daysFromNow(-100),
+      valid_to: daysFromNow(days),
+      ...over,
+    });
+  }
+
+  it("warns the worker once, while the cover is still in force", async () => {
+    await policyEndingIn(10);
+
+    const first = await sendExpiryReminders();
+    expect(first.sent).toBeGreaterThanOrEqual(1);
+
+    const rows = await WorkerNotification.find({ worker_id: reminderWorker._id }).lean();
+    expect(rows).toHaveLength(1);
+
+    const note = await PushNotification.findById(rows[0].notification_id).lean();
+    expect(note.title).toBe("Your insurance cover ends soon");
+    expect(note.body).toContain("10 days left");
+    expect(note.department).toBe("insurance");
+
+    // Running the sweep again must not nag: the policy has been claimed.
+    const second = await sendExpiryReminders();
+    expect(second.sent).toBe(0);
+    expect(await WorkerNotification.countDocuments({ worker_id: reminderWorker._id })).toBe(1);
+  });
+
+  it("leaves cover that has months to run alone", async () => {
+    const later = await policyEndingIn(200);
+    await sendExpiryReminders();
+
+    const untouched = await InsurancePolicy.findById(later._id).lean();
+    expect(untouched.reminder_sent_at).toBe(null);
+  });
+
+  it("still says so when the cover has just lapsed", async () => {
+    const lapsed = await policyEndingIn(-5);
+    await sendExpiryReminders();
+
+    const note = await PushNotification.findOne({
+      title: "Your insurance cover has ended",
+    }).lean();
+    expect(note).not.toBe(null);
+    expect(note.body).toContain("ended on");
+
+    const claimed = await InsurancePolicy.findById(lapsed._id).lean();
+    expect(claimed.reminder_sent_at).not.toBe(null);
+  });
+
+  it("does not chase cover that lapsed months ago", async () => {
+    const stale = await policyEndingIn(-120);
+    const before = await PushNotification.countDocuments({ department: "insurance" });
+
+    await sendExpiryReminders();
+
+    const untouched = await InsurancePolicy.findById(stale._id).lean();
+    expect(untouched.reminder_sent_at).toBe(null);
+    expect(await PushNotification.countDocuments({ department: "insurance" })).toBe(before);
   });
 });

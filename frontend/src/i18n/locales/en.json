@@ -664,6 +664,9 @@
     "errAmount": "Enter the amount the policy covers, in rupees.",
     "errDates": "Enter the start and end date of the policy.",
     "saveFailed": "Could not save this policy. Try again.",
-    "removeFailed": "Could not remove this policy."
+    "removeFailed": "Could not remove this policy.",
+    "expiringSoon": "Cover ends in {days} days — renew it to stay covered.",
+    "expiringTomorrow": "Cover ends tomorrow — renew it to stay covered.",
+    "expiringToday": "Cover ends today — renew it to stay covered."
   }
 }

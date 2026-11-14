@@ -4,6 +4,7 @@ import { connectDB } from "./db.js";
 import { User } from "./models/User.js";
 import { hashPassword } from "./utils/crypto.js";
 import { seedDemoData } from "./seed/seed.js";
+import { sendExpiryReminders } from "./utils/insuranceReminders.js";
 import app from "./app.js";
 
 assertProductionSafe();
@@ -62,6 +63,16 @@ async function bootstrap() {
   if (config.seedDemoData) {
     await seedDemoData();
   }
+
+  // Insurance cover lapsing in silence is exactly the failure the card exists
+  // to prevent, so the reminder sweep runs once at boot and then twice a day.
+  // A failure here must not stop the API: a missing nudge is bad, a server
+  // that will not start is worse.
+  const sweepInsurance = () =>
+    sendExpiryReminders().catch((err) => console.error("[insurance-reminders]", err));
+  await sweepInsurance();
+  // unref() so the interval never keeps the process alive on its own.
+  setInterval(sweepInsurance, 12 * 60 * 60 * 1000).unref();
 
   const server = app.listen(config.port, () => {
     console.log(`[server] ShramSetu Node API on http://127.0.0.1:${config.port} (env=${config.env})`);

@@ -50,6 +50,14 @@ const insurancePolicySchema = new mongoose.Schema(
     },
     verified_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     verified_at: { type: Date, default: null },
+
+    /**
+     * When the worker was last warned that this cover is running out. Null
+     * until the reminder sweep picks the policy up, then set in the same
+     * update that claims it — so a restart, or a second API instance, cannot
+     * send the same warning twice.
+     */
+    reminder_sent_at: { type: Date, default: null },
   },
   { timestamps: true, collection: "insurance_policies" },
 );

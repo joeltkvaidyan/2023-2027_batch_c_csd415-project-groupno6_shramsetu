@@ -91,7 +91,8 @@ flowchart TD
     C --> D["Log a day's wages<br/>→ unpaid total appears"]
     D --> E["Ask the AI assistant<br/>→ grounded + cited / or honest refusal"]
     E --> F["Upload a document to the wallet<br/>(PIN-locked, AES-256-GCM at rest)"]
-    F --> G["Government portal<br/>→ open the grievance as EKM001"]
+    F --> N["ID card → declare insurance<br/>→ scan the QR: cover + who checked it"]
+    N --> G["Government portal<br/>→ open the grievance as EKM001"]
     G --> H["Switch to ADMIN001<br/>→ all 10 workers, aggregated charts"]
     H --> I["Send a targeted notification<br/>→ only construction workers receive it"]
     I --> J["Audit log<br/>→ every action recorded with actor and IP"]
@@ -145,18 +146,37 @@ flowchart TD
    encrypted at rest with per-file keys wrapped under `DOC_MASTER_KEY`.
    *The PIN is a convenience screen-lock, not encryption* — say this if asked.
 
-7. **Jurisdiction scoping** — log in as the **Ernakulam district official** →
+7. **Insurance on the ID card** — open **Worker ID card**. With no policy it
+   reads *"No cover on record"*. Add one (insurer, policy number, cover amount,
+   dates), and the card immediately reads *"National Insurance Co. · cover
+   ₹2,00,000 · valid until 14 Jan 2027"* with the badge **"Declared by worker ·
+   not verified"**. Open the QR link in a second window: the same details, the
+   policy number masked to `••••9231`, and the line *"Cover declared by the
+   worker, not yet checked by an office"*.
+
+   Then go to the government console as **KL001** → **Insurance** tab → **Mark
+   verified**. Reload the public page: the badge flips to *"Checked by a labour
+   office"*. Try the other direction too — the worker can no longer delete that
+   policy (HTTP 409).
+
+   *Say the design rule out loud: status is derived from the dates on every
+   read, never stored, so a card printed last week cannot claim cover that
+   lapsed yesterday. And the page says whether a claim is paid is the insurer's
+   decision — not ours.* The **CSV** button on that tab downloads the register
+   for the official's jurisdiction only.
+
+8. **Jurisdiction scoping** — log in as the **Ernakulam district official** →
    worker list shows **only the 3 Ernakulam workers**; open a Coimbatore
    grievance → **not found**. Then log in as the **superadmin** → Overview shows
    **all 10 workers / 11 grievances** with category and state charts (Mongo
    aggregation pipelines).
 
-8. **Targeted notification** — target `occupation: construction` → **only the 2
+9. **Targeted notification** — target `occupation: construction` → **only the 2
    construction workers** receive it. A non-superadmin cannot target "all
    workers" or another state (HTTP 403).
 
-9. **Audit log** — every login, grievance action and notification send is
-    recorded with actor, IP and outcome.
+10. **Audit log** — every login, grievance action, notification send and
+    insurance verification is recorded with actor, IP and outcome.
 
 ---
 
@@ -165,8 +185,8 @@ flowchart TD
 Run it. These are the numbers as of this commit:
 
 ```bash
-cd server    && npm test    # 206 passed — scoping, ownership, upload crypto, rate limits
-cd frontend  && npm test    # 61 passed  — wallet PIN lockout, auth gate, i18n bundle parity
+cd server    && npm test    # 321 passed — scoping, ownership, upload crypto, rate limits, insurance
+cd frontend  && npm test    # 184 passed — wallet PIN lockout, auth gate, i18n bundle parity
 cd ai-service && venv/Scripts/python -m pytest   # 103 passed — corpus, RAG, PII, injection, cold start
 cd server    && npm run verify                  # 34 live checks across BOTH services
 ```
@@ -216,6 +236,10 @@ rehearse them, because volunteering a limit reads as competence.
   corpus. It refuses rather than guessing.
 - **Wage entries and grievances are self-reported** — never verified against an
   employer or an official record.
+- **Insurance is a record, not an insurer integration.** A worker types in their
+  policy; a labour office can verify it. There is no IRDAI partner API, no live
+  claim check, and the page says so. "Covered" means "a policy says this is in
+  force today", never "this claim will be paid".
 - **The wallet PIN is a screen lock, not encryption.** Documents are encrypted
   server-side; the PIN gates the UI only.
 - **Rate limiting is per-process and in-memory**, so a multi-instance
