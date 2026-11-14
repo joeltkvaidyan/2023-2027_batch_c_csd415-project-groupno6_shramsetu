@@ -1,18 +1,36 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Screen } from "../components/Screen";
 import { BottomNav } from "../components/BottomNav";
 import { api, apiErrorMessage } from "../api/client";
-import { Button, Card, ConfirmDialog, Modal, SkeletonList, Badge, EmptyState } from "../components/ui";
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  Modal,
+  SkeletonList,
+  Badge,
+  EmptyState,
+} from "../components/ui";
 import { InputField } from "../components/InputField";
-import { cacheDocument, getCachedDocument, getCachedDocumentIds, removeCachedDocument, clearAllCachedDocuments } from "../services/documentCache";
+import {
+  cacheDocument,
+  getCachedDocument,
+  getCachedDocumentIds,
+  removeCachedDocument,
+  clearAllCachedDocuments,
+} from "../services/documentCache";
 import {
   isPinSet,
   setPin,
   verifyPin,
   lockWallet,
   getLockoutRemaining,
+  getWalletToken,
+  onWalletLock,
+  touchWallet,
 } from "../services/documentSecurity";
 import {
   FileText,
@@ -40,6 +58,8 @@ export default function DocumentWalletPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   // Security state
   const [pinSet, setPinSet] = useState(false);
@@ -62,6 +82,19 @@ export default function DocumentWalletPage() {
   const [deleteDoc, setDeleteDoc] = useState<DocumentItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const updateCachedIds = useCallback(async () => {
+    try {
+      const ids = await cacheIds();
+      setCachedIds(new Set(ids));
+    } catch {
+      /* offline cache unavailable */
+    }
+  }, []);
+
+  const updateLockoutTimer = useCallback(() => {
+    setLockoutRemaining(getLockoutRemaining());
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -69,7 +102,7 @@ export default function DocumentWalletPage() {
         setPinSet(pinExists);
         setWalletLocked(true);
         lockWallet();
-        updateCachedIds();
+        void updateCachedIds();
         updateLockoutTimer();
       } catch (err) {
         console.error("Failed to check PIN status:", err);
@@ -79,29 +112,53 @@ export default function DocumentWalletPage() {
         setInitializing(false);
       }
     })();
+  }, [updateCachedIds, updateLockoutTimer]);
+
+  // The wallet closes itself: 2 minutes idle, or when the 10-minute server
+  // token expires. Without this the UI would keep showing documents the API
+  // has already stopped serving.
+  useEffect(() => {
+    return onWalletLock(() => {
+      setWalletLocked(true);
+      setPinInput("");
+    });
   }, []);
 
-  const updateLockoutTimer = () => {
-    const remaining = getLockoutRemaining();
-    setLockoutRemaining(remaining);
-    if (remaining > 0) {
-      const timer = setInterval(() => {
-        const r = getLockoutRemaining();
-        setLockoutRemaining(r);
-        if (r <= 0) clearInterval(timer);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  };
+  // Any interaction keeps the idle timer from firing mid-read.
+  useEffect(() => {
+    if (walletLocked) return;
+    const activity = () => touchWallet();
+    window.addEventListener("pointerdown", activity);
+    window.addEventListener("keydown", activity);
+    return () => {
+      window.removeEventListener("pointerdown", activity);
+      window.removeEventListener("keydown", activity);
+    };
+  }, [walletLocked]);
 
-  const updateCachedIds = async () => {
-    try {
-      const ids = await cacheIds();
-      setCachedIds(new Set(ids));
-    } catch {
-      /* offline cache unavailable */
-    }
-  };
+  // One ticking interval while a lockout is running, torn down on unlock or
+  // unmount. Previously updateLockoutTimer() returned its cleanup into an
+  // effect that ignored it, so the interval outlived the lockout.
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+    const timer = setInterval(() => {
+      const remaining = getLockoutRemaining();
+      setLockoutRemaining(remaining);
+      if (remaining <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutRemaining]);
+
+  // Explicit focus instead of autoFocus: the PIN pad should be ready to type
+  // into the moment the wallet opens, and the rename field when its dialog
+  // opens, but nothing else on the page should steal focus.
+  useEffect(() => {
+    if (!initializing && walletLocked) pinInputRef.current?.focus();
+  }, [initializing, walletLocked]);
+
+  useEffect(() => {
+    if (renameDoc) renameInputRef.current?.focus();
+  }, [renameDoc]);
 
   // ── PIN handlers ───────────────────────────────────────────────────
   const handleSetPin = async () => {
@@ -119,8 +176,8 @@ export default function DocumentWalletPage() {
       setNewPin("");
       setConfirmPin("");
       toast.success(t("documents.pinSetSuccess", "PIN created"));
-    } catch (err: any) {
-      setPinError(err.message);
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -138,8 +195,8 @@ export default function DocumentWalletPage() {
         setPinError("Incorrect PIN. Try again.");
         setPinInput("");
       }
-    } catch (err: any) {
-      setPinError(err.message);
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : String(err));
       setPinInput("");
       updateLockoutTimer();
     }
@@ -152,7 +209,7 @@ export default function DocumentWalletPage() {
   };
 
   // ── Document handlers ──────────────────────────────────────────────
-  const loadDocuments = async () => {
+  const loadDocuments = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
@@ -163,12 +220,13 @@ export default function DocumentWalletPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!walletLocked) loadDocuments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletLocked]);
+    if (walletLocked) return;
+    void loadDocuments();
+    void updateCachedIds();
+  }, [walletLocked, loadDocuments, updateCachedIds]);
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,7 +245,7 @@ export default function DocumentWalletPage() {
       });
       toast.success(t("documents.uploadSuccess", "Document uploaded"));
       await loadDocuments();
-    } catch (err: any) {
+    } catch (err) {
       toast.error(apiErrorMessage(err, t("common.error")));
     } finally {
       setUploading(false);
@@ -198,7 +256,10 @@ export default function DocumentWalletPage() {
 
   const handleDownload = async (doc: DocumentItem) => {
     try {
-      const res = await api.get(`/documents/${doc.id}/download`, { responseType: "blob" });
+      const res = await api.get(`/documents/${doc.id}/download`, {
+        responseType: "blob",
+        headers: { "X-Wallet-Token": getWalletToken() ?? "" },
+      });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url;
@@ -220,7 +281,7 @@ export default function DocumentWalletPage() {
       toast.success(t("documents.renameSuccess", "Renamed"));
       setRenameDoc(null);
       await loadDocuments();
-    } catch (err: any) {
+    } catch (err) {
       toast.error(apiErrorMessage(err, t("common.error")));
     }
   };
@@ -235,7 +296,7 @@ export default function DocumentWalletPage() {
       setDeleteDoc(null);
       await loadDocuments();
       await updateCachedIds();
-    } catch (err: any) {
+    } catch (err) {
       toast.error(apiErrorMessage(err, t("common.error")));
     } finally {
       setDeleting(false);
@@ -245,7 +306,11 @@ export default function DocumentWalletPage() {
   const handleCacheForOffline = async (doc: DocumentItem) => {
     setCaching(doc.id);
     try {
-      const res = await api.get(`/documents/${doc.id}/download`, { responseType: "blob" });
+      const res = await api.get(`/documents/${doc.id}/download`, {
+        responseType: "blob",
+        // The API refuses downloads while the wallet is locked.
+        headers: { "X-Wallet-Token": getWalletToken() ?? "" },
+      });
       await cacheDocument(doc.id, doc.display_name, doc.content_type, doc.size_bytes, res.data);
       await updateCachedIds();
       toast.success(t("documents.cachedOffline", "Available offline"));
@@ -264,7 +329,13 @@ export default function DocumentWalletPage() {
 
   const handleViewCached = async (doc: DocumentItem) => {
     const cached = await getCachedDocument(doc.id);
-    if (!cached) return;
+    if (!cached) {
+      // Either the wallet locked since caching, or the record failed its
+      // integrity check — either way the bytes cannot be opened, so say so
+      // rather than doing nothing.
+      toast.error(t("common.error"));
+      return;
+    }
     const url = URL.createObjectURL(cached.blob);
     window.open(url, "_blank");
   };
@@ -344,9 +415,15 @@ export default function DocumentWalletPage() {
         <Screen title="🔒 Document Wallet">
           <div className="space-y-4 mt-8 text-center">
             <div className="mx-auto w-20 h-20 rounded-3xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center mb-2 animate-rise">
-              <ShieldCheck className="h-10 w-10 text-brand-500" strokeWidth={1.5} aria-hidden="true" />
+              <ShieldCheck
+                className="h-10 w-10 text-brand-500"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Set Up Document Security</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Set Up Document Security
+            </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Create a PIN to protect and access your documents
             </p>
@@ -355,7 +432,12 @@ export default function DocumentWalletPage() {
                 You must set a PIN before accessing documents for the first time.
               </p>
             </div>
-            <Button size="lg" className="w-full max-w-xs mx-auto" onClick={() => setShowPinSetup(true)} icon={<Lock className="h-5 w-5" />}>
+            <Button
+              size="lg"
+              className="w-full max-w-xs mx-auto"
+              onClick={() => setShowPinSetup(true)}
+              icon={<Lock className="h-5 w-5" />}
+            >
               Create PIN
             </Button>
             <button
@@ -375,8 +457,12 @@ export default function DocumentWalletPage() {
           <div className="mx-auto w-20 h-20 rounded-3xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center mb-2 animate-rise">
             <Lock className="h-10 w-10 text-brand-500" strokeWidth={1.5} aria-hidden="true" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enter PIN to Access Documents</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Your documents are protected with a PIN</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Enter PIN to Access Documents
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Your documents are protected with a PIN
+          </p>
           <div className="max-w-xs mx-auto">
             <input
               type="text"
@@ -386,6 +472,7 @@ export default function DocumentWalletPage() {
               maxLength={8}
               className="input-field text-center text-2xl tracking-[0.5em]"
               placeholder="••••"
+              ref={pinInputRef}
               value={pinInput}
               onChange={(e) => {
                 setPinInput(e.target.value.replace(/\D/g, ""));
@@ -394,11 +481,12 @@ export default function DocumentWalletPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && pinInput.length >= 4) handleVerifyPin();
               }}
-              autoFocus
             />
           </div>
           {pinError && (
-            <p className="text-red-600 text-sm bg-red-50 dark:bg-red-900/20 rounded-lg p-2 mx-4">⚠️ {pinError}</p>
+            <p className="text-red-600 text-sm bg-red-50 dark:bg-red-900/20 rounded-lg p-2 mx-4">
+              ⚠️ {pinError}
+            </p>
           )}
           {lockoutRemaining > 0 && (
             <p className="text-amber-600 text-sm">
@@ -511,9 +599,15 @@ export default function DocumentWalletPage() {
           <EmptyState
             icon={FileText}
             title={t("documents.noDocuments")}
-            description={t("documents.noDocumentsHint", "Upload your ID cards, certificates and job documents to keep them safe and always available.")}
+            description={t(
+              "documents.noDocumentsHint",
+              "Upload your ID cards, certificates and job documents to keep them safe and always available.",
+            )}
             action={
-              <Button onClick={() => fileInputRef.current?.click()} icon={<UploadCloud className="h-4 w-4" />}>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                icon={<UploadCloud className="h-4 w-4" />}
+              >
                 {t("documents.upload")}
               </Button>
             }
@@ -559,11 +653,11 @@ export default function DocumentWalletPage() {
         }
       >
         <input
+          ref={renameInputRef}
           className="input-field"
           value={renameValue}
           onChange={(e) => setRenameValue(e.target.value)}
           maxLength={200}
-          autoFocus
           aria-label={t("documents.renameTitle", "Rename document")}
         />
       </Modal>
@@ -608,7 +702,7 @@ function DocumentCard({
   onViewCached: (doc: DocumentItem) => void;
   onRename: (doc: DocumentItem) => void;
   onDelete: (doc: DocumentItem) => void;
-  t: any;
+  t: TFunction;
 }) {
   const isPdf = doc.content_type.includes("pdf");
   const isImage = doc.content_type.startsWith("image/");
@@ -629,7 +723,9 @@ function DocumentCard({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{doc.display_name}</p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+            {doc.display_name}
+          </p>
           <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
             <span>{(doc.size_bytes / 1024).toFixed(0)} KB</span>
             <span>•</span>
@@ -675,7 +771,11 @@ function DocumentCard({
             title={t("documents.makeOffline", "Save for offline")}
             className="text-xs py-2 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold disabled:opacity-50"
           >
-            {isCaching ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />}
+            {isCaching ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
           </button>
         )}
 

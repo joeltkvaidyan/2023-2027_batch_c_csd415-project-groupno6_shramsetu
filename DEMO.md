@@ -48,13 +48,22 @@ dev database is fresh on every boot.
 
 ## 1. Credentials
 
-| Role | Where | Credentials |
-|---|---|---|
-| Superadmin | `/government/login` | `ADMIN001` / `Admin@123` |
-| State official (Kerala) | `/government/login` | `KL001` / `Kerala@123` |
-| District official (Ernakulam) | `/government/login` | `EKM001` / `Ernakulam@123` |
-| Worker (password) | `/worker/login` → 🔑 tab | `9555500101`–`9555500110` · password `Worker@123` |
-| Worker (OTP) | `/worker/login` → 📱 tab | any seeded mobile; OTP prints **only in the server terminal** |
+Read them out of the `DEV SEED ACCOUNTS` block at the end of
+[`server/.env.example`](server/.env.example) — one list, in one file that is
+never shipped. They are seeded fixtures, not accounts that can exist in a
+production database (see the boot guard in `server/src/config.js`).
+
+The roles you will switch between: **superadmin** (sees everything + audit
+logs), **state official** (sees one state), **district official** (sees one
+district), **worker** (password tab, or the OTP tab where the code prints only
+in the server terminal), **employer** (accepted, has one listing) and
+**household**.
+
+Both hiring-side accounts are signed-in surfaces for the same worker list:
+search by name, place or trade, read the worker's mobile number, then **Call**
+or **SMS** with the buttons on the card. The seeded employer can also post listings;
+a newly self-registered employer starts pending and can browse/call but not
+post or rate until a labour office accepts it.
 
 **Seeded workers (10).** Ramesh Kumar (construction, Ernakulam) · Sunita Devi
 (domestic work) · Md. Imran Sheikh (garment, Kozhikode) · Lakshmi Narayanan
@@ -82,7 +91,8 @@ flowchart TD
     C --> D["Log a day's wages<br/>→ unpaid total appears"]
     D --> E["Ask the AI assistant<br/>→ grounded + cited / or honest refusal"]
     E --> F["Upload a document to the wallet<br/>(PIN-locked, AES-256-GCM at rest)"]
-    F --> G["Government portal<br/>→ open the grievance as EKM001"]
+    F --> N["ID card → declare insurance<br/>→ scan the QR: cover + who checked it"]
+    N --> G["Government portal<br/>→ open the grievance as EKM001"]
     G --> H["Switch to ADMIN001<br/>→ all 10 workers, aggregated charts"]
     H --> I["Send a targeted notification<br/>→ only construction workers receive it"]
     I --> J["Audit log<br/>→ every action recorded with actor and IP"]
@@ -136,17 +146,44 @@ flowchart TD
    encrypted at rest with per-file keys wrapped under `DOC_MASTER_KEY`.
    *The PIN is a convenience screen-lock, not encryption* — say this if asked.
 
-7. **Jurisdiction scoping** — log in as `EKM001 / Ernakulam@123` → worker list
-   shows **only the 3 Ernakulam workers**; open a Coimbatore grievance → **not
-   found**. Then `ADMIN001 / Admin@123` → Overview shows **all 10 workers / 11
-   grievances** with category and state charts (Mongo aggregation pipelines).
+7. **Insurance on the ID card** — open **Worker ID card**. With no policy it
+   reads *"No cover on record"*. Add one (insurer, policy number, cover amount,
+   dates), and the card immediately reads *"National Insurance Co. · cover
+   ₹2,00,000 · valid until 14 Jan 2027"* with the badge **"Declared by worker ·
+   not verified"**. Open the QR link in a second window: the same details, the
+   policy number masked to `••••9231`, and the line *"Cover declared by the
+   worker, not yet checked by an office"*.
 
-8. **Targeted notification** — target `occupation: construction` → **only the 2
+   Then go to the government console as **KL001** → **Insurance** tab → **Mark
+   verified**. Reload the public page: the badge flips to *"Checked by a labour
+   office"*. Try the other direction too — the worker can no longer delete that
+   policy (HTTP 409).
+
+   *Say the design rule out loud: status is derived from the dates on every
+   read, never stored, so a card printed last week cannot claim cover that
+   lapsed yesterday. And the page says whether a claim is paid is the insurer's
+   decision — not ours.* The **CSV** button on that tab downloads the register
+   for the official's jurisdiction only.
+
+   Then open the **⏰ Overdue** tab. Every complaint here has blown the deadline
+   its priority promised, oldest first, each tagged **"District office
+   notified"** — the escalation is automatic, not a thing an official has to
+   remember, and a restart cannot escalate the same complaint twice. Seven days
+   later, or on a backdated row, the same rung moves to **"State office
+   notified"**.
+
+8. **Jurisdiction scoping** — log in as the **Ernakulam district official** →
+   worker list shows **only the 3 Ernakulam workers**; open a Coimbatore
+   grievance → **not found**. Then log in as the **superadmin** → Overview shows
+   **all 10 workers / 11 grievances** with category and state charts (Mongo
+   aggregation pipelines).
+
+9. **Targeted notification** — target `occupation: construction` → **only the 2
    construction workers** receive it. A non-superadmin cannot target "all
    workers" or another state (HTTP 403).
 
-9. **Audit log** — every login, grievance action and notification send is
-    recorded with actor, IP and outcome.
+10. **Audit log** — every login, grievance action, notification send and
+    insurance verification is recorded with actor, IP and outcome.
 
 ---
 
@@ -155,9 +192,9 @@ flowchart TD
 Run it. These are the numbers as of this commit:
 
 ```bash
-cd server    && npm test    # 49 passed  — scoping, ownership, upload crypto, rate limits
-cd frontend  && npm test    # 50 passed  — wallet PIN lockout, auth gate, i18n bundle parity
-cd ai-service && venv/Scripts/python -m pytest   # 92 passed — corpus, RAG, PII, injection, cold start
+cd server    && npm test    # 329 passed — scoping, ownership, upload crypto, rate limits, insurance, SLA escalation
+cd frontend  && npm test    # 184 passed — wallet PIN lockout, auth gate, i18n bundle parity
+cd ai-service && venv/Scripts/python -m pytest   # 103 passed — corpus, RAG, PII, injection, cold start
 cd server    && npm run verify                  # 34 live checks across BOTH services
 ```
 
@@ -166,15 +203,15 @@ The RAG report (`ai-service/eval/RESULTS.md`, regenerated by
 
 | Metric | Value |
 |---|---|
-| Corpus | 62 active documents (11 superseded ones correctly skipped) |
-| hit@1 | **46/49 = 94%** |
-| hit@3 | **48/49 = 98%** |
+| Corpus | 65 active documents (11 superseded ones correctly skipped), 66 vectors |
+| hit@1 | **45/49 = 92%** |
+| hit@3 | **47/49 = 96%** |
 | Off-topic + prompt-injection refused at retrieval | **12/13 = 92%** |
 
 Retrieval-only mode, so it needs no LLM key and runs in ~30 s. `eval/ANALYSIS.md`
-explains *why* the numbers are what they are — including the one question that
-still misses and the proof that it is a translation failure, not a retrieval one.
-The threshold (0.45) was **not** lowered to reach these numbers; lowering it is
+explains *why* the numbers are what they are — including which questions still
+miss and why (a pre-expansion miss was a translation failure, not a retrieval
+one). The threshold (0.45) was **not** lowered to reach these numbers; lowering it is
 what produces confident wrong answers.
 
 ---
@@ -206,6 +243,10 @@ rehearse them, because volunteering a limit reads as competence.
   corpus. It refuses rather than guessing.
 - **Wage entries and grievances are self-reported** — never verified against an
   employer or an official record.
+- **Insurance is a record, not an insurer integration.** A worker types in their
+  policy; a labour office can verify it. There is no IRDAI partner API, no live
+  claim check, and the page says so. "Covered" means "a policy says this is in
+  force today", never "this claim will be paid".
 - **The wallet PIN is a screen lock, not encryption.** Documents are encrypted
   server-side; the PIN gates the UI only.
 - **Rate limiting is per-process and in-memory**, so a multi-instance

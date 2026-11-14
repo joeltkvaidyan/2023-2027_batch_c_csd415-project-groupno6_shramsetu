@@ -1,8 +1,9 @@
 TITLE: Social Security for Landless Agricultural Workers
 DEPARTMENT: Ministry of Agriculture and Farmers Welfare, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: 2026-10-01
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment / Ministry of Agriculture and Farmers Welfare, Government of India
 STATUS: current
 ---
 Landless agricultural workers are among the most vulnerable sections of the workforce in India. They work on agricultural farms owned by others and do not own any agricultural land. This document covers the social security schemes and rights available to landless agricultural workers.
@@ -17,7 +18,7 @@ RIGHTS AND PROTECTIONS:
 SOCIAL SECURITY SCHEMES:
 1. MGNREGA (Mahatma Gandhi National Rural Employment Guarantee Act):
    - Guarantee of 100 days of employment per year to rural households.
-   - Wages: Rs 200-300 per day depending on the state.
+   - Wages: the state-specific MGNREGA wage rate (state-notified; check nrega.nic.in).
    - Right to get employment within 15 days of applying.
    - If employment is not provided within 15 days, unemployment allowance is payable.
 
@@ -26,8 +27,8 @@ SOCIAL SECURITY SCHEMES:
    - Eligible for various social security benefits.
 
 3. PM-KISAN:
-   - Rs 6,000 per year in three installments of Rs 2,000 each.
-   - Available to all farmer families including those with landless agricultural workers (if they are registered as farmers).
+   - Rs 6,000 per year in three installments of Rs 2,000 each — but ONLY for landholding
+     farmer families: landless households are NOT beneficiaries (no own cultivable land).
 
 4. PM-SYM Pension:
    - Rs 3,000/month pension after age 60.
@@ -43,7 +44,7 @@ SOCIAL SECURITY SCHEMES:
 MIGRANT AGRICULTURAL WORKERS:
 - Migrant agricultural workers have the same rights as local agricultural workers.
 - They are covered under MGNREGA if they have a job card in their home state.
-- Some states have extended MGNREGA-like guarantees to migrant workers.
+   - A few STATES run their own employment-guarantee programmes; MGNREGA itself is rural.
 - Migrant agricultural workers can register on e-Shram portal for social security.
 - Their social security benefits are portable across states.
 
@@ -52,5 +53,5 @@ WELFARE FUNDS:
 - Agricultural Workers' Welfare Fund: Some states have dedicated funds for agricultural workers.
 - National Social Assistance Programme: Available to BPL families including landless agricultural workers.
 
-HELPLINE: 14434 (e-Shram) | MGNREGA helpline 1800-180-5678
+HELPLINE: e-Shram 14434; MGNREGA grievances via the Gram Panchayat / CPGRAMS (pgportal.gov.in)
 WEBSITE: eshram.gov.in | nrega.nic.in | mgnrega.nic.in

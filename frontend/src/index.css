@@ -1,22 +1,55 @@
+/* Token variables first: px/rem sizing below depends on them. */
+@import "./design/fonts.css";
+@import "./design/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html {
+  /* Every rem in the app hangs off this: 17px base × the A/A+/A++ step. */
+  font-size: calc(var(--font-base) * var(--text-scale));
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: "Inter", "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali",
-    "Noto Sans Telugu", "Noto Sans Tamil", "Noto Sans Malayalam", system-ui, sans-serif;
+  font-family:
+    "Inter", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Telugu", "Noto Sans Tamil",
+    "Noto Sans Malayalam", system-ui, sans-serif;
   @apply text-gray-900 dark:text-gray-100 antialiased;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+}
+
+/* Nothing tappable may be smaller than 48px in either direction, including the
+   icon-only buttons that used to be 32px squares. */
+button,
+a[role="button"],
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  min-height: var(--tap-min);
+}
+
+/* Motion budget: 200ms. Anything decorative and longer is a bug, not a style. */
+@media (prefers-reduced-motion: no-preference) {
+  .transition,
+  .transition-all,
+  .transition-colors,
+  .transition-transform,
+  .transition-opacity {
+    transition-duration: var(--motion-base);
+  }
 }
 
 /* Headings and hero numerals get the display face automatically */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   @apply font-display;
   letter-spacing: -0.02em;
 }
@@ -36,14 +69,6 @@ h1, h2, h3 {
   .skeleton {
     @apply bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700;
     background-size: 200% 100%;
-  }
-  /* Decorative blurred orbs for gradient hero sections */
-  .orb {
-    @apply absolute rounded-full pointer-events-none;
-  }
-  /* Frosted glass surface (headers, nav dock, overlays) */
-  .glass {
-    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl;
   }
 }
 
@@ -158,18 +183,25 @@ button.btn-secondary:disabled {
 }
 
 /* ── Inputs: soft inset field with brand focus ──────────────────────── */
-.input-field {
-  @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80
-    px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400
-    shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/60
-    focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)];
-}
+/* In `components`, not at the top level. Unlayered CSS outranks every layered
+   utility in Tailwind, so while this sat outside the layers its `px-4` silently
+   beat the `pl-10`/`pr-14` that pages add to make room for a `+91` prefix or a
+   mic button — the prefix and the placeholder then drew in the same pixels, and
+   a typed value slid underneath the icon. Utilities must be able to win here. */
+@layer components {
+  .input-field {
+    @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80
+      px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400
+      shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/60
+      focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)];
+  }
 
-/* Selects get a custom chevron instead of the native one */
-select.input-field {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  padding-right: 2.5rem;
+  /* Selects get a custom chevron instead of the native one */
+  select.input-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.5rem;
+  }
 }

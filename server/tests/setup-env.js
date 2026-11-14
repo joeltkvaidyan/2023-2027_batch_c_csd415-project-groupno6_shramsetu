@@ -13,6 +13,7 @@ process.env.JWT_SECRET_KEY = "test-secret-key-for-vitest-only-0123456789abcdef";
 // Fixed 32-byte test master key for the document-wallet wrapping.
 process.env.DOC_MASTER_KEY = Buffer.alloc(32, 7).toString("base64");
 process.env.OTP_ECHO_ENABLED = "false";
+process.env.OTP_PEPPER = "test-otp-pepper-0123456789abcdef0123456789abcdef";
 process.env.SEED_DEMO_DATA = "false";
 process.env.UPLOAD_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), ".tmp-uploads");
 

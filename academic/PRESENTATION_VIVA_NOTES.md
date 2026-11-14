@@ -12,7 +12,7 @@ reproduce live — see the commands at the bottom.
 |---|---|---|
 | Six languages: English, Hindi, Bengali, Telugu, Tamil, Malayalam | ✅ True | `frontend/src/i18n/locales/` (6 bundles, parity-tested), accepted by server + AI service |
 | Ask by text or voice | ✅ True | `ai-service/app/services/stt_service.py` (faster-whisper, per-language fine-tuned checkpoints) + TTS (`tts_service.py`, IndicParler-TTS with local MMS VITS fallback) |
-| Retrieve from indexed official documents | ✅ True | FAISS index over `ai-service/rag/sample_docs/`, **62 active docs (11 superseded skipped)**, each with provenance header (source URL, verification date, status) |
+| Retrieve from indexed official documents | ✅ True | FAISS index over `ai-service/rag/sample_docs/`, **65 active docs (11 superseded skipped)**, each with provenance header (source URL, verification date, status) |
 | Answer constrained to retrieved evidence | ✅ True | `rag_service.answer_question`: similarity gate → BM25/RRF rerank → Groq with numbered sources; a `grounded=false` refusal is returned whenever evidence is insufficient |
 | Show source metadata or explicit no-match | ✅ True | Citations carry `source_document`, `government_department`, last-verified date + "informational only, not legal advice" disclaimer (`_disclaimer`) |
 | Secure worker document wallet | ✅ True (say *how*) | AES-256-GCM per file, per-file keys wrapped under `DOC_MASTER_KEY` (`wrapped:v1:`). **If asked about the wallet PIN: it is screen-lock convenience only, not encryption — the docs say so deliberately** |
@@ -99,12 +99,12 @@ and evidence and are routed **to jurisdiction-scoped officials**, not to a
 
 | Metric | Value | Where it comes from |
 |---|---|---|
-| Corpus | 62 active docs indexed, 11 superseded correctly skipped | `rag/` loader, eval header |
-| hit@1 (49 factual Qs) | **46/49 = 94 %** | `eval/ANALYSIS.md` headline table |
-| hit@3 | **48/49 = 98 %** | same |
+| Corpus | 65 active docs indexed, 11 superseded correctly skipped | `rag/` loader, eval header |
+| hit@1 (49 factual Qs) | **45/49 = 92 %** | `eval/RESULTS.md` summary table |
+| hit@3 | **47/49 = 96 %** | same |
 | Off-topic + injection refused at retrieval | **12/13** | same |
 | End-to-end safety (live LLM, 10-question set) | **10/10 refused, 0 system errors** | `eval/RESULTS_FULL.md` |
-| Test suites | server 49/49 · AI service 92/92 · frontend 50 · 34 live E2E checks | `VIVA_QA.md` §9 |
+| Test suites | server 206/206 · AI service 103/103 · frontend 61/61 · 34 live E2E checks | `VIVA_QA.md` §9 |
 | Frontend entry JS | 592 → 406 kB (−31 %) after code-splitting | `VIVA_QA.md` §6 |
 
 **Honest-limits sound bites (volunteer these; defended limitations score well):**
@@ -156,9 +156,9 @@ verification — it makes the evidence reachable."*
 ## Reproduce everything live (during the viva)
 
 ```bash
-cd server     && npm test                                # 49 passed
-cd frontend   && npm test                                # 50 passed
-cd ai-service && venv/Scripts/python -m pytest           # 92 passed
+cd server     && npm test                                # 206 passed
+cd frontend   && npm test                                # 61 passed
+cd ai-service && venv/Scripts/python -m pytest           # 103 passed
 cd server     && npm run verify                          # 34 live checks, both services
 cd ai-service && venv/Scripts/python eval/run_eval.py    # regenerates RESULTS.md with the 94/98 numbers
 ```

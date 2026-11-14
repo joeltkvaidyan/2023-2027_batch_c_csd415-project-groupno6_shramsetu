@@ -72,7 +72,7 @@ flowchart TD
 The 0.45 gate is the refusal mechanism: an off-topic or prompt-injected question
 never reaches the LLM with context attached. BM25 reranks only chunks that
 already passed the gate, so it can reorder but never admit a below-threshold
-chunk. Measured on the 70-question suite: hit@1 94%, hit@3 98%, retrieval
+chunk. Measured on the 70-question suite: hit@1 92%, hit@3 96%, retrieval
 refusals 12/13 — see [eval/ANALYSIS.md](../ai-service/eval/ANALYSIS.md).
 
 ## Grievance flow
@@ -148,7 +148,7 @@ hanging until the Node proxy aborts at 120s. Past that bound it returns a fast
 | `ai-service/tests/` | pytest (92 tests): corpus integrity, loader, RAG contract, PII, prompt injection, translation cache, STT transcribe regression |
 | `ai-service/eval/` | 70-question multilingual eval suite + `run_eval.py` → `RESULTS.md`; reasoning and limits in `ANALYSIS.md` |
 | `frontend/src/` | 16 pages, each a lazy chunk; `context/AuthContext`, `api/client.ts`, `i18n/locales/` (6 languages) |
-| `docs/archive/` | superseded FastAPI/SQLite-era documents; every file is prefixed `ARCHIVED_` — see [archive/README.md](archive/README.md) |
+| `academic/archive/` | superseded FastAPI/SQLite-era documents; every file is prefixed `ARCHIVED_` — see [archive/README.md](../academic/archive/README.md) |
 
 ## Configuration surfaces
 

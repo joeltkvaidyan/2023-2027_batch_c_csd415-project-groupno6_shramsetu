@@ -79,5 +79,12 @@ export const registerLimiter = limiter(
   config.rateLimits.register,
   "Too many registration attempts. Please try again in a minute."
 );
+// Card verification is public and takes an opaque code, so the limit is there to
+// make guessing (or scraping a list of real cards) expensive rather than to
+// shape normal use: a genuine scan is a handful of requests per person.
+export const cardVerifyLimiter = limiter(
+  30,
+  "Too many card checks from this address. Please try again in a minute."
+);
 
 export { redisClient, redisIncr };

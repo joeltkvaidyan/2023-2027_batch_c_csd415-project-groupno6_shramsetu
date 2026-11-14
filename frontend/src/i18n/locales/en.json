@@ -14,10 +14,6 @@
     "worker": "Worker",
     "employer": "Employer",
     "government": "Government",
-    "insurance": "Insurance Provider",
-    "comingSoonTitle": "Coming Soon",
-    "comingSoonDesc": "This portal is being built and will be available soon. Please check back later.",
-    "backToRoles": "Back to role selection",
     "citizen": "Household"
   },
   "auth": {
@@ -118,7 +114,11 @@
     "jobMatches": "Job matches",
     "employers": "Employers",
     "unpaid": "Unpaid",
-    "heatSafety": "Heat safety"
+    "heatSafety": "Heat safety",
+    "unpaidWages": "Unpaid wages",
+    "askQuestion": "Ask a question",
+    "myDocuments": "My documents",
+    "viewIdCard": "Open ID card"
   },
   "documents": {
     "title": "Document Wallet",
@@ -162,6 +162,11 @@
     "historyLoadError": "Couldn't load your chat history.",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
+    "sourceAuthority": "Issuing authority",
+    "sourceVerified": "Verified on",
+    "sourceVersion": "Version",
+    "sourceOpen": "Open official source",
+    "sourceDetailsLabel": "Details for {title}",
     "askPlaceholderVoice": "Type or speak your question",
     "heatPrefillQuestion": "What should I do to stay safe during extreme heat?"
   },
@@ -172,7 +177,11 @@
     "light": "Light",
     "dark": "Dark",
     "account": "Account",
-    "logout": "Logout"
+    "logout": "Logout",
+    "textSize": "Text size",
+    "contrast": "Contrast",
+    "contrastNormal": "Normal",
+    "contrastHigh": "High contrast"
   },
   "grievance": {
     "title": "My Complaints",
@@ -190,6 +199,12 @@
     "incidentDateOptional": "Date of Incident (optional)",
     "submit": "Submit Complaint",
     "submitting": "Submitting...",
+    "stepOf": "Step {current} of {total}",
+    "stepWhat": "What happened?",
+    "stepDetails": "Tell us more",
+    "stepWhere": "Where and when",
+    "next": "Next",
+    "draftSaved": "Draft saved on this phone",
     "submitSuccess": "Complaint filed successfully",
     "subjectPlaceholder": "Briefly describe the issue",
     "descriptionPlaceholder": "Explain what happened, when, and where. Include as much detail as you can.",
@@ -240,7 +255,8 @@
     "allCategories": "All Categories",
     "due": "Due",
     "loadError": "Couldn't load your complaints.",
-    "empty": "No complaints yet"
+    "empty": "No complaints yet",
+    "savedOffline": "Saved on this phone. It will be sent when you are back online."
   },
   "common": {
     "save": "Save",
@@ -254,7 +270,8 @@
     "viewAll": "View all",
     "delete": "Delete",
     "rename": "Rename",
-    "download": "Download"
+    "download": "Download",
+    "notProvided": "Not provided"
   },
   "notifications": {
     "title": "Alerts",
@@ -285,12 +302,15 @@
     "grievances": "Grievances",
     "alerts": "Alerts",
     "chat": "Chat",
-    "settings": "Settings"
+    "settings": "Settings",
+    "wages": "Wages",
+    "primary": "Primary"
   },
   "wages": {
     "title": "Wage Diary",
     "subtitle": "Your daily wage record",
-    "month": "Month",
+    "selectMonth": "Select month",
+    "dayLog": "Day log",
     "addEntry": "Add wage entry",
     "workDate": "Work date",
     "employer": "Employer name (optional)",
@@ -313,13 +333,18 @@
       "partial": "Partial"
     },
     "empty": "No wage entries for this month yet.",
-    "fileGrievance": "File unpaid wage complaint",
     "grievanceSubject": "Unpaid wages: {amount} pending",
     "grievanceDescription": "As per my wage diary, {amount} of my agreed wages remain unpaid for {days} day(s) of work in {period}. Unpaid work dates: {dates}. I have not received the full agreed wages for this work. Please help me recover the pending amount.",
-    "fileForDate": "File a complaint for {date}",
     "last90Days": "last 90 days",
     "selfReported": "Entries are self-reported by you — they are not verified with your employer.",
-    "exportCSV": "Export CSV"
+    "exportCSV": "Export CSV",
+    "savedOffline": "Saved on this phone. The entry will be sent when you are back online.",
+    "calendarLabel": "Wage calendar for {month}",
+    "cellLabel": "{date}: {status}, {agreed} agreed, {paid} paid",
+    "cellEmpty": "{date}: no entry yet",
+    "sameAsYesterday": "Same as yesterday",
+    "unpaidOn": "Unpaid on {date}",
+    "makeComplaint": "Make complaint"
   },
   "errors": {
     "network": "You appear to be offline. Check your connection and try again.",
@@ -374,8 +399,8 @@
     "matchScore": "Profile fit",
     "shortlisted": "Shortlisted",
     "shortlistedNote": "The office read your application. This is not an offer of work — keep applying.",
-    "shortlistedCount": "{{count}} shortlisted by the office",
-    "resultsCount": "{{count}} listing(s) match your profile",
+    "shortlistedCount": "{count} shortlisted by the office",
+    "resultsCount": "{count} listing(s) match your profile",
     "loadingMatches": "Finding listings near your profile…",
     "clearFilters": "Clear search and trade filter",
     "review": {
@@ -481,7 +506,7 @@
   "citizen": {
     "title": "Household",
     "heading": "ShramSetu Household",
-    "tagline": "Find a verified worker near you — they call you, never public numbers",
+    "tagline": "Find a verified worker near you — sign in to see their number and call",
     "tabRegister": "Create account",
     "tabPassword": "Password",
     "tabOtp": "OTP login",
@@ -506,7 +531,7 @@
     "verifyFailed": "Verification failed.",
     "invalidLogin": "Invalid mobile number or password.",
     "otpFailed": "Could not send OTP.",
-    "privacyNote": "This is not a worker account: no labour-office approval is needed. Phone numbers pass between you and a worker only after that worker accepts your request.",
+    "privacyNote": "This is not a worker account: no labour-office approval is needed. Signing in shows you nearby workers' contact numbers; posting a request still lets a worker call you back.",
     "dashboardTitle": "Household",
     "motto": "Reach verified workers safely",
     "signOut": "Sign out",
@@ -537,7 +562,7 @@
     "noWorkers": "No listed workers here yet",
     "noWorkersHint": "Only government-accepted workers are listed in the directory. You can still post a request above.",
     "govAccepted": "gov accepted",
-    "directoryNote": "ShramSetu never shows phone numbers in this directory. To reach a worker, post a request — if they accept, you and the worker get each other's numbers.",
+    "directoryNote": "Contact numbers are shown to your signed-in household account so you can call about work. Use them only for that.",
     "status": {
       "open": "Open",
       "accepted": "Accepted",
@@ -546,5 +571,102 @@
     },
     "call": "Call",
     "sms": "SMS"
+  },
+  "offline": {
+    "offline": "You are offline. New entries are saved on this phone.",
+    "pendingOne": "1 entry waiting to be sent",
+    "pendingMany": "{count} entries waiting to be sent"
+  },
+  "a11y": {
+    "dismiss": "Dismiss",
+    "close": "Close"
+  },
+  "idCard": {
+    "title": "Worker ID card",
+    "subtitle": "Your identity card for employers and labour-office checks. Print it, or save it as a PDF.",
+    "loadFailed": "Could not load your ID card.",
+    "notIssuedTitle": "This card is not issued yet",
+    "notIssuedBody": "A labour-office official must accept your registration before the card can be verified. You can print it, but the QR will not verify until then.",
+    "issuer": "ShramSetu · Labour Department",
+    "cardType": "Worker Identity Card",
+    "accepted": "Verified worker",
+    "pending": "Awaiting approval",
+    "qrLabel": "Verification QR code",
+    "scanToVerify": "Scan to verify",
+    "occupation": "Work",
+    "experience": "Experience",
+    "years": "{count} years",
+    "place": "Place",
+    "registeredOn": "Registered on",
+    "name": "Name",
+    "footer": "This card confirms a registration accepted by a labour office. It is not a background check. Anyone can verify it by scanning the QR code.",
+    "print": "Print / Save as PDF",
+    "insurance": "Insurance",
+    "insuranceLine": "{provider} · cover {amount} · valid until {date}",
+    "insuranceVerified": "Checked by a labour office",
+    "insuranceDeclared": "Declared by worker · not verified",
+    "noInsurance": "No cover on record"
+  },
+  "verify": {
+    "title": "Check a worker card",
+    "checking": "Checking this card...",
+    "validTitle": "This is a verified worker card",
+    "validBody": "ShramSetu issued this card and a labour office accepted the registration.",
+    "workerId": "Worker ID",
+    "checkedAt": "Checked",
+    "notice": "This confirms the registration and its acceptance. It is not a background check, and it says nothing about a specific employer or wage.",
+    "malformedTitle": "This is not a ShramSetu card code",
+    "malformedBody": "The link looks incomplete. Scan the QR code on the card again instead of typing it.",
+    "invalidTitle": "This card could not be verified",
+    "invalidBody": "No accepted, active registration matches this card. It may be a copy, an old card, or a registration that was rejected.",
+    "invalidBadge": "Not verified",
+    "errorBody": "Could not reach the server. Check your connection and try again.",
+    "insuranceVerified": "Accident cover, checked by a labour office",
+    "insuranceDeclared": "Cover declared by the worker, not yet checked by an office",
+    "insuranceExpired": "Insurance on record has expired",
+    "insuranceNone": "No insurance on record",
+    "insuranceDetail": "{provider} · cover {amount} · valid until {date}",
+    "insuranceEnded": "Cover ended {date}.",
+    "insuranceCaveat": "Cover is shown as recorded here. Whether a specific claim is paid is the insurer's decision, not ShramSetu's.",
+    "insuranceAsk": "Ask the worker to show their policy before they start work."
+  },
+  "insurance": {
+    "title": "Insurance",
+    "subtitle": "Accident and health cover, shown on your card once a labour office checks it.",
+    "addCta": "Add policy",
+    "none": "No policy is on record yet.",
+    "until": "until {date}",
+    "coverageLabel": "What it covers",
+    "coverage": {
+      "accident": "Accident",
+      "hospitalisation": "Hospital stay",
+      "disability": "Disability",
+      "death": "Death"
+    },
+    "provider": "Insurance company",
+    "providerPlaceholder": "As printed on the policy",
+    "policyNumber": "Policy number",
+    "policyNumberPlaceholder": "e.g. NIC/KA/2026/0099231",
+    "policyNumberHint": "Only the last four digits are shown to anyone who scans your card.",
+    "sumInsured": "Cover amount (₹)",
+    "validFrom": "Starts",
+    "validTo": "Ends",
+    "save": "Save policy",
+    "saving": "Saving...",
+    "statusActive": "In force",
+    "statusUpcoming": "Starts later",
+    "statusExpired": "Expired",
+    "verified": "Checked by an office",
+    "unverified": "Not yet verified",
+    "remove": "Remove",
+    "errProvider": "Enter the insurance company's name.",
+    "errPolicyNumber": "Enter the policy number from the policy document.",
+    "errAmount": "Enter the amount the policy covers, in rupees.",
+    "errDates": "Enter the start and end date of the policy.",
+    "saveFailed": "Could not save this policy. Try again.",
+    "removeFailed": "Could not remove this policy.",
+    "expiringSoon": "Cover ends in {days} days — renew it to stay covered.",
+    "expiringTomorrow": "Cover ends tomorrow — renew it to stay covered.",
+    "expiringToday": "Cover ends today — renew it to stay covered."
   }
 }

@@ -14,7 +14,6 @@ import OtpPhase from "../components/register/OtpPhase";
 import {
   EMPTY_FORM,
   STEPS,
-  fieldClass,
   type RegistrationFormData,
   type RegistrationResponse,
 } from "../components/register/constants";
@@ -27,7 +26,7 @@ import {
 export default function WorkerRegisterPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeLogin } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [phase, setPhase] = useState<"form" | "recovery" | "otp">("form");
@@ -147,8 +146,10 @@ export default function WorkerRegisterPage() {
       if (formData.gender) form.append("gender", formData.gender);
       if (formData.aadhaarNumber) form.append("aadhaar_number", formData.aadhaarNumber);
 
-      if (formData.currentAddressLine) form.append("current_address_line", formData.currentAddressLine);
-      if (formData.currentVillageOrCity) form.append("current_village_or_city", formData.currentVillageOrCity);
+      if (formData.currentAddressLine)
+        form.append("current_address_line", formData.currentAddressLine);
+      if (formData.currentVillageOrCity)
+        form.append("current_village_or_city", formData.currentVillageOrCity);
       if (formData.currentDistrict) form.append("current_district", formData.currentDistrict);
       if (formData.currentState) form.append("current_state", formData.currentState);
       if (formData.currentPincode) form.append("current_pincode", formData.currentPincode);
@@ -157,11 +158,15 @@ export default function WorkerRegisterPage() {
       if (formData.nativeDistrict) form.append("native_district", formData.nativeDistrict);
 
       if (formData.occupation) form.append("occupation", formData.occupation);
-      if (formData.yearsOfExperience) form.append("years_of_experience", formData.yearsOfExperience);
+      if (formData.yearsOfExperience)
+        form.append("years_of_experience", formData.yearsOfExperience);
 
-      if (formData.emergencyContactName) form.append("emergency_contact_name", formData.emergencyContactName);
-      if (formData.emergencyContactRelation) form.append("emergency_contact_relation", formData.emergencyContactRelation);
-      if (formData.emergencyContactNumber) form.append("emergency_contact_number", formData.emergencyContactNumber);
+      if (formData.emergencyContactName)
+        form.append("emergency_contact_name", formData.emergencyContactName);
+      if (formData.emergencyContactRelation)
+        form.append("emergency_contact_relation", formData.emergencyContactRelation);
+      if (formData.emergencyContactNumber)
+        form.append("emergency_contact_number", formData.emergencyContactNumber);
 
       const res = await api.post<RegistrationResponse>("/auth/worker/register", form, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -194,7 +199,7 @@ export default function WorkerRegisterPage() {
         otp: otp,
       });
 
-      loginWithToken(res.data.access_token, res.data.worker);
+      completeLogin(res.data.worker);
       navigate("/worker/dashboard");
     } catch {
       setError(t("auth.otpInvalid"));
@@ -222,11 +227,15 @@ export default function WorkerRegisterPage() {
                         idx === currentStep
                           ? "bg-brand-600 text-white shadow-glow-brand scale-110"
                           : idx < currentStep
-                          ? "bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                            ? "bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                       }`}
                     >
-                      {idx < currentStep ? <Check className="h-4 w-4" aria-hidden="true" /> : idx + 1}
+                      {idx < currentStep ? (
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        idx + 1
+                      )}
                     </div>
                     {idx < STEPS.length - 1 && (
                       <div
@@ -314,7 +323,11 @@ export default function WorkerRegisterPage() {
                 )}
 
                 {currentStep < STEPS.length - 1 ? (
-                  <button type="button" onClick={handleNext} className="flex-1 btn-primary flex items-center justify-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex-1 btn-primary flex items-center justify-center gap-1"
+                  >
                     {t("auth.next")}
                     <ChevronRight className="h-5 w-5" aria-hidden="true" />
                   </button>
@@ -322,7 +335,8 @@ export default function WorkerRegisterPage() {
                   <button type="submit" disabled={submitting} className="flex-1 btn-primary">
                     {submitting ? (
                       <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> {t("auth.registering")}
+                        <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />{" "}
+                        {t("auth.registering")}
                       </span>
                     ) : (
                       t("auth.createAccount")
@@ -334,7 +348,10 @@ export default function WorkerRegisterPage() {
 
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
               {t("auth.haveAccount")}{" "}
-              <button onClick={() => navigate("/worker/login")} className="text-brand-600 dark:text-brand-400 font-semibold">
+              <button
+                onClick={() => navigate("/worker/login")}
+                className="text-brand-600 dark:text-brand-400 font-semibold"
+              >
                 {t("auth.login")}
               </button>
             </p>
@@ -345,9 +362,8 @@ export default function WorkerRegisterPage() {
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800 rounded-2xl p-5 text-center">
               <p className="text-amber-900 dark:text-amber-200 font-bold">Back up your account</p>
               <p className="text-amber-800 dark:text-amber-300 text-sm mt-1">
-                If you ever lose your phone AND your password, this key is the
-                only way to recover your account. Write it on paper now — it is
-                shown only this once.
+                If you ever lose your phone AND your password, this key is the only way to recover
+                your account. Write it on paper now — it is shown only this once.
               </p>
               <div className="mt-3 py-3 px-2 bg-white dark:bg-gray-900 rounded-xl font-mono text-lg font-bold tracking-widest text-gray-900 dark:text-brand-300 select-all">
                 {registrationData.recovery_key}

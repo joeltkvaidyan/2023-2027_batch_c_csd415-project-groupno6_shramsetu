@@ -1,8 +1,9 @@
 TITLE: Rights and Welfare of Anganwadi Workers and Helpers
 DEPARTMENT: Ministry of Women and Child Development, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Women and Child Development, Government of India
 STATUS: current
 ---
 Anganwadi workers and helpers are frontline workers in the Integrated Child Development Services (ICDS) scheme. They play a crucial role in providing health, nutrition, and early childhood education services. This document covers their rights, entitlements, and welfare schemes.
@@ -15,13 +16,14 @@ KEY RIGHTS:
 5. Insurance: Group insurance coverage for Anganwadi workers.
 
 ENTITLEMENTS:
-1. Anganwadi Worker: Monthly honorarium (varies by state, typically Rs 8,000-15,000)
-2. Anganwadi Helper (Sahayika): Monthly honorarium (typically Rs 4,000-7,000)
+1. Anganwadi Worker: monthly honorarium set by the STATE government (amounts differ by
+   state and cadre; no verified single national figure — check your state WCD department)
+2. Anganwadi Helper (Sahayika): monthly honorarium set by the state government
 3. Mini Anganwadi Worker: Monthly honorarium
 4. Additional incentives for performance
 
 SOCIAL SECURITY:
-1. PM-SYM: Rs 3,000/month pension after age 60
+1. PM-SYM: Rs 3,000/month pension after 60 (entry age 18-40, monthly income up to Rs 15,000)
 2. PM-SBY: Rs 2 lakh accident insurance
 3. Ayushman Bharat: Rs 5 lakh health insurance
 4. e-Shram Registration: For additional social security benefits
@@ -41,5 +43,5 @@ MIGRANT ANGANWADI WORKERS:
 - Children of migrant workers are entitled to Anganwadi services
 - Nutrition supplements are available at Anganwadi centres
 
-HELPLINE: 181 (Women Helpline) | 1098 (Childline)
+HELPLINE: 181 (Women Helpline); child-protection queries via the state WCD department
 WEBSITE: wcd.nic.in | icds-wcd.nic.in

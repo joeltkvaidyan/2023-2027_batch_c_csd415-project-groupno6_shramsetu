@@ -1,22 +1,27 @@
 TITLE: e-Shram Portal — National Database of Unorganised Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
-LAST_UPDATED: needs review
-SOURCE_URL: https://eshram.gov.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://eshram.gov.in/faqs
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The e-Shram portal is the National Database of Unorganised Workers (NDUW), created so that migrant
 workers, construction workers, gig workers, domestic workers, street vendors, agricultural labourers
 and other unorganised sector workers can register and receive a UAN (Universal Account Number) card.
 
-Who can register: Any unorganised worker aged 16 to 59 years who is not a member of EPFO or ESIC and
-does not pay income tax.
+Who can register: Any home-based, self-employed or wage worker in the unorganised
+sector aged 16 years or above who is not a member of EPFO or ESIC. There is no
+income criterion and registration is free.
 
 Benefits of the e-Shram card:
 - A 12-digit Universal Account Number valid across India, portable if the worker migrates to another state.
-- Automatic eligibility check for central welfare schemes.
-- Accident insurance cover under the PM Suraksha Bima Yojana linked benefit of up to Rs 2 lakh for
-  accidental death or full disability, and Rs 1 lakh for partial disability, for registered workers.
+- Since 21 October 2024 the portal hosts a One-Stop-Solution (OSS) scheme tracker
+  for central welfare schemes; it does not automatically enrol anyone or guarantee
+  a benefit.
+- Accident insurance is not automatic: enrol separately in the PM Suraksha Bima
+  Yojana through a savings bank account (Rs 2 lakh for accidental death/total
+  disability, Rs 1 lakh for partial disability, Rs 20 per year).
 - Access to a self-declared employment history that can be shown to employers or government offices.
 
 How to register: Workers can self-register using the eshram.gov.in website or mobile app using their

@@ -119,7 +119,7 @@ beforeEach(() => {
 
 describe("JobsPanel applicant review", () => {
   it("shows the fit the server ranked by, in server order", async () => {
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
 
     const names = await screen.findAllByText(/Anil Kumar|Meena Selvam/);
@@ -129,22 +129,20 @@ describe("JobsPanel applicant review", () => {
     // Reasons are shown as words, not raw snake_case codes.
     expect(screen.getByText("occupation_match")).toBeTruthy();
     expect(screen.getByText("different_trade")).toBeTruthy();
-    expect(
-      screen.getByText(/It is not a rating of the worker/i)
-    ).toBeTruthy();
+    expect(screen.getByText(/It is not a rating of the worker/i)).toBeTruthy();
     // The disclaimer sits on every applicant card, so a review queue can never
     // be mistaken for a list of offers.
     expect(
-      screen.getAllByText(/Shortlisting only records that this office read the application/i)
+      screen.getAllByText(/Shortlisting only records that this office read the application/i),
     ).toHaveLength(2);
   });
 
   it("does not invent a phone number the worker did not share", async () => {
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
 
     expect(
-      await screen.findByText(/Phone not shared — contact them through this office/)
+      await screen.findByText(/Phone not shared — contact them through this office/),
     ).toBeTruthy();
     // The applicant who consented still shows their number.
     expect(screen.getByText(/9876500000/)).toBeTruthy();
@@ -159,19 +157,14 @@ describe("JobsPanel applicant review", () => {
       reviewed_at: "2026-10-19T02:00:00.000Z",
     });
 
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
     // One button per applicant; the first card is the top-ranked applicant.
     const shortlistButtons = await screen.findAllByText("Shortlist");
     await userEvent.click(shortlistButtons[0]);
 
     await waitFor(() =>
-      expect(mocks.reviewJobApplicant).toHaveBeenCalledWith(
-        "t",
-        "job-1",
-        "app-1",
-        "shortlisted"
-      )
+      expect(mocks.reviewJobApplicant).toHaveBeenCalledWith("job-1", "app-1", "shortlisted"),
     );
     expect(await screen.findByText("Remove shortlist")).toBeTruthy();
   });
@@ -185,7 +178,7 @@ describe("JobsPanel applicant review", () => {
       counts: { total: 2, shortlisted: 1 },
     });
 
-    render(<JobsPanel token="t" />);
+    render(<JobsPanel />);
     await userEvent.click(await screen.findByText(/Review applicants/));
     await userEvent.click(await screen.findByRole("tab", { name: /Shortlisted \(1\)/ }));
 

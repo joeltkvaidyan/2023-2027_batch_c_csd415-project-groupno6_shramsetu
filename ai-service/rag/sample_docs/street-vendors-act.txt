@@ -1,8 +1,9 @@
 TITLE: Street Vendors (Protection of Livelihood and Regulation of Street Vending) Act, 2014
 DEPARTMENT: Ministry of Housing and Urban Affairs, Government of India
 LAST_UPDATED: 2025-02-01
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://prsindia.org/files/bills_acts/acts_parliament/2014/the-street-vendors-act,-2014.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Housing and Urban Affairs, Government of India
 STATUS: current
 ---
 The Street Vendors Act, 2014 protects the rights of street vendors and provides for regulation of street vending. It ensures that no street vendor can be evicted without due process and provides for identification, registration, and licensing.
@@ -11,16 +12,22 @@ KEY PROVISIONS:
 - Definition: Street vendor means a person engaged in vending of articles, goods, wares, food items or merchandise of everyday use to the public in a public place or a private area adjacent to a public place.
 - Town Vending Committee (TVC): Every local authority shall constitute a TVC consisting of representatives of street vendors, local authority, police, and other stakeholders.
 - Certificate of vending: Every street vendor shall be issued a certificate of vending by the TVC after verification.
-- vending certificate validity: The certificate shall be valid for a period of 5 years and may be renewed.
+- Certificate validity and renewal terms come from the Act and state rules — confirm
+  with the Town Vending Committee.
 - No eviction without due process: No street vendor shall be evicted or their goods confiscated without following the procedure laid down in the Act.
 - Relocation: If vending is to be discontinued due to development projects, the vendor shall be relocated to an alternative site.
-- Penalty: Street vending without a certificate can attract a fine of up to Rs 2,000.
+- Penalty for vending without a certificate is set by the Act text and state rules — do
+  not quote an amount without reading the current text.
 - Rehabilitation: Vendors displaced due to development projects are entitled to rehabilitation.
 
-PM-SVANIDHI (PRADHAN MANTRI STREET VENDORS ATMA NIDHI NIDHI):
-- Special credit scheme for street vendors affected by COVID-19.
-- Collateral-free working capital loans up to Rs 10,000 for the first tranche.
-- Second tranche: Up to Rs 20,000 after repaying the first tranche on time.
+PM-SVANIDHI (PRADHAN MANTRI STREET VENDORS' ATMANIRBHAR NIDHI):
+- Working-capital credit scheme for street vendors (launched 1 June 2020); PM SVANidhi
+  2.0 (Cabinet approval, 27 August 2025) runs to 31 March 2030 with the tranches raised
+  below.
+- Collateral-free working-capital loans: first tranche up to Rs 15,000 (raised from
+  Rs 10,000).
+- Second tranche: up to Rs 25,000 (was Rs 20,000) after repaying the first tranche on
+  time.
 - Third tranche: Up to Rs 50,000 after repaying the second tranche on time.
 - 7% annual interest subsidy on timely repayment (credited directly to the vendor's bank account).
 
@@ -30,5 +37,6 @@ MIGRANT STREET VENDORS:
 - The TVC cannot deny registration based on the vendor's native state.
 - Migrant vendors are equally eligible for PM-SVANidhi loans.
 
-HELPLINE: 1800-180-6030 (PM-SVANidhi)
-WEBSITE: pm svanidhi.mohua.gov.in
+HELPLINE: use the PM SVANidhi portal or your bank branch; grievances via
+pgportal.gov.in (CPGRAMS)
+WEBSITE: pmsvanidhi.mohua.gov.in

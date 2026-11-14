@@ -41,8 +41,7 @@ vi.mock("react-i18next", () => ({
 import JobsPage from "./JobsPage";
 import EmployersPage from "./EmployersPage";
 
-const renderPage = (ui: ReactElement) =>
-  render(<MemoryRouter>{ui}</MemoryRouter>);
+const renderPage = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 const JOB = {
   id: "job-1",
@@ -86,7 +85,7 @@ describe("JobsPage", () => {
   it("warns that listings are unverified and never to pay a fee", async () => {
     renderPage(<JobsPage />);
     expect(
-      await screen.findByText(/ShramSetu does not verify the employer or the wage/i)
+      await screen.findByText(/ShramSetu does not verify the employer or the wage/i),
     ).toBeTruthy();
   });
 
@@ -107,7 +106,7 @@ describe("JobsPage", () => {
 
     await userEvent.click(screen.getByText("I am interested"));
     await waitFor(() =>
-      expect(mocks.post).toHaveBeenCalledWith("/jobs/job-1/apply", { share_contact: false })
+      expect(mocks.post).toHaveBeenCalledWith("/jobs/job-1/apply", { share_contact: false }),
     );
   });
 
@@ -115,7 +114,21 @@ describe("JobsPage", () => {
     mocks.get.mockImplementation((url: string) => {
       if (url === "/jobs") return Promise.resolve({ data: { jobs: [{ ...JOB, applied: true }] } });
       if (url === "/jobs/applications/mine") {
-        return Promise.resolve({ data: { applications: [{ id: "a1", job_id: "job-1", status: "submitted", note: null, share_contact: false, created_at: "2026-10-18T00:00:00.000Z", updated_at: "2026-10-18T00:00:00.000Z" }] } });
+        return Promise.resolve({
+          data: {
+            applications: [
+              {
+                id: "a1",
+                job_id: "job-1",
+                status: "submitted",
+                note: null,
+                share_contact: false,
+                created_at: "2026-10-18T00:00:00.000Z",
+                updated_at: "2026-10-18T00:00:00.000Z",
+              },
+            ],
+          },
+        });
       }
       return Promise.reject(new Error(`unexpected GET ${url}`));
     });
@@ -162,7 +175,9 @@ describe("EmployersPage", () => {
     renderPage(<EmployersPage />);
     expect(await screen.findByText("Ravi Constructions")).toBeTruthy();
     expect(
-      screen.getByText(/You entered this yourself — ShramSetu has not verified it with the employer/i)
+      screen.getByText(
+        /You entered this yourself — ShramSetu has not verified it with the employer/i,
+      ),
     ).toBeTruthy();
   });
 
@@ -181,9 +196,7 @@ describe("EmployersPage", () => {
     await userEvent.click(screen.getByText("Add an employer"));
     await userEvent.click(screen.getByText("common.save"));
 
-    expect(
-      await screen.findByText("Please enter the employer's name.")
-    ).toBeTruthy();
+    expect(await screen.findByText("Please enter the employer's name.")).toBeTruthy();
     expect(mocks.post).not.toHaveBeenCalled();
   });
 });

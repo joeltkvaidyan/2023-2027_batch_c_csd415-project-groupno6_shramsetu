@@ -3,9 +3,15 @@
  * Handles Firebase Cloud Messaging (FCM) registration and permissions
  */
 import { useState, useEffect, useCallback } from "react";
-import { api } from "../api/client";
+import { api, apiErrorMessage } from "../api/client";
 
-type PushEvent = Event & { data: { json: () => any } | null };
+/** Shape of a Web Push message body (RFC 8030 payload as we send it). */
+interface PushPayload {
+  notification: { title: string; body?: string };
+  data?: Record<string, unknown>;
+}
+
+type PushEvent = Event & { data: { json: () => PushPayload } | null };
 
 interface PushNotificationState {
   isSupported: boolean;
@@ -14,15 +20,10 @@ interface PushNotificationState {
   error: string | null;
 }
 
-// Firebase configuration (replace with your Firebase config)
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+// FCM registration is not wired yet: the hook reports capability only and the
+// server-side push sender does not exist. VITE_FIREBASE_* values were being
+// read into an object nothing consumed, which made a half-configured feature
+// look implemented. Add the SDK call and this config together, with tests.
 
 export function usePushNotifications() {
   const [state, setState] = useState<PushNotificationState>({
@@ -48,7 +49,7 @@ export function usePushNotifications() {
     try {
       // Request notification permission
       const permission = await Notification.requestPermission();
-      
+
       if (permission !== "granted") {
         setState((prev) => ({
           ...prev,
@@ -63,7 +64,7 @@ export function usePushNotifications() {
       // For production, initialize Firebase and get FCM token
       // For now, we'll use a placeholder
       const fcmToken = `placeholder-token-${Date.now()}`;
-      
+
       // Register token with backend
       await api.post("/notifications/register", {
         token: fcmToken,
@@ -77,11 +78,11 @@ export function usePushNotifications() {
       }));
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Push notification setup error:", error);
       setState((prev) => ({
         ...prev,
-        error: error.message || "Failed to setup push notifications",
+        error: apiErrorMessage(error, "Failed to setup push notifications"),
       }));
       return false;
     }

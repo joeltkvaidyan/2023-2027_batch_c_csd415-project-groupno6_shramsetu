@@ -1,0 +1,128 @@
+/*
+ * Design tokens.
+ *
+ * `--color-*` values are asserted against design/tokens.json by
+ * scripts/check-contrast.mjs, which also computes WCAG contrast for every pair
+ * the app renders. Editing a hex here without editing tokens.json fails CI, and
+ * so does a pair that drops under 4.5:1 (text) or 3:1 (UI) — the point is that a
+ * worker reading a wage claim on a sunlit phone never gets grey-on-grey.
+ *
+ * Scale below the palette is deliberately coarse: 48px minimum tap targets,
+ * four radii, two motion durations. A welfare form is not a place for taste.
+ */
+
+:root {
+  /* Type scale. 17px base, not 16: the default size is read by people who may
+     not know the app or the script well, and one extra pixel is the cheapest
+     legibility win available. `--text-scale` is the A/A+/A++ control. */
+  --font-base: 17px;
+  --text-scale: 1;
+  --leading-body: 1.55;
+  --leading-tight: 1.25;
+  --tracking-body: 0;
+
+  /* 48px is the floor for anything tappable (WCAG 2.5.5 / Android Material). */
+  --tap-min: 48px;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Light theme — limewash, sand and fired brick.
+     The palette comes from the site, not from a brand deck: the surfaces are
+     a lime-washed wall (#fffcf7) and dry sand (#f7f0e4), the ink is wet clay,
+     and the accent is the brick a mason actually lays (#7e3213, light enough
+     for text at 8.7:1 on the surface, dark enough for white button labels at
+     6.4:1). Danger/success/warning stay recognisably red/green/ochre, tuned to
+     sit with the warm neutrals instead of fighting them. */
+  --color-surface: #fffcf7;
+  --color-surface-raised: #f7f0e4;
+  --color-surface-sunken: #efe5d5;
+  --color-text-primary: #231a14;
+  --color-text-secondary: #574639;
+  --color-text-muted: #6a5646;
+  --color-border: #dfd2be;
+  --color-border-strong: #7c6a57;
+  --color-brand: #7e3213;
+  --color-brand-hover: #65280f;
+  --color-on-brand: #fff8f1;
+  --color-danger: #a32020;
+  --color-on-danger: #ffffff;
+  --color-success: #2e6b2f;
+  --color-on-success: #ffffff;
+  --color-warning: #8a5a00;
+  --color-on-warning: #ffffff;
+  --color-focus: #1e5f8a;
+}
+
+.dark {
+  /* Night on site: charcoal cement, sand-coloured ink, and the brick step
+     carried up to #f0a277 — the same hue, lifted until it reads on a dark
+     surface (9:1), with the button label inverting to burnt brown. */
+  --color-surface: #17120f;
+  --color-surface-raised: #221b16;
+  --color-surface-sunken: #0d0a08;
+  --color-text-primary: #f7efe4;
+  --color-text-secondary: #d8c8b6;
+  --color-text-muted: #b49f8b;
+  --color-border: #3a302a;
+  --color-border-strong: #a08c77;
+  --color-brand: #f0a277;
+  --color-brand-hover: #f6bc9a;
+  --color-on-brand: #2a1207;
+  --color-danger: #ff9e8a;
+  --color-on-danger: #2a0505;
+  --color-success: #96d9a1;
+  --color-on-success: #04220c;
+  --color-warning: #f5c86b;
+  --color-on-warning: #2a1a00;
+  --color-focus: #8cc8f0;
+}
+
+/* High contrast is a layer on top, not a third choice: it keeps the light/dark
+   surfaces' meaning (an inverted card is still a card) while forcing maximum
+   separation. Declared after .dark so it wins when both classes are present. */
+.hc {
+  --color-surface: #000000;
+  --color-surface-raised: #0a0a0a;
+  --color-surface-sunken: #000000;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ffffff;
+  --color-text-muted: #e5e5e5;
+  --color-border: #ffffff;
+  --color-border-strong: #ffffff;
+  --color-brand: #ffc48a;
+  --color-brand-hover: #ffd9b5;
+  --color-on-brand: #000000;
+  --color-danger: #ff9a9a;
+  --color-on-danger: #000000;
+  --color-success: #8dffa8;
+  --color-on-success: #000000;
+  --color-warning: #ffe066;
+  --color-on-warning: #000000;
+  --color-focus: #7dd3fc;
+}
+
+/* The five Indic scripts sit low in the Latin line box and their matras collide
+   when tracking is tight, so they get their own metrics instead of inheriting
+   the Latin ones. */
+:root:lang(hi),
+:root:lang(bn),
+:root:lang(te),
+:root:lang(ta),
+:root:lang(ml) {
+  --leading-body: 1.65;
+  --tracking-body: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0.01ms;
+    --motion-base: 0.01ms;
+  }
+}

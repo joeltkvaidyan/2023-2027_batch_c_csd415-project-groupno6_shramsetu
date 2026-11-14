@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Mic, Square, Hourglass } from "lucide-react";
-import { api } from "../api/client";
+import { api, httpStatus } from "../api/client";
 
 /**
  * VoiceRecorder v14 — Raw PCM capture → client-side WAV encoding → Groq Whisper.
@@ -23,7 +23,7 @@ const TARGET_SAMPLE_RATE = 16000;
 function resampleTo16k(samples: Float32Array, sourceRate: number): Float32Array {
   if (sourceRate === TARGET_SAMPLE_RATE) return samples;
 
-  const outputLength = Math.floor(samples.length * TARGET_SAMPLE_RATE / sourceRate);
+  const outputLength = Math.floor((samples.length * TARGET_SAMPLE_RATE) / sourceRate);
   const output = new Float32Array(outputLength);
   const sourcePerOutput = sourceRate / TARGET_SAMPLE_RATE;
 
@@ -91,6 +91,30 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
     modeRef.current = mode;
   }, [mode]);
 
+  const stopEverything = useCallback(() => {
+    try {
+      processorRef.current?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    try {
+      sourceRef.current?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    processorRef.current = null;
+    sourceRef.current = null;
+    try {
+      audioCtxRef.current?.close();
+    } catch {
+      /* context already closed */
+    }
+    audioCtxRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setMode("idle");
+  }, []);
+
   // Check mic support on mount (HTTPS required for mediaDevices)
   useEffect(() => {
     const ok = !!navigator.mediaDevices?.getUserMedia;
@@ -99,20 +123,7 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
       console.warn("[VoiceRecorder] navigator.mediaDevices unavailable — HTTPS required");
     }
     return () => stopEverything();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const stopEverything = useCallback(() => {
-    try { processorRef.current?.disconnect(); } catch {}
-    try { sourceRef.current?.disconnect(); } catch {}
-    processorRef.current = null;
-    sourceRef.current = null;
-    try { audioCtxRef.current?.close(); } catch {}
-    audioCtxRef.current = null;
-    streamRef.current?.getTracks().forEach((tr) => tr.stop());
-    streamRef.current = null;
-    setMode("idle");
-  }, []);
+  }, [stopEverything]);
 
   /** Encode Float32 mono PCM to a 16-bit WAV blob. */
   const encodeWav = (samples: Float32Array, sampleRate: number): Blob => {
@@ -125,13 +136,13 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
     view.setUint32(4, 36 + samples.length * 2, true);
     writeStr(8, "WAVE");
     writeStr(12, "fmt ");
-    view.setUint32(16, 16, true);          // PCM chunk size
-    view.setUint16(20, 1, true);           // PCM format
-    view.setUint16(22, 1, true);           // mono
+    view.setUint32(16, 16, true); // PCM chunk size
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, 1, true); // mono
     view.setUint32(24, sampleRate, true);
     view.setUint32(28, sampleRate * 2, true); // byte rate
-    view.setUint16(32, 2, true);           // block align
-    view.setUint16(34, 16, true);          // bits per sample
+    view.setUint16(32, 2, true); // block align
+    view.setUint16(34, 16, true); // bits per sample
     writeStr(36, "data");
     view.setUint32(40, samples.length * 2, true);
     let offset = 44;
@@ -159,7 +170,7 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
       });
       streamRef.current = stream;
 
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioCtx();
       audioCtxRef.current = ctx;
       await ctx.resume();
@@ -186,11 +197,12 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
       silentSink.connect(ctx.destination);
 
       setMode("recording");
-    } catch (err: any) {
-      console.error("[VoiceRecorder] mic error:", err?.name, err?.message);
-      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      console.error("[VoiceRecorder] mic error:", name, err instanceof Error ? err.message : err);
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
         onError?.(t("voice.errors.micPermission"));
-      } else if (err?.name === "NotFoundError") {
+      } else if (name === "NotFoundError") {
         onError?.("No microphone found on this device.");
       } else {
         onError?.(t("voice.errors.recognitionFailed"));
@@ -200,9 +212,17 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
   }, [onError, t, stopEverything]);
 
   const stopAndTranscribe = useCallback(async () => {
-    // Detach audio graph first so onaudioprocess stops
-    try { processorRef.current?.disconnect(); } catch {}
-    try { sourceRef.current?.disconnect(); } catch {}
+    // Detach the audio graph first so onaudioprocess stops firing.
+    try {
+      processorRef.current?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    try {
+      sourceRef.current?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
 
     // Merge all PCM chunks
     const total = chunksRef.current.reduce((n, c) => n + c.length, 0);
@@ -235,7 +255,7 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
 
     if (durationSec < 0.7 || rms < 0.004 || peak < 0.05) {
       onError?.(
-        "No speech detected in the recording — move closer to the microphone and try again."
+        "No speech detected in the recording — move closer to the microphone and try again.",
       );
       return;
     }
@@ -254,7 +274,7 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
       const res = await api.post(
         `/chat/transcribe?language=${encodeURIComponent(language)}`,
         formData,
-        { timeout: 45000 }
+        { timeout: 45000 },
       );
 
       const text: string = res.data?.text || "";
@@ -262,23 +282,28 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
         onTranscript(text.trim());
       } else {
         onError?.(
-          "Whisper could not transcribe that recording — please speak a bit louder and try again."
+          "Whisper could not transcribe that recording — please speak a bit louder and try again.",
         );
       }
-    } catch (err: any) {
-      console.error("[VoiceRecorder] transcription error:", err?.response?.status, err?.message);
-      if (err?.response?.status === 503) {
+    } catch (err) {
+      const status = httpStatus(err);
+      console.error(
+        "[VoiceRecorder] transcription error:",
+        status,
+        err instanceof Error ? err.message : err,
+      );
+      if (status === 503) {
         // STT runs locally (faster-whisper); a 503 means the engine itself
         // failed — the backend log has the exact cause.
         onError?.("Voice service unavailable. Check the backend log and that ffmpeg is installed.");
-      } else if (err?.response?.status === 401) {
+      } else if (status === 401) {
         onError?.("Please login first to use voice input.");
-      } else if (err?.response?.status === 400) {
+      } else if (status === 400) {
         onError?.("Recording was not usable. Please speak a bit louder and try again.");
-      } else if (err?.code === "ERR_NETWORK" || !err?.response) {
+      } else if (!status) {
         // Backend itself unreachable — never tell the user their voice failed.
         onError?.(
-          "Voice service unreachable. Check that the backend (:8000) and AI service (:8100) are running."
+          "Voice service unreachable. Check that the backend (:8000) and AI service (:8100) are running.",
         );
       } else {
         onError?.(t("voice.errors.recognitionFailed"));
@@ -317,8 +342,8 @@ export function VoiceRecorder({ language, onTranscript, onError }: VoiceRecorder
           mode === "recording"
             ? "bg-red-500 text-white scale-110 shadow-lg shadow-red-500/40 ring-4 ring-red-500/20 animate-pulse-soft"
             : mode === "transcribing"
-            ? "bg-amber-500 text-white"
-            : "bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/70 active:scale-95"
+              ? "bg-amber-500 text-white"
+              : "bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/70 active:scale-95"
         }`}
       >
         {mode === "recording" ? (

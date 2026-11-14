@@ -16,7 +16,19 @@ Final-year project scope, stated plainly: what is enforced, what is not.
 ## Controls in place (with where to verify)
 
 **Authentication & sessions**
-- bcrypt password hashing; JWT with 12 h expiry.
+- bcrypt password hashing.
+- The browser holds **no token**. A sign-in sets three cookies: a 15-minute
+  access JWT (`st_access`, httpOnly), a 30-day opaque refresh token
+  (`st_refresh`, httpOnly, path-scoped to `/api/v1/auth`), and a readable CSRF
+  value (`st_csrf`). Every unsafe cookie-authenticated request must echo the
+  CSRF value in `X-CSRF-Token` (double submit), so a cross-site page cannot
+  drive the API with the worker's session.
+- Refresh tokens rotate on every use and only their SHA-256 is stored
+  (`models/Session.js`). Presenting an already-rotated token revokes the whole
+  chain — that is the signature of a copied cookie — and logout revokes
+  server-side, so a stolen token dies with the session instead of living out a
+  12-hour window. Bearer tokens still work for API clients and scripts; they
+  are not exposed to a browser page and cannot be forged cross-site.
 - OTPs: 6 digits, hashed at rest, expiring, resend cooldown, printed **only
   to the server terminal** in dev (`OTP_ECHO_ENABLED`); production boot
   refuses echo mode.
@@ -48,6 +60,12 @@ Final-year project scope, stated plainly: what is enforced, what is not.
   chat text **before** any external AI provider call
   (`ai-service/app/services/pii.py`), applied to both text chat and voice
   transcription flows.
+- Duplicate records from retried submissions: grievance and wage writes accept a
+  client `client_request_id` (or `Idempotency-Key` header), scoped per worker by
+  a partial unique index, so a retry after a lost reply returns the record that
+  already exists (200 + `Idempotent-Replay: true`) instead of filing a second
+  complaint or tripping the paid-day lock. A malformed or absent key changes
+  nothing — those requests behave exactly as before.
 
 **Network & abuse**
 - `helmet` security headers; CORS allowlist whenever `CORS_ORIGINS` is set.
@@ -78,10 +96,17 @@ Final-year project scope, stated plainly: what is enforced, what is not.
    gateway integration.
 2. **No HTTPS termination here.** TLS must be handled by a reverse proxy or
    load balancer.
-3. **Client-side document PIN lock is convenience only.** It gates UI
-   access on a shared device; it is not encryption and provides no
-   protection against someone with the worker's API token. The real
-   protection is server-side encryption of stored files.
+3. **The document PIN is a server-side access control, and offline copies are
+   encrypted with it.** The PIN digest (scrypt), attempt counter and
+   five-minute lockout live on the user row, and `GET /documents/:id/download`
+   refuses a request without a 10-minute wallet token once a PIN exists — so
+   holding a stolen session is not enough to pull Aadhaar cards. Documents
+   cached for offline viewing are AES-256-GCM encrypted with a key derived from
+   the PIN (PBKDF2-SHA256, 310k iterations, device salt), so the IndexedDB
+   contents are unreadable once the wallet locks, and the store is wiped on
+   logout. What this does NOT do: it cannot stop someone who knows the PIN from
+   reading a cached file, and it does not protect a document already opened in
+   another tab's memory.
 4. **Liveness cache window.** A deactivated user can keep working for up to
    30 s after deactivation (cache TTL); zero the TTL to trade performance
    for strictness.

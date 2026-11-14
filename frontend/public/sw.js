@@ -1,25 +1,20 @@
 const CACHE_NAME = "shramsetu-v2";
-const APP_SHELL = [
-  "/",
-  "/index.html",
-  "/icon.svg",
-  "/manifest.webmanifest",
-];
+const APP_SHELL = ["/", "/index.html", "/icon.svg", "/manifest.webmanifest"];
 
 // Install — cache the app shell for offline startup
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
 // Activate — purge every older cache immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
   self.clients.claim();
 });
@@ -43,8 +38,8 @@ self.addEventListener("fetch", (event) => {
           new Response(JSON.stringify({ error: "Offline" }), {
             status: 503,
             headers: { "Content-Type": "application/json" },
-          })
-      )
+          }),
+      ),
     );
     return;
   }
@@ -66,7 +61,7 @@ self.addEventListener("fetch", (event) => {
             return caches.match("/index.html");
           }
           return new Response("", { status: 504, statusText: "Offline" });
-        })
-      )
+        }),
+      ),
   );
 });

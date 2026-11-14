@@ -27,13 +27,14 @@ export const EmployerCard = forwardRef<HTMLDivElement, EmployerCardProps>(functi
     rating,
     stats,
     onRate,
-    onHire,
+    // Accepted for API compatibility; the hire action is rendered by callers.
+    onHire: _onHire,
     ratingOpen,
     className = "",
     children,
     ...rest
   },
-  ref
+  ref,
 ) {
   const avg = rating?.average ?? null;
   const count = rating?.count ?? 0;
@@ -60,7 +61,9 @@ export const EmployerCard = forwardRef<HTMLDivElement, EmployerCardProps>(functi
             </span>
           ) : (
             <div className="flex items-center gap-1 text-xs">
-              <span className="text-amber-500" aria-hidden="true">★</span>
+              <span className="text-amber-500" aria-hidden="true">
+                ★
+              </span>
               <span className={avg != null ? "text-gray-700 dark:text-gray-300" : "text-gray-400"}>
                 {avg?.toFixed(1) ?? "—"}
               </span>

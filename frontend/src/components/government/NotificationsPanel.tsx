@@ -9,12 +9,11 @@ import { apiErrorMessage } from "../../api/client";
 import { govSendNotification, type GovNotification } from "../../api/governmentClient";
 
 interface NotificationsPanelProps {
-  token: string;
   notifications: GovNotification[];
   onSent: () => void;
 }
 
-export default function NotificationsPanel({ token, notifications, onSent }: NotificationsPanelProps) {
+export default function NotificationsPanel({ notifications, onSent }: NotificationsPanelProps) {
   // Notification form
   const [notifTitle, setNotifTitle] = useState("");
   const [notifMessage, setNotifMessage] = useState("");
@@ -32,7 +31,7 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
     setNotifSending(true);
     setNotifError("");
     try {
-      const result = await govSendNotification(token, {
+      const result = await govSendNotification({
         title: notifTitle,
         body: notifMessage,
         priority: notifPriority,
@@ -71,14 +70,20 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
           </div>
         )}
         {notifError && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-sm mb-4" role="alert">
+          <div
+            className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-sm mb-4"
+            role="alert"
+          >
             ⚠️ {notifError}
           </div>
         )}
         <form onSubmit={handleSendNotification} className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">Title</label>
+            <label htmlFor="notif-title" className="block text-sm text-slate-300 mb-1">
+              Title
+            </label>
             <input
+              id="notif-title"
               type="text"
               value={notifTitle}
               onChange={(e) => setNotifTitle(e.target.value)}
@@ -90,8 +95,11 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-300 mb-1">Message</label>
+            <label htmlFor="notif-message" className="block text-sm text-slate-300 mb-1">
+              Message
+            </label>
             <textarea
+              id="notif-message"
               value={notifMessage}
               onChange={(e) => setNotifMessage(e.target.value)}
               placeholder="Detailed notification message for workers..."
@@ -107,8 +115,11 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Priority</label>
+              <label htmlFor="notif-priority" className="block text-sm text-slate-300 mb-1">
+                Priority
+              </label>
               <select
+                id="notif-priority"
                 value={notifPriority}
                 onChange={(e) => setNotifPriority(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -120,8 +131,11 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
               </select>
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Target</label>
+              <label htmlFor="notif-target" className="block text-sm text-slate-300 mb-1">
+                Target
+              </label>
               <select
+                id="notif-target"
                 value={notifTarget}
                 onChange={(e) => setNotifTarget(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -140,10 +154,10 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
                 {notifTarget === "specific_workers"
                   ? "Worker IDs (comma-separated)"
                   : notifTarget === "by_state"
-                  ? "State name"
-                  : notifTarget === "by_district"
-                  ? "District name"
-                  : "Occupation"}
+                    ? "State name"
+                    : notifTarget === "by_district"
+                      ? "District name"
+                      : "Occupation"}
               </label>
               <input
                 type="text"
@@ -153,10 +167,10 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
                   notifTarget === "specific_workers"
                     ? "e.g. 3, 7, 12"
                     : notifTarget === "by_state"
-                    ? "e.g. Kerala"
-                    : notifTarget === "by_district"
-                    ? "e.g. Ernakulam"
-                    : "e.g. construction"
+                      ? "e.g. Kerala"
+                      : notifTarget === "by_district"
+                        ? "e.g. Ernakulam"
+                        : "e.g. construction"
                 }
                 required
                 className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -188,16 +202,22 @@ export default function NotificationsPanel({ token, notifications, onSent }: Not
                     <p className="text-slate-400 text-sm mt-1">{n.body}</p>
                     <p className="text-slate-500 text-xs mt-2">
                       By {n.sender_name} ({n.department}) •{" "}
-                      {n.created_at ? new Date(n.created_at).toLocaleString() : "-"} • Target: {n.target}
+                      {n.created_at ? new Date(n.created_at).toLocaleString() : "-"} • Target:{" "}
+                      {n.target}
                       {n.target_value && ` (${n.target_value})`}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    n.priority === "urgent" ? "bg-red-500/20 text-red-400" :
-                    n.priority === "high" ? "bg-orange-500/20 text-orange-400" :
-                    n.priority === "medium" ? "bg-yellow-500/20 text-yellow-400" :
-                    "bg-green-500/20 text-green-400"
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      n.priority === "urgent"
+                        ? "bg-red-500/20 text-red-400"
+                        : n.priority === "high"
+                          ? "bg-orange-500/20 text-orange-400"
+                          : n.priority === "medium"
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : "bg-green-500/20 text-green-400"
+                    }`}
+                  >
                     {n.priority}
                   </span>
                 </div>

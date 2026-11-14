@@ -1,8 +1,9 @@
 TITLE: Employees' Provident Fund (EPF) — Retirement Savings for Organised Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-04-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.epfo.gov.in/wp-content/themes/epfo-child/assets/pdfs/ContributionRate.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Employees' Provident Fund Organisation, Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 The Employees' Provident Fund (EPF) is a retirement savings scheme managed by the Employees' 
@@ -20,8 +21,9 @@ Benefits:
 - Accumulated balance: The total EPF balance (employee + employer contributions + interest) 
   is paid to the employee at the time of retirement, resignation, or after 2 months of 
   unemployment.
-- Interest: EPF earns a tax-free interest rate declared annually by the government (currently 
-  around 8.15% per annum for FY 2023-24).
+- Interest: EPF earns a tax-free interest rate declared annually — 8.25% for FY 2024-25,
+  retained for FY 2025-26 after ratification in 2025 (check epfindia.gov.in for the
+  current year's rate).
 - Partial withdrawal: Employees can withdraw partially for specific purposes:
   - Housing: Up to 90% of EPF balance after 5 years of service for purchase/construction of 
     a house.

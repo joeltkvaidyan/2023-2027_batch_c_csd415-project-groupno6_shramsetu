@@ -1,8 +1,9 @@
 TITLE: Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013
 DEPARTMENT: Ministry of Women and Child Development, Government of India
 LAST_UPDATED: 2025-02-01
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://doe.gov.in/files/inline-documents/DoE_Prevention_sexual_harassment.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Women and Child Development, Government of India
 STATUS: current
 ---
 The POSH Act, 2013 provides protection to women against sexual harassment at the workplace and establishes a redressal mechanism for complaints. It applies to all workplaces including organized and unorganized sectors.
@@ -10,8 +11,11 @@ The POSH Act, 2013 provides protection to women against sexual harassment at the
 KEY PROVISIONS:
 - Definition of sexual harassment: Any unwelcome sexually determined behaviour including physical contact, sexual advances, demand for sexual favours, sexually coloured remarks, showing pornography, or any other unwelcome physical, verbal or non-verbal conduct of a sexual nature.
 - Internal Complaints Committee (ICC): Every employer with 10 or more workers must constitute an ICC to receive and redress complaints of sexual harassment. The ICC must have at least 4 members, with a senior woman employee as presiding officer.
-- Local Complaints Committee (LCC): For workplaces with less than 10 workers or where the complaint is against the employer, the District Magistrate shall constitute an LCC.
-- Complaint timeline: The complaint must be filed within 3 months from the date of incident.
+- Local Complaints Committee (LCC): for workplaces with fewer than 10 workers, or where
+  the complaint is against the employer itself, the District Officer (notified for the
+  district) constitutes the Local Committee.
+- Complaint timeline: file within 3 months of the incident; the committee may extend it
+  by a further 3 months if the delay is explained (reasons recorded).
 - Interim relief: The ICC/LCC may recommend interim measures including transfer of the complainant or the respondent, or leave from work.
 - Penalty: For non-compliance with the provisions of the Act, the employer may be fined up to Rs 50,000. Repeated non-compliance may result in doubling of the penalty and cancellation of licence.
 
@@ -26,7 +30,9 @@ REMEDIES:
 - Service of the complainant shall not be terminated or subjected to any disadvantage.
 - Transfer of the respondent to another workplace.
 - Monetary compensation for the loss suffered.
-- Criminal prosecution under Section 354 of the Indian Penal Code.
+- Criminal prosecution: such acts are also offences under the criminal law now in force
+  (the Bharatiya Nyaya Sanhita, 2023 — successor to the IPC provision on outraging
+  modesty).
 
 HELPLINE: Women Helpline 181 | Police 100 | NCW 7827-170-170
-WEBSITE: wcd.nic.in | ncwindia.org
+WEBSITE: wcd.nic.in | ncw.gov.in

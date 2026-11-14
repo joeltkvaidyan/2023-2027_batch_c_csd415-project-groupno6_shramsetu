@@ -5,7 +5,7 @@ import { Screen } from "../components/Screen";
 import { BottomNav } from "../components/BottomNav";
 import { Card, Badge, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
-import { api, apiErrorMessage } from "../api/client";
+import { api, apiErrorMessage, httpStatus, apiErrorCode } from "../api/client";
 
 /**
  * House offers near me — citizens' service requests, scored with the same
@@ -67,7 +67,7 @@ export default function WorkerRequestsPage() {
       setNearby([]);
       const msg = apiErrorMessage(err, t("common.error"));
       setError(msg);
-      if ((err as any)?.response?.status === 403 && (err as any)?.response?.data?.code === "gov_approval_pending") {
+      if (httpStatus(err) === 403 && apiErrorCode(err) === "gov_approval_pending") {
         setGate(true);
       }
     }
@@ -99,7 +99,7 @@ export default function WorkerRequestsPage() {
 
   return (
     <Screen title={t("requests.title", "House requests")} onBack={true}>
-      <main className="p-4 pb-40 space-y-6 max-w-lg mx-auto">
+      <div className="p-4 pb-40 space-y-6 max-w-lg mx-auto">
         {error && (
           <Card className="border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 p-4">
             <div className="flex items-start gap-3">
@@ -145,7 +145,12 @@ export default function WorkerRequestsPage() {
             <SkeletonList rows={2} />
           ) : nearby.length === 0 ? (
             <Card className="text-center py-6">
-              <p className="text-sm text-gray-400">{t("requests.nearbyEmpty", "No open house requests near you right now. Check back later.")}</p>
+              <p className="text-sm text-gray-400">
+                {t(
+                  "requests.nearbyEmpty",
+                  "No open house requests near you right now. Check back later.",
+                )}
+              </p>
             </Card>
           ) : (
             nearby.map((r) => (
@@ -178,12 +183,20 @@ export default function WorkerRequestsPage() {
                   {t("requests.askedBy", "From")} {r.citizen_name}
                 </p>
                 <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                  <Button size="sm" loading={busyId === r.id} disabled={gate} onClick={() => void accept(r)}>
+                  <Button
+                    size="sm"
+                    loading={busyId === r.id}
+                    disabled={gate}
+                    onClick={() => void accept(r)}
+                  >
                     {t("requests.accept", "Accept & reveal numbers")}
                   </Button>
                 </div>
                 <p className="text-xs text-gray-400 mt-1.5">
-                  {t("requests.acceptHint", "Accepting opens BOTH sides' numbers to each other. Expect a call or SMS from the household.")}
+                  {t(
+                    "requests.acceptHint",
+                    "Accepting opens BOTH sides' numbers to each other. Expect a call or SMS from the household.",
+                  )}
                 </p>
               </Card>
             ))
@@ -197,7 +210,9 @@ export default function WorkerRequestsPage() {
             </h2>
           </div>
           {accepted === null ? null : accepted.length === 0 ? (
-            <p className="text-sm text-gray-400">{t("requests.acceptedEmpty", "Nothing accepted yet.")}</p>
+            <p className="text-sm text-gray-400">
+              {t("requests.acceptedEmpty", "Nothing accepted yet.")}
+            </p>
           ) : (
             accepted.map((r) => (
               <Card key={r.id} className="p-4">
@@ -235,13 +250,15 @@ export default function WorkerRequestsPage() {
                         href={`tel:${r.citizen.phone}`}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 transition active:scale-95"
                       >
-                        <Phone className="h-4 w-4" aria-hidden="true" /> {t("requests.call", "Call")}
+                        <Phone className="h-4 w-4" aria-hidden="true" />{" "}
+                        {t("requests.call", "Call")}
                       </a>
                       <a
                         href={`sms:${r.citizen.phone}`}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-800/50 text-brand-700 dark:text-brand-400 text-sm font-medium px-3.5 py-2 transition active:scale-95"
                       >
-                        <MessageSquare className="h-4 w-4" aria-hidden="true" /> {t("requests.sms", "SMS")}
+                        <MessageSquare className="h-4 w-4" aria-hidden="true" />{" "}
+                        {t("requests.sms", "SMS")}
                       </a>
                     </div>
                   </div>
@@ -257,7 +274,7 @@ export default function WorkerRequestsPage() {
             "Safety: meet in public where possible, agree the day's rate before starting, and report problems through Grievances.",
           )}
         </p>
-      </main>
+      </div>
       <BottomNav />
     </Screen>
   );

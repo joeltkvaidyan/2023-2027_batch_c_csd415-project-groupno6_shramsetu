@@ -13,7 +13,11 @@ export interface Worker {
   recovery_key_set?: boolean;
 }
 
-/** One row of the public “find a worker” directory (privacy-safe by design). */
+/**
+ * One row of the worker directory. The base shape is the privacy-safe public
+ * listing; a signed-in employer/household account also receives `phone` from
+ * /directory/workers so it can call the worker about work.
+ */
 export interface PublicWorker {
   id: string;
   worker_code: string;
@@ -25,6 +29,8 @@ export interface PublicWorker {
   current_state: string | null;
   rating: { average: number | null; count: number };
   gov_accepted: true;
+  /** Present only on the signed-in /directory/workers response. */
+  phone?: string | null;
 }
 
 export interface PublicWorkersResponse {
@@ -37,7 +43,14 @@ export interface PublicWorkersResponse {
 export interface RatingSummary {
   average: number | null;
   count: number;
-  latest: { id: string; rater_role: string; rater_display_name: string; stars: number; comment: string | null; created_at: string }[];
+  latest: {
+    id: string;
+    rater_role: string;
+    rater_display_name: string;
+    stars: number;
+    comment: string | null;
+    created_at: string;
+  }[];
 }
 
 export interface DocumentItem {

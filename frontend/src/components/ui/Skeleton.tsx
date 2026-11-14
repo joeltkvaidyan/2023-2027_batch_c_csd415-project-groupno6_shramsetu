@@ -5,7 +5,13 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`rounded-xl skeleton animate-shimmer ${className}`} aria-hidden="true" />;
 }
 
-export function SkeletonList({ rows = 3, rowClass = "h-16" }: { rows?: number; rowClass?: string }) {
+export function SkeletonList({
+  rows = 3,
+  rowClass = "h-16",
+}: {
+  rows?: number;
+  rowClass?: string;
+}) {
   return (
     <div className="space-y-3" aria-hidden="true">
       {Array.from({ length: rows }).map((_, i) => (

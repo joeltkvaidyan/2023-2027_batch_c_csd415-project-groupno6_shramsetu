@@ -15,10 +15,27 @@ export interface JobCardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const JobCard = forwardRef<HTMLDivElement, JobCardProps>(function JobCard(
-  { title, employer, occupation, location, wage, openings, workType, onApply, onDetails, applied, className = "", ...rest },
-  ref
+  {
+    title,
+    employer,
+    occupation,
+    location,
+    wage,
+    openings,
+    // Part of the public props, but the card shows the wage line instead.
+    workType: _workType,
+    onApply,
+    onDetails,
+    applied,
+    className = "",
+    ...rest
+  },
+  ref,
 ) {
-  const wageText = wage?.min != null && wage?.max != null ? `₹${wage.min}–₹${wage.max} / ${wage.period}` : "Wage not listed";
+  const wageText =
+    wage?.min != null && wage?.max != null
+      ? `₹${wage.min}–₹${wage.max} / ${wage.period}`
+      : "Wage not listed";
   return (
     <div
       ref={ref}
@@ -29,7 +46,8 @@ export const JobCard = forwardRef<HTMLDivElement, JobCardProps>(function JobCard
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{title}</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {occupation ? occupation.replace(/_/g, " ") : "Trade not specified"} • {location || "Location not specified"}
+            {occupation ? occupation.replace(/_/g, " ") : "Trade not specified"} •{" "}
+            {location || "Location not specified"}
           </p>
         </div>
         <div className="flex items-center gap-1 text-xs">
@@ -40,14 +58,30 @@ export const JobCard = forwardRef<HTMLDivElement, JobCardProps>(function JobCard
       </div>
 
       <div className="flex items-center gap-3 mb-4 text-sm text-gray-600 dark:text-gray-300">
-        <span className="flex items-center gap-1"><span className="text-gray-400" aria-hidden="true">💼</span> {employer}</span>
-        {wage && <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400 font-medium">{wageText}</span>}
-        {openings != null && <span className="flex items-center gap-1">{openings} opening{openings > 1 ? "s" : ""}</span>}
+        <span className="flex items-center gap-1">
+          <span className="text-gray-400" aria-hidden="true">
+            💼
+          </span>{" "}
+          {employer}
+        </span>
+        {wage && (
+          <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400 font-medium">
+            {wageText}
+          </span>
+        )}
+        {openings != null && (
+          <span className="flex items-center gap-1">
+            {openings} opening{openings > 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
         {applied ? (
-          <button disabled className="flex-1 text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl py-2.5 cursor-not-allowed">
+          <button
+            disabled
+            className="flex-1 text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl py-2.5 cursor-not-allowed"
+          >
             Applied
           </button>
         ) : (
@@ -61,7 +95,10 @@ export const JobCard = forwardRef<HTMLDivElement, JobCardProps>(function JobCard
               </button>
             )}
             {onApply && (
-              <button onClick={onApply} className="flex-1 bg-gradient-to-b from-brand-500 to-brand-600 text-white text-sm font-medium rounded-xl py-2.5 shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/30 active:scale-[0.98] transition">
+              <button
+                onClick={onApply}
+                className="flex-1 bg-gradient-to-b from-brand-500 to-brand-600 text-white text-sm font-medium rounded-xl py-2.5 shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/30 active:scale-[0.98] transition"
+              >
                 Apply
               </button>
             )}

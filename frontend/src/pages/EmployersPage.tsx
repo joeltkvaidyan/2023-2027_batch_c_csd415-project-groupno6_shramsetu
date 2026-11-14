@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, IndianRupee, Pencil, Plus, Trash2 } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { Card, Badge, SkeletonList } from "../components/ui";
+import { Card, SkeletonList } from "../components/ui";
 import { Button } from "../components/ui/Button";
 import { InputField } from "../components/InputField";
 import { api, apiErrorMessage } from "../api/client";
@@ -140,7 +140,7 @@ export default function EmployersPage() {
           <p className="text-sm text-blue-900 dark:text-blue-100">
             {t(
               "employers.intro",
-              "Keep a private list of the employers you work for often. Only you can see it, and the totals come from your own wage diary."
+              "Keep a private list of the employers you work for often. Only you can see it, and the totals come from your own wage diary.",
             )}
           </p>
         </Card>
@@ -156,7 +156,9 @@ export default function EmployersPage() {
             <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">
               {t("employers.totalOutstanding", "Outstanding across employers")}
             </p>
-            <p className="text-xl font-bold text-brand-700 dark:text-brand-400">₹{totalOutstanding}</p>
+            <p className="text-xl font-bold text-brand-700 dark:text-brand-400">
+              ₹{totalOutstanding}
+            </p>
           </Card>
         )}
 
@@ -176,7 +178,9 @@ export default function EmployersPage() {
         {showForm && (
           <Card className="!p-4 space-y-3">
             <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-              {editingId ? t("employers.edit", "Edit employer") : t("employers.add", "Add an employer")}
+              {editingId
+                ? t("employers.edit", "Edit employer")
+                : t("employers.add", "Add an employer")}
             </h2>
 
             <InputField
@@ -244,7 +248,11 @@ export default function EmployersPage() {
             />
 
             <div className="flex gap-2">
-              <Button loading={saving} loadingText={t("common.loading")} onClick={() => void submit()}>
+              <Button
+                loading={saving}
+                loadingText={t("common.loading")}
+                onClick={() => void submit()}
+              >
                 {t("common.save")}
               </Button>
               <Button
@@ -267,7 +275,10 @@ export default function EmployersPage() {
           <Card className="text-center py-8">
             <Building2 className="h-8 w-8 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t("employers.empty", "No employers saved yet. Add one to track your work and unpaid wages.")}
+              {t(
+                "employers.empty",
+                "No employers saved yet. Add one to track your work and unpaid wages.",
+              )}
             </p>
           </Card>
         ) : (
@@ -276,9 +287,17 @@ export default function EmployersPage() {
               <Card key={employer.id} className="!p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{employer.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                      {employer.name}
+                    </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {[employer.occupation ? t(occupationLabelKey(employer.occupation), employer.occupation) : null, employer.work_location, employer.district]
+                      {[
+                        employer.occupation
+                          ? t(occupationLabelKey(employer.occupation), employer.occupation)
+                          : null,
+                        employer.work_location,
+                        employer.district,
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
@@ -302,8 +321,14 @@ export default function EmployersPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                  <Stat label={t("employers.days", "Days")} value={String(employer.stats.days_worked)} />
-                  <Stat label={t("employers.paid", "Paid")} value={`₹${employer.stats.total_paid}`} />
+                  <Stat
+                    label={t("employers.days", "Days")}
+                    value={String(employer.stats.days_worked)}
+                  />
+                  <Stat
+                    label={t("employers.paid", "Paid")}
+                    value={`₹${employer.stats.total_paid}`}
+                  />
                   <Stat
                     label={t("employers.outstanding", "Unpaid")}
                     value={`₹${employer.stats.total_outstanding}`}
@@ -324,7 +349,10 @@ export default function EmployersPage() {
                 )}
 
                 <p className="text-[11px] text-gray-400 mt-3">
-                  {t("employers.selfReported", "You entered this yourself — ShramSetu has not verified it with the employer.")}
+                  {t(
+                    "employers.selfReported",
+                    "You entered this yourself — ShramSetu has not verified it with the employer.",
+                  )}
                 </p>
 
                 {employer.stats.total_outstanding > 0 && (
@@ -352,13 +380,25 @@ export default function EmployersPage() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "danger" | "success" }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "danger" | "success";
+}) {
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg py-2">
       <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">{label}</p>
       <p
         className={`text-sm font-bold ${
-          tone === "danger" ? "text-red-600 dark:text-red-400" : tone === "success" ? "text-green-600 dark:text-green-400" : "text-gray-800 dark:text-gray-100"
+          tone === "danger"
+            ? "text-red-600 dark:text-red-400"
+            : tone === "success"
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-800 dark:text-gray-100"
         }`}
       >
         {value}

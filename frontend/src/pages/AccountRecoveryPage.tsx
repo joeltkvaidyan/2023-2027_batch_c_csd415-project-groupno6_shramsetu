@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Smartphone, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api } from "../api/client";
+import { api, apiErrorDetail } from "../api/client";
 import { useAuth } from "../store/AuthContext";
 import type { Worker } from "../types";
 
@@ -20,7 +20,7 @@ type Mode = "password" | "mobile";
 
 export default function AccountRecoveryPage() {
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeLogin } = useAuth();
 
   const [mode, setMode] = useState<Mode>("password");
   const [workerId, setWorkerId] = useState("");
@@ -50,8 +50,8 @@ export default function AccountRecoveryPage() {
         new_password: newPasswordState,
       });
       setDoneMsg(typeof res.data?.detail === "string" ? res.data.detail : "Password updated.");
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Recovery failed. Check your worker ID and recovery key.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Recovery failed. Check your worker ID and recovery key.");
     } finally {
       setBusy(false);
     }
@@ -77,12 +77,12 @@ export default function AccountRecoveryPage() {
           otp: otp.replace(/\D/g, ""),
         });
         const data = res.data as { access_token: string; worker: Worker };
-        loginWithToken(data.access_token, data.worker);
+        completeLogin(data.worker);
         navigate("/worker/dashboard");
         return;
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Recovery failed. Check your worker ID and recovery key.");
+    } catch (err) {
+      setError(apiErrorDetail(err) || "Recovery failed. Check your worker ID and recovery key.");
     } finally {
       setBusy(false);
     }
@@ -92,27 +92,37 @@ export default function AccountRecoveryPage() {
     <Screen title="Recover account" onBack={true}>
       <div className="mb-6 animate-fade-up">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Lost your phone, your password, or both? Your recovery key — the
-          SRK-… code printed once when you registered — proves who you are. No
-          OTP can help here because the phone itself is the problem.
+          Lost your phone, your password, or both? Your recovery key — the SRK-… code printed once
+          when you registered — proves who you are. No OTP can help here because the phone itself is
+          the problem.
         </p>
       </div>
 
       <div className="flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1 mb-6">
         <button
           type="button"
-          onClick={() => { setMode("password"); reset(); }}
+          onClick={() => {
+            setMode("password");
+            reset();
+          }}
           className={`flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition ${
-            mode === "password" ? "bg-brand-600 text-white shadow-glow-brand" : "text-gray-600 dark:text-gray-300"
+            mode === "password"
+              ? "bg-brand-600 text-white shadow-glow-brand"
+              : "text-gray-600 dark:text-gray-300"
           }`}
         >
           <KeyRound className="h-4 w-4" aria-hidden="true" /> Forgot password
         </button>
         <button
           type="button"
-          onClick={() => { setMode("mobile"); reset(); }}
+          onClick={() => {
+            setMode("mobile");
+            reset();
+          }}
           className={`flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition ${
-            mode === "mobile" ? "bg-brand-600 text-white shadow-glow-brand" : "text-gray-600 dark:text-gray-300"
+            mode === "mobile"
+              ? "bg-brand-600 text-white shadow-glow-brand"
+              : "text-gray-600 dark:text-gray-300"
           }`}
         >
           <Smartphone className="h-4 w-4" aria-hidden="true" /> Lost phone / change number
@@ -120,7 +130,10 @@ export default function AccountRecoveryPage() {
       </div>
 
       {doneMsg && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-4" role="status">
+        <div
+          className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-4"
+          role="status"
+        >
           <p className="text-emerald-700 dark:text-emerald-300 text-sm flex items-start gap-2">
             <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" /> {doneMsg}
           </p>
@@ -132,7 +145,10 @@ export default function AccountRecoveryPage() {
 
       <form onSubmit={mode === "password" ? submitPassword : submitMobile} className="space-y-4">
         <div>
-          <label htmlFor="rec-worker-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="rec-worker-id"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Worker ID
           </label>
           <input
@@ -146,7 +162,10 @@ export default function AccountRecoveryPage() {
           />
         </div>
         <div>
-          <label htmlFor="rec-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="rec-key"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             Recovery key
           </label>
           <input
@@ -163,7 +182,10 @@ export default function AccountRecoveryPage() {
 
         {mode === "password" ? (
           <div>
-            <label htmlFor="rec-pass" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="rec-pass"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               New password
             </label>
             <input
@@ -181,7 +203,10 @@ export default function AccountRecoveryPage() {
         ) : (
           <>
             <div>
-              <label htmlFor="rec-new-mobile" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="rec-new-mobile"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 New mobile number
               </label>
               <input
@@ -198,7 +223,10 @@ export default function AccountRecoveryPage() {
             </div>
             {mobileStep === 2 && (
               <div>
-                <label htmlFor="rec-otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  htmlFor="rec-otp"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   OTP sent to the new number
                 </label>
                 <input
@@ -217,7 +245,10 @@ export default function AccountRecoveryPage() {
         )}
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200/70 dark:border-red-800 rounded-xl p-3" role="alert">
+          <div
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200/70 dark:border-red-800 rounded-xl p-3"
+            role="alert"
+          >
             <p className="text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" /> {error}
             </p>
@@ -241,8 +272,8 @@ export default function AccountRecoveryPage() {
       </form>
 
       <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-        Lost BOTH the password and the recovery key? Visit a Common Service
-        Centre or labour office with your ID documents.
+        Lost BOTH the password and the recovery key? Visit a Common Service Centre or labour office
+        with your ID documents.
       </p>
     </Screen>
   );

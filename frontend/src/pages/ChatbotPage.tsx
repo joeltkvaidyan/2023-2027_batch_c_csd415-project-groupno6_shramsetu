@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
@@ -6,7 +6,8 @@ import { BottomNav } from "../components/BottomNav";
 import { VoiceRecorder } from "../components/VoiceRecorder";
 import { api, apiErrorMessage } from "../api/client";
 import { SkeletonList } from "../components/ui";
-import { Trash2, BookOpen, Sparkles, Volume2, Square, SendHorizontal, ShieldCheck, Info, FileText } from "lucide-react";
+import { SourceChips } from "../components/SourceChips";
+import { Trash2, Sparkles, Volume2, Square, SendHorizontal, ShieldCheck, Info } from "lucide-react";
 import type { ChatAnswer, ChatHistoryItem } from "../types";
 
 interface DisplayMessage {
@@ -22,14 +23,30 @@ const SUGGESTIONS_BY_LANG: Record<string, string[]> = {
     "How do I file a complaint about unpaid wages?",
   ],
   hi: [
-    "ई-श्रम में पंजीकरण कैसे करें?",
-    "दुर्घटना बीमा कितने का मिलता है?",
-    "बकाया मजदूरी की शिकायत कैसे दर्ज करें?",
+    "à¤ˆ-à¤¶à¥à¤°à¤® à¤®à¥‡à¤‚ à¤ªà¤‚à¤œà¥€à¤•à¤°à¤£ à¤•à¥ˆà¤¸à¥‡ à¤•à¤°à¥‡à¤‚?",
+    "à¤¦à¥à¤°à¥à¤˜à¤Ÿà¤¨à¤¾ à¤¬à¥€à¤®à¤¾ à¤•à¤¿à¤¤à¤¨à¥‡ à¤•à¤¾ à¤®à¤¿à¤²à¤¤à¤¾ à¤¹à¥ˆ?",
+    "à¤¬à¤•à¤¾à¤¯à¤¾ à¤®à¤œà¤¦à¥‚à¤°à¥€ à¤•à¥€ à¤¶à¤¿à¤•à¤¾à¤¯à¤¤ à¤•à¥ˆà¤¸à¥‡ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚?",
   ],
-  bn: ["ই-শ্রমে কীভাবে নিবন্ধন করব?", "দুর্ঘটনা বীমা কত টাকা?", "বকেয়া মজুরির অভিযোগ কীভাবে করব?"],
-  te: ["ఈ-శ్రమ్‌లో ఎలా నమోదు చేసుకోవాలి?", "ప్రమాద భీమా ఎంత?", "చెల్లించని జీతం ఫిర్యాదు ఎలా చేయాలి?"],
-  ta: ["ஈ-ஸ்ரமத்தில் பதிவு செய்வது எப்படி?", "விபத்து காப்பீடு எவ்வளவு?", "நிலுவை கூலி புகாரு எப்படி?"],
-  ml: ["ഇ-ശ്രമിൽ രജിസ്റ്റർ ചെയ്യുന്നത് എങ്ങനെ?", "അപകട ഇൻഷുറൻസ് എത്ര?", "കിട്ടാത്ത കൂലി പരാതി എങ്ങനെ?"],
+  bn: [
+    "à¦‡-à¦¶à§à¦°à¦®à§‡ à¦•à§€à¦­à¦¾à¦¬à§‡ à¦¨à¦¿à¦¬à¦¨à§à¦§à¦¨ à¦•à¦°à¦¬?",
+    "à¦¦à§à¦°à§à¦˜à¦Ÿà¦¨à¦¾ à¦¬à§€à¦®à¦¾ à¦•à¦¤ à¦Ÿà¦¾à¦•à¦¾?",
+    "à¦¬à¦•à§‡à¦¯à¦¼à¦¾ à¦®à¦œà§à¦°à¦¿à¦° à¦…à¦­à¦¿à¦¯à§‹à¦— à¦•à§€à¦­à¦¾à¦¬à§‡ à¦•à¦°à¦¬?",
+  ],
+  te: [
+    "à°ˆ-à°¶à±à°°à°®à±â€Œà°²à±‹ à°Žà°²à°¾ à°¨à°®à±‹à°¦à± à°šà±‡à°¸à±à°•à±‹à°µà°¾à°²à°¿?",
+    "à°ªà±à°°à°®à°¾à°¦ à°­à±€à°®à°¾ à°Žà°‚à°¤?",
+    "à°šà±†à°²à±à°²à°¿à°‚à°šà°¨à°¿ à°œà±€à°¤à°‚ à°«à°¿à°°à±à°¯à°¾à°¦à± à°Žà°²à°¾ à°šà±‡à°¯à°¾à°²à°¿?",
+  ],
+  ta: [
+    "à®ˆ-à®¸à¯à®°à®®à®¤à¯à®¤à®¿à®²à¯ à®ªà®¤à®¿à®µà¯ à®šà¯†à®¯à¯à®µà®¤à¯ à®Žà®ªà¯à®ªà®Ÿà®¿?",
+    "à®µà®¿à®ªà®¤à¯à®¤à¯ à®•à®¾à®ªà¯à®ªà¯€à®Ÿà¯ à®Žà®µà¯à®µà®³à®µà¯?",
+    "à®¨à®¿à®²à¯à®µà¯ˆ à®•à¯‚à®²à®¿ à®ªà¯à®•à®¾à®°à¯ à®Žà®ªà¯à®ªà®Ÿà®¿?",
+  ],
+  ml: [
+    "à´‡-à´¶àµà´°à´®à´¿àµ½ à´°à´œà´¿à´¸àµà´±àµà´±àµ¼ à´šàµ†à´¯àµà´¯àµà´¨àµà´¨à´¤àµ à´Žà´™àµà´™à´¨àµ†?",
+    "à´…à´ªà´•à´Ÿ à´‡àµ»à´·àµà´±àµ»à´¸àµ à´Žà´¤àµà´°?",
+    "à´•à´¿à´Ÿàµà´Ÿà´¾à´¤àµà´¤ à´•àµ‚à´²à´¿ à´ªà´°à´¾à´¤à´¿ à´Žà´™àµà´™à´¨àµ†?",
+  ],
 };
 
 export default function ChatbotPage() {
@@ -48,7 +65,7 @@ export default function ChatbotPage() {
 
   const lang = i18n.language.split("-")[0];
 
-  const loadHistory = () => {
+  const loadHistory = useCallback(() => {
     setHistoryLoading(true);
     setHistoryError(false);
     api
@@ -58,7 +75,7 @@ export default function ChatbotPage() {
           // Old history rows may carry stale meta (error-flagged answers from
           // a past outage). Rendering their historical system_error state as
           // if it described the CURRENT assistant made the page open with a
-          // permanent "temporarily unavailable" banner — so only a fresh
+          // permanent "temporarily unavailable" banner â€” so only a fresh
           // error from this session's /chat/ask may set the banner.
           const meta = item.meta && !item.meta.system_error ? item.meta : undefined;
           return {
@@ -71,15 +88,41 @@ export default function ChatbotPage() {
       })
       .catch(() => setHistoryError(true))
       .finally(() => setHistoryLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadHistory]);
+
+  const sendQuestion = useCallback(
+    async (question: string) => {
+      if (!question.trim() || asking) return;
+      setMessages((prev) => [...prev, { role: "user", text: question }]);
+      setInput("");
+      setAsking(true);
+      try {
+        const res = await api.post<ChatAnswer>("/chat/ask", { question, language: i18n.language });
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: res.data.answer, meta: res.data },
+        ]);
+        setAssistantUnavailable(Boolean(res.data.system_error));
+      } catch (err) {
+        // Localised friendly message: network outage, 429 rate limit, or the
+        // server's own detail â€” never a raw exception string.
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: apiErrorMessage(err, t("common.error")) },
+        ]);
+      } finally {
+        setAsking(false);
+      }
+    },
+    [asking, i18n.language, t],
+  );
 
   // Dashboard deep links (e.g. the Heat-safety tile) pre-seed a question via
-  // navigation state. Send it once, AFTER history settles — loadHistory()
+  // navigation state. Send it once, AFTER history settles â€” loadHistory()
   // replaces the message list, so sending earlier would lose the bubble.
   const location = useLocation();
   const initialQuestion = (location.state as { initialQuestion?: string } | null)?.initialQuestion;
@@ -88,33 +131,11 @@ export default function ChatbotPage() {
     if (!initialQuestion || prefillSentRef.current || historyLoading) return;
     prefillSentRef.current = true;
     void sendQuestion(initialQuestion);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuestion, historyLoading]);
+  }, [initialQuestion, historyLoading, sendQuestion]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, asking]);
-
-  const sendQuestion = async (question: string) => {
-    if (!question.trim() || asking) return;
-    setMessages((prev) => [...prev, { role: "user", text: question }]);
-    setInput("");
-    setAsking(true);
-    try {
-      const res = await api.post<ChatAnswer>("/chat/ask", { question, language: i18n.language });
-      setMessages((prev) => [...prev, { role: "assistant", text: res.data.answer, meta: res.data }]);
-      setAssistantUnavailable(Boolean(res.data.system_error));
-    } catch (err) {
-      // Localised friendly message: network outage, 429 rate limit, or the
-      // server's own detail — never a raw exception string.
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: apiErrorMessage(err, t("common.error")) },
-      ]);
-    } finally {
-      setAsking(false);
-    }
-  };
 
   const handleVoiceResult = (text: string) => {
     setVoiceError(null);
@@ -164,7 +185,8 @@ export default function ChatbotPage() {
     if ("speechSynthesis" in window) {
       const voices = window.speechSynthesis.getVoices();
       const base = speechLocale.split("-")[0];
-      const voice = voices.find((v) => v.lang === speechLocale) || voices.find((v) => v.lang.startsWith(base));
+      const voice =
+        voices.find((v) => v.lang === speechLocale) || voices.find((v) => v.lang.startsWith(base));
 
       if (voice) {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -229,7 +251,7 @@ export default function ChatbotPage() {
               className="min-h-[44px] px-3 text-xs font-medium text-gray-400 hover:text-red-500 disabled:opacity-50 flex items-center gap-1.5 transition rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-              {clearing ? "…" : t("chat.clearHistory")}
+              {clearing ? "â€¦" : t("chat.clearHistory")}
             </button>
           </div>
         )}
@@ -265,15 +287,19 @@ export default function ChatbotPage() {
           )}
           {!historyLoading && !historyError && messages.length === 0 && (
             <div className="py-6">
-              {/* Feature intro — replaces the bare "start chatting" text */}
+              {/* Feature intro â€” replaces the bare "start chatting" text */}
               <div className="text-center mb-6 animate-rise">
                 <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20 mb-3">
                   <Sparkles className="h-7 w-7 text-white" aria-hidden="true" />
                 </div>
-                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">{t("chat.title")}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 px-6">{t("chat.emptyState")}</p>
+                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  {t("chat.title")}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 px-6">
+                  {t("chat.emptyState")}
+                </p>
               </div>
-              {/* Suggested questions — instant engagement, zero typing */}
+              {/* Suggested questions â€” instant engagement, zero typing */}
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
                 {t("chat.suggestionsTitle", "Try asking")}
               </p>
@@ -306,11 +332,15 @@ export default function ChatbotPage() {
           )}
         </div>
 
-        {/* Voice-or-type composer — lifted above the floating nav dock */}
+        {/* Voice-or-type composer â€” lifted above the floating nav dock */}
         <div className="fixed bottom-24 left-0 right-0 bg-gray-50/90 dark:bg-gray-950/90 backdrop-blur-xl px-4 py-3 border-t border-gray-200/70 dark:border-gray-700/60">
           <div className="max-w-md mx-auto">
             {voiceError && (
-              <p className="text-red-500 text-xs mb-2 flex items-center gap-1" role="alert" aria-live="assertive">
+              <p
+                className="text-red-500 text-xs mb-2 flex items-center gap-1"
+                role="alert"
+                aria-live="assertive"
+              >
                 {voiceError}
               </p>
             )}
@@ -381,7 +411,9 @@ function ChatBubble({
             : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-md shadow-card"
         }`}
       >
-        <p className={isUser ? "" : "text-gray-900 dark:text-gray-100 whitespace-pre-wrap"}>{msg.text}</p>
+        <p className={isUser ? "" : "text-gray-900 dark:text-gray-100 whitespace-pre-wrap"}>
+          {msg.text}
+        </p>
         {!isUser && msg.meta && (
           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
             {msg.meta.system_error ? (
@@ -390,51 +422,36 @@ function ChatBubble({
               </p>
             ) : msg.meta.grounded ? (
               <>
-                <p className="text-xs text-gray-500 dark:text-gray-400 italic">{msg.meta.simple_explanation}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                  {msg.meta.simple_explanation}
+                </p>
 
-                {/* Source citations — the trust moment */}
+                {/* Source citations: each chip opens the record behind it */}
                 {msg.meta.sources && msg.meta.sources.length > 0 && (
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1">
-                      <BookOpen className="h-3 w-3" aria-hidden="true" />
-                      {t("chat.sources", "Sources")}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {msg.meta.sources.slice(0, 3).map((s, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex items-center gap-1.5 max-w-full overflow-hidden text-[11px] font-medium bg-gray-50 dark:bg-gray-900/60 rounded-full pl-1.5 pr-2.5 py-1 border border-gray-100 dark:border-gray-700"
-                          title={[s.department, s.last_updated && s.last_updated !== "Unknown" ? s.last_updated : null]
-                            .filter(Boolean)
-                            .join(" • ")}
-                        >
-                          <span className="w-4 h-4 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 flex items-center justify-center text-[10px] font-bold shrink-0">
-                            {i + 1}
-                          </span>
-                          <FileText className="h-3 w-3 text-gray-400 shrink-0" aria-hidden="true" />
-                          <span className="truncate text-gray-700 dark:text-gray-300">{s.title ?? s.source_file}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <SourceChips sources={msg.meta.sources} />
                 )}
                 {!msg.meta.sources && msg.meta.source_document && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <span className="font-semibold">{t("chat.sourceDocument")}:</span> {msg.meta.source_document}
-                    {msg.meta.government_department ? ` • ${msg.meta.government_department}` : ""}
+                    <span className="font-semibold">{t("chat.sourceDocument")}:</span>{" "}
+                    {msg.meta.source_document}
+                    {msg.meta.government_department ? ` â€¢ ${msg.meta.government_department}` : ""}
                   </p>
                 )}
 
-                {/* Grounding + confidence — subtle, honest, not scary numbers */}
+                {/* Grounding + confidence â€” subtle, honest, not scary numbers */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700 dark:text-green-400">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("chat.notVerified", "") === "" ? "Verified from government documents" : t("chat.groundedBadge", "Verified source")}
+                    {t("chat.notVerified", "") === ""
+                      ? "Verified from government documents"
+                      : t("chat.groundedBadge", "Verified source")}
                   </span>
                   <button
                     onClick={() => onSpeak(msg.text, idx)}
                     className={`inline-flex items-center gap-1.5 text-xs font-semibold transition ${
-                      isSpeaking ? "text-red-500" : "text-brand-600 dark:text-brand-400 hover:underline"
+                      isSpeaking
+                        ? "text-red-500"
+                        : "text-brand-600 dark:text-brand-400 hover:underline"
                     }`}
                   >
                     {isSpeaking ? (

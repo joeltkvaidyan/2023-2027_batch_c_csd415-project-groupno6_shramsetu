@@ -472,12 +472,13 @@ describe("Auth hardening", () => {
   });
 
   it("completing OTP verification lets the ORIGINAL password work", async () => {
-    // Simulate OTP consumption via the model layer (code delivery is terminal-only).
-    const { sha256 } = await import("../src/utils/crypto.js");
+    // Simulate OTP delivery via the model layer (the adapter prints to the
+    // terminal in dev). The digest is the peppered HMAC the route now writes.
+    const { hashOtp } = await import("../src/utils/crypto.js");
     const { OtpCode } = await import("../src/models/Document.js");
     await OtpCode.create({
       mobile_number: "9111100000",
-      code_hash: sha256("123456"),
+      code_hash: hashOtp("123456"),
       purpose: "register",
       expires_at: new Date(Date.now() + 60_000),
       last_sent_at: new Date(),

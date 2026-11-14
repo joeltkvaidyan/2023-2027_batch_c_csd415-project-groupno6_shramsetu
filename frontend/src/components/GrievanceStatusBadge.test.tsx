@@ -59,8 +59,6 @@ describe("GrievanceStatusBadge", () => {
     render(<GrievanceStatusBadge status="under_review" />);
     // Tailwind's whitespace-nowrap on a pill with an icon: a regression to
     // wrapping would push the badge to two lines in the grievance list.
-    expect(screen.getByText("grievance.status.under_review")).toHaveClass(
-      "whitespace-nowrap"
-    );
+    expect(screen.getByText("grievance.status.under_review")).toHaveClass("whitespace-nowrap");
   });
 });

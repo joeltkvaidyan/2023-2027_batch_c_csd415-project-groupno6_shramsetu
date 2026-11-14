@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, CheckCircle, Home, Loader2, Lock, Phone, User } from "lucide-react";
 import { Screen } from "../components/Screen";
-import { api, setCitizenToken } from "../api/client";
+import { api, apiErrorDetail } from "../api/client";
+import { declareSession } from "../api/session";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 
@@ -42,11 +43,11 @@ export default function CitizenLoginPage() {
 
   const finishLogin = useCallback(
     (data: CitizenResponse) => {
-      setCitizenToken(data.access_token);
+      declareSession("citizen");
       localStorage.setItem("citizen_user", JSON.stringify(data.citizen));
       navigate("/citizen/dashboard", { replace: true });
     },
-    [navigate]
+    [navigate],
   );
 
   const resetFlow = (next: Mode) => {
@@ -72,8 +73,8 @@ export default function CitizenLoginPage() {
       });
       setRecoveryKey(res.data.recovery_key);
       setPendingMobile(digitsOnly(mobileNumber));
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.registerFailed", "Registration failed."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.registerFailed", "Registration failed."));
     } finally {
       setBusy(false);
     }
@@ -88,8 +89,8 @@ export default function CitizenLoginPage() {
         otp: otp.replace(/\D/g, ""),
       });
       finishLogin(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.verifyFailed", "Verification failed."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.verifyFailed", "Verification failed."));
     } finally {
       setBusy(false);
     }
@@ -104,8 +105,10 @@ export default function CitizenLoginPage() {
         password,
       });
       finishLogin(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.invalidLogin", "Invalid mobile number or password."));
+    } catch (err) {
+      setError(
+        apiErrorDetail(err) || t("citizen.invalidLogin", "Invalid mobile number or password."),
+      );
     } finally {
       setBusy(false);
     }
@@ -115,10 +118,12 @@ export default function CitizenLoginPage() {
     setBusy(true);
     setError(null);
     try {
-      await api.post("/auth/citizen/login/otp/request", { mobile_number: digitsOnly(mobileNumber) });
+      await api.post("/auth/citizen/login/otp/request", {
+        mobile_number: digitsOnly(mobileNumber),
+      });
       setOtpSent(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || t("citizen.otpFailed", "Could not send OTP."));
+    } catch (err) {
+      setError(apiErrorDetail(err) || t("citizen.otpFailed", "Could not send OTP."));
     } finally {
       setBusy(false);
     }
@@ -144,7 +149,10 @@ export default function CitizenLoginPage() {
             {t("citizen.heading", "ShramSetu Household")}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t("citizen.tagline", "Find a verified worker near you — they call you back, never public numbers")}
+            {t(
+              "citizen.tagline",
+              "Find a verified worker near you — they call you back, never public numbers",
+            )}
           </p>
         </div>
 
@@ -155,10 +163,18 @@ export default function CitizenLoginPage() {
               type="button"
               onClick={() => resetFlow(m)}
               className={`flex-1 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
-                mode === m ? "bg-white shadow-sm text-brand-700 dark:text-brand-400" : "text-gray-600 dark:text-gray-300"
+                mode === m
+                  ? "bg-white shadow-sm text-brand-700 dark:text-brand-400"
+                  : "text-gray-600 dark:text-gray-300"
               }`}
             >
-              {m === "register" ? <User className="h-3.5 w-3.5" aria-hidden="true" /> : m === "password" ? <Lock className="h-3.5 w-3.5" aria-hidden="true" /> : <Phone className="h-3.5 w-3.5" aria-hidden="true" />}
+              {m === "register" ? (
+                <User className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : m === "password" ? (
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               {m === "register"
                 ? t("citizen.tabRegister", "Create account")
                 : m === "password"
@@ -172,14 +188,20 @@ export default function CitizenLoginPage() {
           <Card className="p-6 space-y-4">
             {[
               <div key="a" className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <AlertCircle
+                  className="h-5 w-5 text-amber-600 dark:text-amber-400"
+                  aria-hidden="true"
+                />
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">
                   {t("citizen.recoveryTitle", "Save this recovery key")}
                 </h3>
               </div>,
             ]}
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              {t("citizen.recoveryBody", "Shown only once — it recovers this account if you lose your phone number.")}
+              {t(
+                "citizen.recoveryBody",
+                "Shown only once — it recovers this account if you lose your phone number.",
+              )}
             </p>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4 font-mono text-lg font-bold tracking-widest text-gray-900 dark:text-brand-300 select-all break-all">
               {recoveryKey}
@@ -241,11 +263,13 @@ export default function CitizenLoginPage() {
                   {t("citizen.mobile", "Mobile number")}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">+91</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    +91
+                  </span>
                   <input
                     type="text"
                     inputMode="numeric"
-                    className="input-field w-full pl-10"
+                    className="input-field w-full pl-12"
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(digitsOnly(e.target.value))}
                     placeholder="9876543210"
@@ -267,7 +291,11 @@ export default function CitizenLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    placeholder={mode === "register" ? t("citizen.newPassword", "At least 6 characters") : t("citizen.yourPassword", "Your password")}
+                    placeholder={
+                      mode === "register"
+                        ? t("citizen.newPassword", "At least 6 characters")
+                        : t("citizen.yourPassword", "Your password")
+                    }
                   />
                 </div>
               )}
@@ -298,22 +326,30 @@ export default function CitizenLoginPage() {
                 </div>
               )}
 
-              <button type="submit" disabled={busy} className="btn-primary w-full shadow-glow-brand">
+              <button
+                type="submit"
+                disabled={busy}
+                className="btn-primary w-full shadow-glow-brand"
+              >
                 {busy ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> {t("common.loading", "Working…")}
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />{" "}
+                    {t("common.loading", "Working…")}
                   </span>
                 ) : mode === "register" ? (
                   <span className="flex items-center justify-center gap-2">
-                    <User className="h-4 w-4" aria-hidden="true" /> {t("citizen.createAccount", "Create household account")}
+                    <User className="h-4 w-4" aria-hidden="true" />{" "}
+                    {t("citizen.createAccount", "Create household account")}
                   </span>
                 ) : mode === "otp" && !otpSent ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Phone className="h-4 w-4" aria-hidden="true" /> {t("citizen.sendOtp", "Send OTP")}
+                    <Phone className="h-4 w-4" aria-hidden="true" />{" "}
+                    {t("citizen.sendOtp", "Send OTP")}
                   </span>
                 ) : mode === "otp" ? (
                   <span className="flex items-center justify-center gap-2">
-                    <CheckCircle className="h-4 w-4" aria-hidden="true" /> {t("citizen.verifyOtp", "Verify OTP")}
+                    <CheckCircle className="h-4 w-4" aria-hidden="true" />{" "}
+                    {t("citizen.verifyOtp", "Verify OTP")}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">

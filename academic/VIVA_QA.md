@@ -261,7 +261,7 @@ are left to Rollup, which places them in the page chunk that uses them.
 
 Deliberately at the seams that hold logic, not by mocking everything:
 
-- **50 tests** across 4 files: wallet PIN lockout logic, the auth gate's four
+- **61 tests** across 6 files: wallet PIN lockout logic, the auth gate's four
   outcomes, the status badge's "never colour alone" accessibility contract,
   i18n bundle parity across all six languages, and the lazy-loading fallback's
   live-region semantics.
@@ -269,7 +269,7 @@ Deliberately at the seams that hold logic, not by mocking everything:
   `grievance.status.*` keys as English, and that the registry matches the
   languages the server and AI service accept — a mismatch there fails at
   runtime, for a real worker, so it fails in CI instead.
-- Server behaviour is covered by 49 tests plus 34 live end-to-end checks.
+- Server behaviour is covered by 206 tests plus 34 live end-to-end checks.
 
 **Q. Anything you'd change about the frontend?**
 
@@ -321,18 +321,18 @@ successful answer in the automated checks either.
 Run any of these live:
 
 ```bash
-cd server     && npm test                                  # 49 passed
-cd frontend   && npm test                                  # 50 passed
-cd ai-service && venv/Scripts/python -m pytest             # 92 passed
+cd server     && npm test                                  # 206 passed
+cd frontend   && npm test                                  # 61 passed
+cd ai-service && venv/Scripts/python -m pytest             # 103 passed
 cd server     && npm run verify                           # 34 live checks, both services
 cd ai-service && venv/Scripts/python eval/run_eval.py      # → eval/RESULTS.md (~30 s)
 ```
 
 | Metric | Value |
 |---|---|
-| Corpus | 62 active documents (11 superseded correctly skipped) |
-| hit@1 | **46/49 = 94%** |
-| hit@3 | **48/49 = 98%** |
+| Corpus | 65 active documents (11 superseded correctly skipped) |
+| hit@1 | **45/49 = 92%** |
+| hit@3 | **47/49 = 96%** |
 | Off-topic + injection refused | **12/13 = 92%** |
 
 Retrieval-only mode, so no API key is needed. `eval/ANALYSIS.md` holds the

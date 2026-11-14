@@ -1,8 +1,9 @@
 TITLE: Rights and Protections for Domestic Workers in India
 DEPARTMENT: Ministry of Labour and Employment, Government of India
 LAST_UPDATED: 2025-02-15
-SOURCE_URL: needs review
+SOURCE_URL: https://eshram.gov.in/faqs
 LAST_VERIFIED: 2026-10-01
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 Domestic workers are persons employed in household work including cooking, cleaning, washing, ironing, childcare, elderly care, gardening, and similar tasks. While there is no specific comprehensive legislation for domestic workers in India, they are protected under various laws and schemes.
@@ -26,9 +27,10 @@ Several states have enacted specific legislation for domestic workers:
 
 SCHEMES AVAILABLE:
 - e-Shram registration: Domestic workers can register on the e-Shram portal for social security.
-- PM-SYM Pension: Rs 3,000/month pension after age 60.
+- PM-SYM pension: Rs 3,000/month after 60 (entry age 18-40, monthly income up to
+  Rs 15,000).
 - PM-SBY Insurance: Rs 2 lakh accident insurance.
-- Ayushman Bharat: Rs 5 lakh health insurance.
+- Ayushman Bharat (PM-JAY): Rs 5 lakh hospital cover for eligible families.
 - PM-KISAN: Rs 6,000/year for those with agricultural land.
 
 RIGHTS OF DOMESTIC WORKERS:

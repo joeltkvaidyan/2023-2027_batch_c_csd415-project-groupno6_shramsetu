@@ -15,17 +15,25 @@ import jobRoutes from "./routes/jobs.js";
 import employerRoutes from "./routes/employers.js";
 import ratingRoutes from "./routes/ratings.js";
 import publicRoutes from "./routes/public.js";
+import directoryRoutes from "./routes/directory.js";
 import requestRoutes from "./routes/requests.js";
 import engagementRoutes from "./routes/engagements.js";
 import wageSlipRoutes from "./routes/wageSlips.js";
 import recordRoutes from "./routes/records.js";
+import idCardRoutes from "./routes/idCard.js";
+import insuranceRoutes from "./routes/insurance.js";
 
 /**
  * The Express app, separated from bootstrap (DB connect + listen) so the
  * integration tests can exercise the full middleware stack over supertest.
  */
 const app = express();
-app.set("trust proxy", false); // local deployment: rate limits key off the socket IP
+// req.ip (and therefore every rate-limit key) must be the REAL client, not the
+// reverse proxy in front of us. One hop in production by default; set
+// TRUST_PROXY=0 when the app is exposed directly, or to the hop count / CIDR
+// list your topology needs. Never `true`: that lets any client forge
+// X-Forwarded-For and walk past the limiters.
+app.set("trust proxy", config.trustProxy);
 
 // Security headers. This is a JSON API (no HTML), so CSP is disabled here;
 // the SPA's own headers belong to the frontend host.
@@ -58,10 +66,13 @@ app.use("/api/v1/jobs", jobRoutes);
 app.use("/api/v1/employers", employerRoutes);
 app.use("/api/v1/ratings", ratingRoutes);
 app.use("/api/v1/public", publicRoutes);
+app.use("/api/v1/directory", directoryRoutes);
 app.use("/api/v1/requests", requestRoutes);
 app.use("/api/v1/engagements", engagementRoutes);
 app.use("/api/v1/wage-slips", wageSlipRoutes);
 app.use("/api/v1/records", recordRoutes);
+app.use("/api/v1/id-card", idCardRoutes);
+app.use("/api/v1/insurance", insuranceRoutes);
 
 // 404 for unknown API routes
 app.use("/api", (req, res) => res.status(404).json({ detail: "Not found" }));

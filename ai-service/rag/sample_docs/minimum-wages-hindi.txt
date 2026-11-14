@@ -1,8 +1,9 @@
 TITLE: न्यूनतम मजदूरी अधिनियम — श्रमिकों के अधिकार
 DEPARTMENT: श्रम और रोजगार मंत्रालय, भारत सरकार
-LAST_UPDATED: needs review
+LAST_UPDATED: 2026-11-03
 SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192463
 LAST_VERIFIED: 2026-10-01
+AUTHORITY: श्रम और रोजगार मंत्रालय, भारत सरकार
 STATUS: superseded
 ---
 न्यूनतम मजदूरी अधिनियम — श्रमिकों के अधिकार

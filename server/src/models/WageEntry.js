@@ -22,6 +22,11 @@ const WageEntrySchema = new Schema(
   {
     worker_id: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     work_date: { type: Date, required: true },
+    // Idempotency key of the submission that last wrote this row. A retry of
+    // the same submission replays the stored row instead of re-running the
+    // paid-day and employer-confirmation locks. Absent (never null) when the
+    // client sends no key, so the sparse index ignores the row.
+    client_request_id: { type: String },
     employer_name: { type: String, default: null },
     agreed_amount: { type: Number, required: true, min: 0 },
     paid_amount: { type: Number, default: 0, min: 0 },
@@ -40,6 +45,13 @@ const WageEntrySchema = new Schema(
 );
 
 WageEntrySchema.index({ worker_id: 1, work_date: 1 }, { unique: true });
+// The same key may arrive on a different day only if the worker retyped the
+// form, so scope the uniqueness to the row that holds it. Partial, so rows with
+// no key are simply outside the constraint.
+WageEntrySchema.index(
+  { worker_id: 1, client_request_id: 1 },
+  { unique: true, partialFilterExpression: { client_request_id: { $type: "string" } } }
+);
 
 WageEntrySchema.methods.toJSON = function () {
   return {

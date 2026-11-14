@@ -6,8 +6,10 @@ secure encrypted document wallet, grievance filing with tracking, a
 jurisdiction-scoped government dashboard with notifications and audit logs,
 and a **multilingual AI welfare assistant** — RAG over curated government
 scheme documents — with **voice in/out**. The worker dashboard also carries a
-**QR digital ID card** and a **wage diary** that can pre-fill an unpaid-wages
-grievance (a day already recorded as fully paid is locked from further edits).
+**QR digital ID card** — which states whether the worker is insured today, and
+whether a labour office checked that policy — and a **wage diary** that can
+pre-fill an unpaid-wages grievance (a day already recorded as fully paid is
+locked from further edits).
 
 Trust is gated on both sides of the work: **new WORKER and EMPLOYER accounts
 both start pending and a jurisdiction labour office must accept them** before
@@ -16,8 +18,10 @@ ratings). Accepted employers can self-post job listings that carry an honest
 "labour-office accepted" poster signal (never a listing certification), and
 **households (the general public) get their own account**: they post area-
 scoped work requests, workers see them ranked by the same explainable matcher,
-and phone numbers pass between the two sides **only after the worker accepts**
-— `tel:`/`sms:` buttons appear on both dashboards, nothing is shown publicly.
+and both the employer and household dashboards list the contact number of
+labour-office accepted workers with `tel:`/`sms:` buttons. Contact numbers are
+never public — `/public/workers` omits them and the open directory is gone;
+only a signed-in employer or household account can read them.
 The RAG corpus further answers the questions the 2026 evidence showed are
 actually failing on the ground: the 8-May-2026 final Labour-Code grievance
 path (GRC at 20+ workers; contract-labour grievance → principal-employer
@@ -142,20 +146,22 @@ demo workers/grievances if the users collection is empty.
 
 ## Demo credentials (development only)
 
-| Role | Where | Credentials |
-|---|---|---|
-| Superadmin | `/government/login` | `ADMIN001` / `Admin@123` (sees everything + audit logs) |
-| State official (Kerala) | `/government/login` | `KL001` / `Kerala@123` (sees all Kerala) |
-| District official (Ernakulam) | `/government/login` | `EKM001` / `Ernakulam@123` (sees only Ernakulam) |
-| Worker (password) | `/worker/login` → 🔑 tab | `9555500101` … `9555500110`, password `Worker@123` |
-| Worker (OTP) | `/worker/login` → 📱 tab | any seeded mobile → OTP appears **only in the server terminal** |
+The seeded accounts are fixtures created by `SEED_DEMO_DATA=true`, and their
+logins are listed in the `DEV SEED ACCOUNTS` block at the end of
+[`server/.env.example`](server/.env.example). They are deliberately not repeated
+here: a credential table in a README is the first thing a scraper finds, and the
+same table invites carrying a demo password into a real deployment.
+
+The server refuses to boot in production with `SEED_DEMO_DATA=true` or the
+default `BOOTSTRAP_ADMIN_PASSWORD`, so these accounts cannot exist in a
+production database created by this code.
 
 ## Tests and verification
 
 | Suite | Command | Covers |
 |---|---|---|
-| Server unit/security | `cd server && npm test` | 200 tests: scoping, ownership, upload crypto, rate limits, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules |
-| Frontend unit/component | `cd frontend && npm test` | 61 tests: wallet PIN lockout, auth-gate routing, status badge a11y, i18n bundle parity |
+| Server unit/security | `cd server && npm test` | 329 tests: scoping, ownership, upload crypto, document-wallet PIN (scrypt, lockout, wallet tokens), cookie sessions (httpOnly, CSRF, refresh rotation/reuse, logout revocation, one role probe, idempotent grievance/wage submissions), rate limits, trust proxy, auth hardening, wage parity (incl. paid-day lock), superadmin officials monitoring, employer acceptance gate, job posting and applicant consent-reveal, citizen service requests, engagement loop (offer → accept → confirm shift → payment) with its transition and diary rules, insurance records (expiry-derived status, masking, jurisdiction-scoped verification, one warning per policy, CSV scope), SLA escalation (one rung per sweep, no duplicate escalation, grace window, scoped overdue view) |
+| Frontend unit/component | `cd frontend && npm test` | 184 tests: idempotency keys (retry reuses, success resets), offline queue replay decisions, session module (CSRF echo, single silent refresh, one role probe, no token storage), role guard states, wallet unlock/idle-lock behaviour, offline-cache AES-GCM round trip and LRU, auth-gate routing, status badge a11y, i18n bundle parity |
 | AI service | `cd ai-service && venv/Scripts/python -m pytest` | 92 tests: corpus integrity, loader, RAG contract, PII, prompt injection, cold-start readiness, STT transcribe regression |
 | End-to-end checks | `cd server && npm run verify` | 34 live checks across both services (incl. wage round trip, paid-day lock, SOS route removed, officials monitoring). Expects the seeded demo dataset — after registering test workers run `npm run demo:reset` or the seed-count checks fail. A check that needs an external provider we have no working key for prints `SKIP` with the reason instead of silently disappearing, and is never counted as a pass |
 | RAG eval harness | `venv/Scripts/python eval/run_eval.py` | hit@1/hit@3, retrieval refusals, per-language → `eval/RESULTS.md` |
@@ -197,6 +203,76 @@ as "not recorded". Nothing is invented to fill a statutory box.
 The Form IX attendance-cum-muster roll is built only from engagements whose shift
 was confirmed as worked: `GET /api/v1/records/muster-roll?month=2027-03` (JSON) or
 `…/muster-roll/print` (printable HTML).
+
+### Insurance on the ID card, and what it does not claim
+
+A worker can record accident, hospital, disability or death cover on their ID
+card: insurer, policy number, sum insured and validity dates. The card and the
+page behind its QR code then answer one narrow question — **is this person
+covered today** — and say who vouched for the answer.
+
+There is deliberately no `is_insured` flag. Status is recomputed from
+`valid_from`/`valid_to` on every read (`server/src/utils/insurance.js`), so a
+card printed last week cannot keep claiming cover that lapsed on Tuesday.
+
+Two levels of trust, and the difference is printed rather than implied:
+
+| Shown to a household | Where it comes from |
+|---|---|
+| "Cover declared by the worker, not yet checked by an office" (amber) | the worker typed it in |
+| "Checked by a labour office" (green) | an official verified it in the console |
+
+`GET /api/v1/public/verify/worker/:code` returns the insurer, coverage, sum
+insured, end date and **only the last four digits** of the policy number; the
+full number is visible to the worker and to a jurisdiction-scoped official, who
+needs it to check the policy with the insurer. Every verification writes an
+`insurance.verify` audit entry, an official can only verify workers inside their
+own jurisdiction (403 otherwise), and a verified policy cannot be deleted by the
+worker (409). The page states plainly that whether a particular claim is paid is
+the insurer's decision, not ShramSetu's.
+
+A sweep (`server/src/utils/insuranceReminders.js`) runs at boot and every 12
+hours: a worker whose cover ends within 30 days, or ended within the last 30
+days, gets one in-app notification per policy. The claim on the notification is
+an atomic update filtered on `reminder_sent_at: null`, so a restart or a second
+API instance cannot send the same warning twice. The worker's own panel also
+shows "cover ends in N days" directly, because an inbox a worker never opens is
+not a reminder.
+
+The labour office gets an **Insurance** tab: scoped policy rows, a **Mark
+verified** action and a CSV export of the register that re-uses the same scope
+helper as the on-screen list, so a download can never contain a worker the
+official cannot already see.
+
+This is a record of cover, not a live insurer feed: connecting to an IRDAI
+licensed insurer's API needs partner credentials this project does not hold, and
+the code does not pretend otherwise.
+
+### When a deadline is missed
+
+Every grievance carries a deadline derived from its priority — `urgent 7 ·
+high 14 · medium 30 · low 45` days. A promise nobody enforces is worse than no
+promise, so the deadline drives a two-rung ladder
+(`server/src/utils/slaEscalation.js`):
+
+| Rung | When | Told |
+|---|---|---|
+| 1 | the deadline passes and the complaint is still open | the district labour office |
+| 2 | it is still open 7 days later | the state labour office |
+
+Each rung is taken by an atomic claim filtered on the level the sweep expects
+to find (`escalation_level: {$lt: 1}` / `=== 1`), so a restart or a second API
+instance cannot escalate the same complaint twice, and the worker's timeline
+gains exactly one entry per rung, so the worker is told rather than left
+guessing.
+Every escalation writes a `grievance.escalate` / `grievance.escalate_state`
+audit entry.
+
+Only open grievances climb. A complaint closed on day 40 of a 14-day SLA was
+late, but escalating a closed file tells nobody anything actionable, so it is
+left alone. The console's **Overdue** tab lists breaches in the official's
+jurisdiction — oldest deadline first, with days late and which office has
+already been told — using the same scope filter as every other government list.
 
 ### Evidence reaching a complaint, and how a rating is labelled
 
@@ -273,10 +349,11 @@ Still needed for a real deployment:
 - Push notifications (FCM) and persistent media for chat/attachments.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
-[docs/SECURITY.md](docs/SECURITY.md) (threat model + known limitations),
-[DEMO.md](DEMO.md) (timed demo script, credentials, troubleshooting) and
-[VIVA_QA.md](VIVA_QA.md) (likely examiner questions with defensible answers).
-[WORKFLOW.md](WORKFLOW.md) is the code walkthrough for the viva.
+[docs/SECURITY.md](docs/SECURITY.md) (threat model + known limitations) and
+[DEMO.md](DEMO.md) (timed demo script, troubleshooting).
+[WORKFLOW.md](WORKFLOW.md) is the code walkthrough, and
+[academic/](academic/) holds the presentation deck, viva question bank and the
+superseded FastAPI-era documents — none of it is part of the shipped product.
 
 ## Deploy (production)
 

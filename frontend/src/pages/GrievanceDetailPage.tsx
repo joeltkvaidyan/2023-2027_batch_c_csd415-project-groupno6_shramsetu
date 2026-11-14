@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
 import { FileText, Image as ImageIcon, Loader2, SendHorizontal } from "lucide-react";
 import { GrievanceStatusBadge } from "../components/GrievanceStatusBadge";
-import { api } from "../api/client";
+import { api, apiErrorDetail } from "../api/client";
 import type { GrievanceDetail } from "../types";
 
 export default function GrievanceDetailPage() {
@@ -25,7 +25,7 @@ export default function GrievanceDetailPage() {
   const [feedbackText, setFeedbackText] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
@@ -36,12 +36,11 @@ export default function GrievanceDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    void load();
+  }, [load]);
 
   const handleAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,8 +101,8 @@ export default function GrievanceDetailPage() {
       });
       setShowFeedback(false);
       await load();
-    } catch (err: any) {
-      alert(err?.response?.data?.detail || t("common.error"));
+    } catch (err) {
+      alert(apiErrorDetail(err) || t("common.error"));
     } finally {
       setSubmittingFeedback(false);
     }
@@ -126,7 +125,10 @@ export default function GrievanceDetailPage() {
       <Screen onBack={true}>
         <div className="flex flex-col items-center gap-2 py-10 text-center">
           <p className="text-sm text-gray-500">{t("common.error")}</p>
-          <button onClick={load} className="text-sm font-semibold text-brand-600 dark:text-brand-400 underline">
+          <button
+            onClick={load}
+            className="text-sm font-semibold text-brand-600 dark:text-brand-400 underline"
+          >
             {t("common.retry")}
           </button>
         </div>
@@ -140,7 +142,9 @@ export default function GrievanceDetailPage() {
     <Screen title={grievance.complaint_number} onBack={() => navigate("/worker/grievances")}>
       <div className="card mb-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">{grievance.subject}</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            {grievance.subject}
+          </h1>
           <GrievanceStatusBadge status={grievance.status} />
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{grievance.description}</p>
@@ -151,7 +155,8 @@ export default function GrievanceDetailPage() {
           </p>
           {grievance.employer_name && (
             <p>
-              <span className="font-semibold">{t("grievance.employerName")}:</span> {grievance.employer_name}
+              <span className="font-semibold">{t("grievance.employerName")}:</span>{" "}
+              {grievance.employer_name}
             </p>
           )}
           {grievance.incident_location && (
@@ -172,7 +177,13 @@ export default function GrievanceDetailPage() {
       <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
         {t("grievance.attachments")}
       </h2>
-      <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden" onChange={handleAttach} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={handleAttach}
+      />
       <div className="space-y-2 mb-4">
         {grievance.attachments.length === 0 ? (
           <p className="text-gray-400 text-sm">{t("grievance.noAttachments")}</p>
@@ -186,7 +197,11 @@ export default function GrievanceDetailPage() {
                     : "bg-brand-50 dark:bg-brand-900/30 text-brand-500"
                 }`}
               >
-                {att.content_type.includes("pdf") ? <FileText className="h-5 w-5" aria-hidden="true" /> : <ImageIcon className="h-5 w-5" aria-hidden="true" />}
+                {att.content_type.includes("pdf") ? (
+                  <FileText className="h-5 w-5" aria-hidden="true" />
+                ) : (
+                  <ImageIcon className="h-5 w-5" aria-hidden="true" />
+                )}
               </span>
               <a
                 href={`${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/grievances/${id}/attachments/${att.id}/download`}
@@ -256,14 +271,15 @@ export default function GrievanceDetailPage() {
           grievance.comments.map((comment) => (
             <div
               key={comment.id}
-              className={`card p-3 ${comment.author_role === 'government' ? 'border-l-4 border-green-500' : 'border-l-4 border-brand-500'}`}
+              className={`card p-3 ${comment.author_role === "government" ? "border-l-4 border-green-500" : "border-l-4 border-brand-500"}`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm">
-                  {comment.author_role === 'government' ? '🏛️' : '👷'}
+                  {comment.author_role === "government" ? "🏛️" : "👷"}
                 </span>
                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  {comment.author_name || (comment.author_role === 'government' ? 'Government Official' : 'Worker')}
+                  {comment.author_name ||
+                    (comment.author_role === "government" ? "Government Official" : "Worker")}
                 </span>
                 <span className="text-xs text-gray-400">
                   {new Date(comment.created_at).toLocaleString()}
@@ -284,7 +300,7 @@ export default function GrievanceDetailPage() {
             placeholder={t("grievance.addCommentPlaceholder") || "Add a comment..."}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+            onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
           />
           <button
             onClick={handleAddComment}
@@ -292,13 +308,17 @@ export default function GrievanceDetailPage() {
             aria-label="Send comment"
             className="w-11 h-11 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0 disabled:opacity-40 transition hover:bg-brand-700 active:scale-95 shadow-md shadow-brand-600/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 self-end"
           >
-            {submittingComment ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <SendHorizontal className="h-5 w-5" aria-hidden="true" />}
+            {submittingComment ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+            ) : (
+              <SendHorizontal className="h-5 w-5" aria-hidden="true" />
+            )}
           </button>
         </div>
       )}
 
       {/* Feedback Section - only show for resolved grievances without feedback */}
-      {grievance.status === 'resolved' && !grievance.worker_rating && !showFeedback && (
+      {grievance.status === "resolved" && !grievance.worker_rating && !showFeedback && (
         <button
           onClick={() => setShowFeedback(true)}
           className="w-full card p-4 mb-6 text-left active:scale-[0.98] transition border-2 border-dashed border-brand-300 dark:border-brand-700"
@@ -322,7 +342,7 @@ export default function GrievanceDetailPage() {
               <button
                 key={star}
                 onClick={() => setFeedbackRating(star)}
-                className={`text-2xl ${star <= feedbackRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                className={`text-2xl ${star <= feedbackRating ? "text-yellow-400" : "text-gray-300"}`}
               >
                 ★
               </button>
@@ -331,15 +351,14 @@ export default function GrievanceDetailPage() {
           <textarea
             className="input-field text-sm resize-none mb-3"
             rows={3}
-            placeholder={t("grievance.feedbackPlaceholder") || "Tell us about your experience (optional)..."}
+            placeholder={
+              t("grievance.feedbackPlaceholder") || "Tell us about your experience (optional)..."
+            }
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowFeedback(false)}
-              className="btn-secondary flex-1 !py-2"
-            >
+            <button onClick={() => setShowFeedback(false)} className="btn-secondary flex-1 !py-2">
               Cancel
             </button>
             <button
@@ -347,7 +366,7 @@ export default function GrievanceDetailPage() {
               disabled={submittingFeedback || feedbackRating === 0}
               className="btn-primary flex-1 !py-2 disabled:opacity-40"
             >
-              {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+              {submittingFeedback ? "Submitting..." : "Submit Feedback"}
             </button>
           </div>
         </div>
@@ -365,7 +384,8 @@ export default function GrievanceDetailPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400">{grievance.worker_feedback}</p>
           )}
           <p className="text-xs text-gray-400 mt-2">
-            Submitted: {grievance.feedback_at ? new Date(grievance.feedback_at).toLocaleDateString() : ''}
+            Submitted:{" "}
+            {grievance.feedback_at ? new Date(grievance.feedback_at).toLocaleDateString() : ""}
           </p>
         </div>
       )}

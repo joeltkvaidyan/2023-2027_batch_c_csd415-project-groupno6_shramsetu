@@ -1,137 +1,202 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Search, Users, UserCheck, Megaphone, Flag, Building2, Clock } from "lucide-react";
-import { getGovToken, clearGovToken } from "../api/client";
+import {
+  LogOut,
+  Search,
+  Users,
+  UserCheck,
+  Megaphone,
+  Flag,
+  Building2,
+  Clock,
+  Download,
+} from "lucide-react";
+import { httpStatus } from "../api/client";
+import { readJson } from "../utils/storage";
+import { signOut } from "../api/session";
 import NotificationsPanel from "../components/government/NotificationsPanel";
-import JobsPanel from "../components/government/JobsPanel";
-import ApprovalsPanel from "../components/government/ApprovalsPanel";
-import EmployerApprovalsPanel from "../components/government/EmployerApprovalsPanel";
+import ReviewQueue from "../components/government/ReviewQueue";
 import {
   govGetStats,
   govGetWorkers,
   govGetGrievances,
+  govGetEscalations,
   govUpdateGrievanceStatus,
   govGetNotifications,
   govGetOfficials,
   govGetAuditLogs,
+  govDownloadCsv,
   type GovernmentOfficial,
+  type GovernmentUser,
   type DashboardStats,
   type WorkerRecord,
   type GovGrievance,
+  type GovEscalation,
   type GovNotification,
   type AuditLog,
 } from "../api/governmentClient";
+import { govListInsurance, govVerifyInsurance, type OfficePolicy } from "../api/insuranceClient";
 
-type Tab = "overview" | "approvals" | "employers" | "grievances" | "workers" | "jobs" | "notifications" | "officials" | "audit";
+type Tab =
+  | "overview"
+  | "review"
+  | "grievances"
+  | "escalations"
+  | "workers"
+  | "insurance"
+  | "notifications"
+  | "officials"
+  | "audit";
 
 export default function GovernmentDashboardPage() {
   const navigate = useNavigate();
-  const token = getGovToken();
-  const govUser = JSON.parse(localStorage.getItem("gov_user") || "{}");
+  // A corrupt cache entry must not take the dashboard down with it.
+  const govUser = readJson<Partial<GovernmentUser>>("gov_user", {});
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [workers, setWorkers] = useState<WorkerRecord[]>([]);
   const [grievances, setGrievances] = useState<GovGrievance[]>([]);
+  const [escalations, setEscalations] = useState<GovEscalation[]>([]);
   const [notifications, setNotifications] = useState<GovNotification[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [officials, setOfficials] = useState<GovernmentOfficial[]>([]);
+  const [insurancePolicies, setInsurancePolicies] = useState<OfficePolicy[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [grievanceStatusFilter, setGrievanceStatusFilter] = useState("");
   const [grievanceCategoryFilter, setGrievanceCategoryFilter] = useState("");
+  // Which export is in flight (the browser blocks while the blob downloads) and
+  // a one-line failure note — a silently dead download button is worse than
+  // the clutter of an error message.
+  const [exporting, setExporting] = useState<null | "workers" | "grievances" | "insurance">(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * Export the current view as CSV. The server re-applies the official's
+   * jurisdiction scope (the same filter as the list on screen), so passing the
+   * on-screen search/filters here can only narrow the file, never widen it.
+   */
+  const runExport = useCallback(
+    async (
+      kind: "workers" | "grievances" | "insurance",
+      params: {
+        search?: string;
+        status_filter?: string;
+        category?: string;
+        status?: string;
+        verification?: string;
+      },
+    ) => {
+      setExportError(null);
+      setExporting(kind);
+      try {
+        await govDownloadCsv(kind, params);
+      } catch {
+        setExportError(
+          "Could not build the export. Nothing was downloaded — check your connection and try again.",
+        );
+      } finally {
+        setExporting(null);
+      }
+    },
+    [],
+  );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/government/login");
-      return;
-    }
-    loadTabData();
-  }, [activeTab, token]);
-
   const loadTabData = useCallback(async () => {
-    if (!token) return;
     setLoading(true);
     try {
       if (activeTab === "overview") {
-        setStats(await govGetStats(token));
+        setStats(await govGetStats());
       } else if (activeTab === "workers") {
-        const res = await govGetWorkers(token, searchQuery || undefined);
+        const res = await govGetWorkers(searchQuery || undefined);
         setWorkers(res.workers || []);
+      } else if (activeTab === "insurance") {
+        setInsurancePolicies(await govListInsurance());
+      } else if (activeTab === "escalations") {
+        const res = await govGetEscalations();
+        setEscalations(res.escalations || []);
       } else if (activeTab === "grievances") {
         const res = await govGetGrievances(
-          token,
           grievanceStatusFilter || undefined,
-          grievanceCategoryFilter || undefined
+          grievanceCategoryFilter || undefined,
         );
         setGrievances(res.grievances || []);
       } else if (activeTab === "notifications") {
-        const res = await govGetNotifications(token);
+        const res = await govGetNotifications();
         setNotifications(res.notifications || []);
       } else if (activeTab === "officials") {
-        const res = await govGetOfficials(token);
+        const res = await govGetOfficials();
         setOfficials(res.officials || []);
       } else if (activeTab === "audit") {
-        const res = await govGetAuditLogs(token);
+        const res = await govGetAuditLogs();
         setAuditLogs(res.logs || []);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load:", err);
-      if (err?.response?.status === 401) {
-        clearGovToken();
+      if (httpStatus(err) === 401) {
+        void signOut();
         localStorage.removeItem("gov_user");
         navigate("/government/login");
       }
     } finally {
       setLoading(false);
     }
-  }, [activeTab, token, searchQuery, grievanceStatusFilter, grievanceCategoryFilter]);
+  }, [activeTab, searchQuery, grievanceStatusFilter, grievanceCategoryFilter, navigate]);
+
+  useEffect(() => {
+    void loadTabData();
+  }, [loadTabData]);
 
   const handleUpdateGrievanceStatus = async (id: number, newStatus: string) => {
-    if (!token) return;
     try {
-      await govUpdateGrievanceStatus(token, id, newStatus);
+      await govUpdateGrievanceStatus(id, newStatus);
       loadTabData();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleLogout = () => {
-    clearGovToken();
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem("gov_user");
     navigate("/government/login");
   };
 
   const tabs: { key: Tab; icon: string; label: string }[] = [
     { key: "overview", icon: "📊", label: "Overview" },
-    { key: "approvals", icon: "✅", label: "Approvals" },
-    { key: "employers", icon: "🏢", label: "Employers" },
+    { key: "review", icon: "✅", label: "Review" },
     { key: "grievances", icon: "📢", label: "Grievances" },
+    { key: "escalations", icon: "⏰", label: "Overdue" },
     { key: "workers", icon: "👷", label: "Workers" },
-    { key: "jobs", icon: "🧰", label: "Job Listings" },
+    { key: "insurance", icon: "🛡️", label: "Insurance" },
     { key: "notifications", icon: "🔔", label: "Notifications" },
     // Officials monitoring is superadmin-only — hidden here and 403-guarded
     // server-side, so ordinary state/district officials never see the tab.
-    ...(govUser.is_superadmin
-      ? [{ key: "officials" as Tab, icon: "👥", label: "Officials" }]
-      : []),
+    ...(govUser.is_superadmin ? [{ key: "officials" as Tab, icon: "👥", label: "Officials" }] : []),
     { key: "audit", icon: "📋", label: "Audit Logs" },
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
-      <header className="glass bg-slate-900/80 border-b border-slate-800 px-4 py-3 sticky top-0 z-20">
+      <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 sticky top-0 z-20">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-teal-600 rounded-xl flex items-center justify-center shadow-glow-brand ring-1 ring-white/10">
               <span className="text-xl">🛡️</span>
             </div>
-            <div>
-              <h1 className="font-bold text-lg">ShramSetu Government Portal</h1>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <span>{govUser.is_superadmin ? "Super Admin" : govUser.department || "Official"}</span>
+            {/* min-w-0 + wrapping: at 320px the department and jurisdiction
+                line is wider than the space left by the sign-out button, and
+                without this the whole page gains a horizontal scrollbar. */}
+            <div className="min-w-0">
+              <h1 className="font-bold text-base break-words sm:text-lg">
+                ShramSetu Government Portal
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400 sm:text-sm">
+                <span>
+                  {govUser.is_superadmin ? "Super Admin" : govUser.department || "Official"}
+                </span>
                 <span>•</span>
                 <span>{govUser.employee_id}</span>
                 {govUser.state && (
@@ -177,35 +242,71 @@ export default function GovernmentDashboardPage() {
       <main className="max-w-7xl mx-auto p-4">
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-400 rounded-full animate-spin" aria-label="Loading" />
+            <div
+              className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-400 rounded-full animate-spin"
+              aria-label="Loading"
+            />
           </div>
         )}
 
         {!loading && activeTab === "overview" && stats && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard icon={Users} label="Total Workers" value={stats.total_workers} color="blue" />
-              <StatCard icon={UserCheck} label="Active Workers" value={stats.active_workers} color="green" />
-              <StatCard icon={Building2} label="Employers" value={stats.total_employers ?? 0} color="emerald" />
-              <StatCard icon={Clock} label="Employers Pending" value={stats.pending_employers ?? 0} color="amber" />
-              <StatCard icon={Megaphone} label="Open Grievances" value={stats.open_grievances} color="amber" />
-              <StatCard icon={Flag} label="Resolved" value={stats.resolved_grievances} color="emerald" />
+              <StatCard
+                icon={Users}
+                label="Total Workers"
+                value={stats.total_workers}
+                color="blue"
+              />
+              <StatCard
+                icon={UserCheck}
+                label="Active Workers"
+                value={stats.active_workers}
+                color="green"
+              />
+              <StatCard
+                icon={Building2}
+                label="Employers"
+                value={stats.total_employers ?? 0}
+                color="emerald"
+              />
+              <StatCard
+                icon={Clock}
+                label="Employers Pending"
+                value={stats.pending_employers ?? 0}
+                color="amber"
+              />
+              <StatCard
+                icon={Megaphone}
+                label="Open Grievances"
+                value={stats.open_grievances}
+                color="amber"
+              />
+              <StatCard
+                icon={Flag}
+                label="Resolved"
+                value={stats.resolved_grievances}
+                color="emerald"
+              />
             </div>
 
             {/* Grievances by Category */}
-            {stats.grievances_by_category && Object.keys(stats.grievances_by_category).length > 0 && (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-                <h3 className="font-bold mb-4">📊 Grievances by Category</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {Object.entries(stats.grievances_by_category).map(([cat, count]) => (
-                    <div key={cat} className="bg-slate-900/50 rounded-xl p-3">
-                      <p className="text-2xl font-bold text-blue-400">{count}</p>
-                      <p className="text-slate-400 text-sm capitalize">{cat.replace(/_/g, " ")}</p>
-                    </div>
-                  ))}
+            {stats.grievances_by_category &&
+              Object.keys(stats.grievances_by_category).length > 0 && (
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+                  <h3 className="font-bold mb-4">📊 Grievances by Category</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Object.entries(stats.grievances_by_category).map(([cat, count]) => (
+                      <div key={cat} className="bg-slate-900/50 rounded-xl p-3">
+                        <p className="text-2xl font-bold text-blue-400">{count}</p>
+                        <p className="text-slate-400 text-sm capitalize">
+                          {cat.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Workers by State */}
             {stats.workers_by_state && Object.keys(stats.workers_by_state).length > 0 && (
@@ -228,18 +329,28 @@ export default function GovernmentDashboardPage() {
                 <h3 className="font-bold mb-4">📋 Recent Grievance Filings</h3>
                 <div className="space-y-2">
                   {stats.recent_filings.map((f) => (
-                    <div key={f.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3">
+                    <div
+                      key={f.id}
+                      className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3"
+                    >
                       <div>
-                        <span className="font-mono text-blue-400 text-sm">{f.complaint_number}</span>
+                        <span className="font-mono text-blue-400 text-sm">
+                          {f.complaint_number}
+                        </span>
                         <span className="mx-2 text-slate-600">•</span>
                         <span className="text-white text-sm">{f.subject}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        f.status === "submitted" ? "bg-blue-500/20 text-blue-400" :
-                        f.status === "under_review" ? "bg-amber-500/20 text-amber-400" :
-                        f.status === "resolved" ? "bg-green-500/20 text-green-400" :
-                        "bg-slate-500/20 text-slate-400"
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          f.status === "submitted"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : f.status === "under_review"
+                              ? "bg-amber-500/20 text-amber-400"
+                              : f.status === "resolved"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-slate-500/20 text-slate-400"
+                        }`}
+                      >
                         {f.status}
                       </span>
                     </div>
@@ -250,10 +361,9 @@ export default function GovernmentDashboardPage() {
           </div>
         )}
 
-        {/* ── Approvals Tab ───────────────────────────────────── */}
-        {!loading && activeTab === "approvals" && token && <ApprovalsPanel token={token} />}
+        {/* ── Review Tab (workers, employers, job listings) ────── */}
+        {!loading && activeTab === "review" && <ReviewQueue />}
 
-        {!loading && activeTab === "employers" && token && <EmployerApprovalsPanel token={token} />}
         {!loading && activeTab === "workers" && (
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -271,7 +381,17 @@ export default function GovernmentDashboardPage() {
               >
                 <Search className="h-4 w-4" aria-hidden="true" /> Search
               </button>
+              <button
+                onClick={() => runExport("workers", { search: searchQuery })}
+                disabled={exporting !== null}
+                title="Download these rows as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "workers" ? "Preparing…" : "CSV"}
+              </button>
             </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -286,16 +406,23 @@ export default function GovernmentDashboardPage() {
                 </thead>
                 <tbody>
                   {workers.map((w) => (
-                    <tr key={w.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition">
+                    <tr
+                      key={w.id}
+                      className="border-b border-slate-800 hover:bg-slate-800/50 transition"
+                    >
                       <td className="py-3 px-3 font-mono text-blue-400">{w.worker_id}</td>
                       <td className="py-3 px-3">{w.full_name}</td>
                       <td className="py-3 px-3 text-slate-300">{w.occupation || "-"}</td>
                       <td className="py-3 px-3 text-slate-300">{w.current_state || "-"}</td>
                       <td className="py-3 px-3 text-slate-300">{w.current_district || "-"}</td>
                       <td className="py-3 px-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          w.is_active ? "bg-green-500/20 text-green-400" : "bg-slate-500/20 text-slate-400"
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            w.is_active
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-slate-500/20 text-slate-400"
+                          }`}
+                        >
                           {w.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
@@ -303,12 +430,101 @@ export default function GovernmentDashboardPage() {
                   ))}
                   {workers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">No workers found</td>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                        No workers found
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* ── Overdue Tab (SLA escalations) ─────────────────── */}
+        {!loading && activeTab === "escalations" && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold">⏰ Overdue complaints</h2>
+              <p className="text-slate-400 text-sm mt-1">
+                Every complaint here has passed the deadline its priority promised. The ladder is
+                automatic: the deadline passing tells the district office, and seven more days
+                without an answer tells the state office. Oldest breach first — it is the one a
+                worker has been waiting on longest.
+              </p>
+            </div>
+
+            {escalations.length === 0 ? (
+              <p className="text-center py-8 text-slate-500">
+                No complaint is past its deadline in your jurisdiction
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-slate-300">
+                  <span className="font-semibold text-red-400">{escalations.length}</span> past
+                  their deadline ·{" "}
+                  <span className="font-semibold text-amber-400">
+                    {escalations.filter((e) => e.escalation_level === 1).length}
+                  </span>{" "}
+                  with the district office ·{" "}
+                  <span className="font-semibold text-red-400">
+                    {escalations.filter((e) => e.escalation_level >= 2).length}
+                  </span>{" "}
+                  with the state office
+                </p>
+
+                <div className="space-y-3">
+                  {escalations.map((e) => (
+                    <div
+                      key={e.id}
+                      className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold break-words">{e.subject}</p>
+                          <p className="mt-1 font-mono text-xs text-slate-400">
+                            {e.complaint_number} · {e.priority} priority
+                          </p>
+                          <p className="mt-1 text-sm text-slate-300 break-words">
+                            {e.worker?.full_name ?? "Unknown worker"}{" "}
+                            <span className="font-mono text-xs text-slate-400">
+                              {e.worker?.worker_id ?? ""}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {e.district ?? "—"}, {e.state ?? "—"} · deadline{" "}
+                            {e.sla_deadline ? new Date(e.sla_deadline).toLocaleDateString() : "—"}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
+                            {e.days_overdue === null
+                              ? "overdue"
+                              : e.days_overdue === 1
+                                ? "1 day late"
+                                : `${e.days_overdue} days late`}
+                          </span>
+                          {e.escalation_level >= 2 ? (
+                            <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-300">
+                              State office notified
+                            </span>
+                          ) : e.escalation_level === 1 ? (
+                            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">
+                              District office notified
+                            </span>
+                          ) : (
+                            <span className="rounded bg-slate-500/20 px-2 py-0.5 text-xs text-slate-300">
+                              Awaiting escalation
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -349,29 +565,58 @@ export default function GovernmentDashboardPage() {
               >
                 Apply Filters
               </button>
+              <button
+                onClick={() =>
+                  runExport("grievances", {
+                    status_filter: grievanceStatusFilter,
+                    category: grievanceCategoryFilter,
+                  })
+                }
+                disabled={exporting !== null}
+                title="Download these rows as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "grievances" ? "Preparing…" : "CSV"}
+              </button>
             </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
             {grievances.length === 0 ? (
               <p className="text-slate-500 text-center py-8">No grievances found</p>
             ) : (
               <div className="space-y-3">
                 {grievances.map((g) => (
-                  <div key={g.id} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                  <div
+                    key={g.id}
+                    className="bg-slate-800/50 border border-slate-700 rounded-xl p-4"
+                  >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            g.status === "submitted" ? "bg-blue-500/20 text-blue-400" :
-                            g.status === "under_review" ? "bg-amber-500/20 text-amber-400" :
-                            g.status === "resolved" ? "bg-green-500/20 text-green-400" :
-                            "bg-red-500/20 text-red-400"
-                          }`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              g.status === "submitted"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : g.status === "under_review"
+                                  ? "bg-amber-500/20 text-amber-400"
+                                  : g.status === "resolved"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
                             {g.status.replace(/_/g, " ")}
                           </span>
-                          <span className="font-mono text-slate-500 text-xs">{g.complaint_number || `#${g.id}`}</span>
-                          <span className="text-slate-600 text-xs">• {g.category?.replace(/_/g, " ")}</span>
-                        </div>
-                        <h3 className="font-medium text-white">{g.subject}</h3>
-                        <p className="text-slate-400 text-sm mt-1 line-clamp-2">{g.description}</p>
+                          <span className="font-mono text-slate-500 text-xs">
+                            {g.complaint_number || `#${g.id}`}
+                          </span>
+                          <span className="text-slate-600 text-xs">
+                            • {g.category?.replace(/_/g, " ")}
+                          </span>
+                        </div>{" "}
+                        <h3 className="font-medium text-white break-words">{g.subject}</h3>
+                        <p className="text-slate-400 text-sm mt-1 line-clamp-2 break-words">
+                          {g.description}
+                        </p>
                         {g.employer_name && (
                           <p className="text-slate-500 text-xs mt-1">Employer: {g.employer_name}</p>
                         )}
@@ -379,7 +624,7 @@ export default function GovernmentDashboardPage() {
                           Filed: {g.created_at ? new Date(g.created_at).toLocaleDateString() : "-"}
                         </p>
                       </div>
-                      <div className="ml-4 flex flex-col gap-2">
+                      <div className="ml-4 flex shrink-0 flex-col gap-2">
                         {g.status === "submitted" && (
                           <button
                             onClick={() => handleUpdateGrievanceStatus(g.id, "under_review")}
@@ -414,8 +659,8 @@ export default function GovernmentDashboardPage() {
         )}
 
         {/* ── Notifications Tab ──────────────────────────────── */}
-        {!loading && activeTab === "notifications" && token && (
-          <NotificationsPanel token={token} notifications={notifications} onSent={loadTabData} />
+        {!loading && activeTab === "notifications" && (
+          <NotificationsPanel notifications={notifications} onSent={loadTabData} />
         )}
 
         {/* ── Officials Tab (superadmin monitoring) ──────── */}
@@ -435,7 +680,10 @@ export default function GovernmentDashboardPage() {
                 </thead>
                 <tbody>
                   {officials.map((o) => (
-                    <tr key={o.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition">
+                    <tr
+                      key={o.id}
+                      className="border-b border-slate-800 hover:bg-slate-800/50 transition"
+                    >
                       <td className="py-3 px-3 font-mono text-blue-400">{o.employee_id || "-"}</td>
                       <td className="py-3 px-3">{o.full_name}</td>
                       <td className="py-3 px-3">
@@ -468,23 +716,120 @@ export default function GovernmentDashboardPage() {
                   ))}
                   {officials.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">No officials found</td>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                        No officials found
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-slate-500">
-              Every official logs in with their own employee ID and sees only the jurisdiction above.
-              Counts are live totals for that scope — the same numbers they see when they sign in.
+              Every official logs in with their own employee ID and sees only the jurisdiction
+              above. Counts are live totals for that scope — the same numbers they see when they
+              sign in.
             </p>
+          </div>
+        )}
+
+        {/* ── Insurance Tab ──────────────────────────────────── */}
+        {!loading && activeTab === "insurance" && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold">🛡️ Worker insurance</h2>
+                <p className="text-slate-400 text-sm mt-1">
+                  Policies workers entered themselves. Check the number against the insurer or the
+                  scheme enrolment list, then verify — only a verified policy is shown to a
+                  household as checked. Policies for workers outside your jurisdiction never appear
+                  here.
+                </p>
+              </div>
+              <button
+                onClick={() => runExport("insurance", {})}
+                disabled={exporting !== null}
+                title="Download this register as a CSV file (opens in Excel)"
+                className="bg-slate-700 hover:bg-slate-600 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5 disabled:opacity-60 shrink-0"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {exporting === "insurance" ? "Preparing…" : "CSV"}
+              </button>
+            </div>
+            {exportError && <p className="text-sm text-red-400">{exportError}</p>}
+
+            {insurancePolicies.length === 0 ? (
+              <p className="text-slate-500 text-center py-8">No insurance records in your area</p>
+            ) : (
+              <div className="space-y-3">
+                {insurancePolicies.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold break-words">
+                          {p.worker?.full_name ?? "Unknown worker"}{" "}
+                          <span className="font-mono text-xs text-slate-400">
+                            {p.worker?.worker_id ?? ""}
+                          </span>
+                        </p>
+                        <p className="text-sm text-slate-300 mt-1 break-words">
+                          {p.provider} · {p.coverage} · ₹{p.sum_insured?.toLocaleString("en-IN")}
+                        </p>
+                        <p className="font-mono text-xs text-slate-400 mt-1 break-all">
+                          {p.policy_number}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Valid {p.valid_from?.slice(0, 10) ?? "—"} to{" "}
+                          {p.valid_to?.slice(0, 10) ?? "—"} · {p.worker?.district ?? "—"},{" "}
+                          {p.worker?.state ?? "—"}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            p.status === "active"
+                              ? "bg-green-500/20 text-green-400"
+                              : p.status === "upcoming"
+                                ? "bg-amber-500/20 text-amber-400"
+                                : "bg-red-500/20 text-red-400"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                        {p.verification === "office_verified" ? (
+                          <span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-300">
+                            verified
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await govVerifyInsurance(p.id);
+                              setInsurancePolicies(await govListInsurance());
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-xs font-semibold"
+                          >
+                            Mark verified
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* ── Audit Logs Tab ─────────────────────────────────── */}
         {!loading && activeTab === "audit" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">🔒 Audit Logs (Superadmin Only)</h2>
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              🔒 Audit Logs (Superadmin Only)
+            </h2>
             {auditLogs.length === 0 ? (
               <p className="text-slate-500 text-center py-8">No audit logs found</p>
             ) : (
@@ -506,16 +851,28 @@ export default function GovernmentDashboardPage() {
                         <td className="py-3 px-3 text-slate-300">
                           {log.timestamp ? new Date(log.timestamp).toLocaleString() : "-"}
                         </td>
-                        <td className="py-3 px-3 font-mono text-blue-400">{log.actor_identifier}</td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs">{log.action}</span>
+                        <td className="py-3 px-3 font-mono text-blue-400">
+                          {log.actor_identifier}
                         </td>
-                        <td className="py-3 px-3 text-slate-300">{log.resource_type || "-"} #{log.resource_id || "-"}</td>
-                        <td className="py-3 px-3 text-slate-500 font-mono text-xs">{log.ip_address || "-"}</td>
                         <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-xs ${
-                            log.success ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                          }`}>
+                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-slate-300">
+                          {log.resource_type || "-"} #{log.resource_id || "-"}
+                        </td>
+                        <td className="py-3 px-3 text-slate-500 font-mono text-xs">
+                          {log.ip_address || "-"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              log.success
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
                             {log.success ? "OK" : "FAILED"}
                           </span>
                         </td>
@@ -527,8 +884,6 @@ export default function GovernmentDashboardPage() {
             )}
           </div>
         )}
-        {/* ── Job Listings Tab ───────────────────────────────── */}
-        {!loading && activeTab === "jobs" && <JobsPanel token={token} />}
       </main>
     </div>
   );
@@ -554,7 +909,9 @@ function StatCard({
   return (
     <div className={`bg-gradient-to-br ${colors[color]} border rounded-2xl p-5 shadow-card`}>
       <div className="flex items-center justify-between mb-3">
-        <span className={`w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center ${colors[color].split(" ").pop()}`}>
+        <span
+          className={`w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center ${colors[color].split(" ").pop()}`}
+        >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>

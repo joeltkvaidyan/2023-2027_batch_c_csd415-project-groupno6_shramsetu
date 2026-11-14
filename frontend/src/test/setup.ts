@@ -10,12 +10,10 @@
  *    render from test 1 is still mounted during test 2, and getByText throws
  *    "found multiple elements" instead of the failure the test meant.
  *
- * Note on crypto: jsdom in this Vitest environment does provide crypto.subtle,
- * so documentSecurity exercises its real PBKDF2 path with no polyfill here. If
- * a future environment ever dropped it, the module would silently fall back to
- * its legacy hash — and `documentSecurity.test.ts` asserts the stored format
- * starts with "pbkdf2:", so that regression fails loudly instead of quietly
- * testing weaker code.
+ * Note on crypto: the document-wallet PIN no longer hashes in the browser. It
+ * is verified server-side with scrypt and returns a short-lived wallet token,
+ * so `documentSecurity.test.ts` mocks the API client and asserts token and
+ * idle-timeout behaviour rather than any local digest format.
  */
 import "@testing-library/jest-dom/vitest";
 import { afterEach } from "vitest";

@@ -7,15 +7,24 @@ import { useTranslation } from "react-i18next";
 import FieldErrorText from "./FieldErrorText";
 import { fieldClass, type RegisterStepProps } from "./constants";
 
-export default function PersonalDetailsStep({ formData, fieldErrors, onChange }: RegisterStepProps) {
+export default function PersonalDetailsStep({
+  formData,
+  fieldErrors,
+  onChange,
+}: RegisterStepProps) {
   const { t } = useTranslation();
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-gray-900 dark:text-white">{t("auth.stepPersonalDetails")}</h3>
+      <h3 className="font-semibold text-gray-900 dark:text-white">
+        {t("auth.stepPersonalDetails")}
+      </h3>
 
       <div>
-        <label htmlFor="register-dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-dateOfBirth"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.dateOfBirth")} *
         </label>
         <input
@@ -31,7 +40,10 @@ export default function PersonalDetailsStep({ formData, fieldErrors, onChange }:
       </div>
 
       <div>
-        <label htmlFor="register-gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-gender"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.gender")} *
         </label>
         <select
@@ -51,7 +63,10 @@ export default function PersonalDetailsStep({ formData, fieldErrors, onChange }:
       </div>
 
       <div>
-        <label htmlFor="register-aadhaarNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-aadhaarNumber"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.aadhaarNumber")}
         </label>
         <input

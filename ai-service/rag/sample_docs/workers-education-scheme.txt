@@ -1,44 +1,38 @@
 TITLE: National Workers' Education Scheme — Skill Development and Training for Workers
 DEPARTMENT: Ministry of Labour and Employment, Government of India
-LAST_UPDATED: 2024-10-15
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://www.msde.gov.in/static/uploads/2024/02/PMKVY-4.0-Guidelines_final-copy.pdf
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
-The National Workers' Education Scheme is implemented through the Workers' Education Boards 
-(WEB) to provide education, training, and skill development to workers, particularly those in 
-the unorganised sector and migrant workers. The scheme aims to empower workers with knowledge 
-of their rights, welfare schemes, and skills for better employment.
+The National Workers' Education Scheme is a Ministry of Labour and Employment programme
+run through the Central and State Workers' Education Boards to educate workers on their
+rights, welfare schemes and skills — with a special focus on workers in the unorganised
+sector, including migrant workers.
 
-Key components:
-- Residential training programmes for workers on topics such as labour laws, trade union 
-  rights, welfare schemes, health and safety, and financial literacy.
-- Non-residential awareness camps at the workplace or community level.
-- Training for new entrants to the workforce, including young migrants.
-- Orientation programmes for trade union functionaries and worker representatives.
-
-Training areas:
-- Knowledge of labour laws and workers' rights.
-- Awareness of government welfare schemes (EPF, ESI, e-Shram, ration card, etc.).
-- Health and safety at the workplace.
-- Financial literacy and digital payment skills.
-- Skill development for better employment opportunities.
-- Entrepreneurship development through PMEGP and other schemes.
+What it covers:
+- Awareness training on labour rights and welfare schemes (e-Shram, EPF/ESIC, ration
+  cards, and the minimum-wage and timely-payment rules of the Code on Wages, 2019).
+- Health and safety at the workplace (now under the OSH Code, 2020).
+- Financial literacy and digital payments.
+- Skill-development and entrepreneurship referrals to schemes such as PMKVY 4.0 (ages
+  15-45; free short-term training and Recognition of Prior Learning through Skill India
+  Digital — enrolment is phased, so check the current window before promising a stipend
+  or a training slot).
 
 How to participate:
-- Contact the nearest Workers' Education Board office in the state.
-- Training programmes are usually free of cost for workers.
-- Workers can also approach the District Labour Office for information about upcoming 
-  training programmes.
-- Many training programmes are conducted in local languages.
+- Contact the Workers' Education Board office for your state (contacts on labour.gov.in).
+- Programmes for workers are typically free; schedules vary by state and year.
+- The District Labour Office or a Common Service Centre can point you to current
+  programmes.
 
-Benefits for migrant workers:
-- Understand their rights and entitlements in the state where they are working.
-- Learn about local welfare schemes and how to access them.
-- Gain new skills for better employment opportunities.
-- Build networks with other workers and trade unions.
+For migrant workers:
+- Learn your rights and entitlements in the state where you work.
+- Use the e-Shram One-Stop-Solution (on eshram.gov.in since 21 October 2024) to see which
+  central welfare schemes you may qualify for.
 
 Contact:
-- Workers' Education Board offices are located in all state capitals and major cities.
-- Call the labour helpline 14400 for information about training programmes.
-- Visit the Ministry of Labour website: https://labour.gov.in
+- Skill guidance: National Career Service portal (ncs.gov.in), helpline 1514.
+- Grievances: CPGRAMS (pgportal.gov.in) or samadhan.labour.gov.in.
+- Ministry of Labour and Employment: labour.gov.in

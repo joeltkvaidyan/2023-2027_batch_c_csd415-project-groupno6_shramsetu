@@ -1,8 +1,9 @@
 TITLE: Pradhan Mantri Jeevan Jyoti Bima Yojana (PM-JJBY)
 DEPARTMENT: Department of Financial Services, Ministry of Finance, Government of India
-LAST_UPDATED: 2025-03-01
-SOURCE_URL: https://jansuraksha.gov.in
-LAST_VERIFIED: needs review
+LAST_UPDATED: 2026-11-03
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=1823754
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Department of Financial Services, Ministry of Finance, Government of India
 STATUS: current
 ---
 The Pradhan Mantri Jeevan Jyoti Bima Yojana (PM-JJBY) is a one-year term life insurance scheme renewable from year to year. It offers a life cover of Rs 2 lakh to the nominees at a nominal premium of Rs 436 per annum (approximately Rs 1.2 per day).
@@ -13,7 +14,8 @@ KEY PROVISIONS:
 - Coverage: Rs 2 lakh in case of death of the insured due to any reason.
 - Nomination: The amount is paid to the nominee(s) registered for the bank account.
 - Auto-debit: Premium is auto-debited from the savings bank account on or before the due date.
-- Renewal: The scheme is renewable on 31st May every year. If the premium is not paid by the due date, the coverage lapses.
+- Renewal: the scheme renews from 1 June each year; if the premium is not paid during the
+  annual enrolment window, the coverage lapses.
 - Exit: Subscriber can exit the scheme at any time. If no claim has been filed, the premium for the current year is not refunded.
 - Multiple accounts: If a person has more than one savings bank account linked to the same Aadhaar, the cover will be available only in one bank account.
 
@@ -37,5 +39,5 @@ CLAIM PROCESS:
 3. The bank processes the claim and transfers Rs 2 lakh to the nominee's bank account.
 4. The claim is usually processed within 30 days.
 
-HELPLINE: 1800-11-0001 (toll-free)
+HELPLINE: scheme queries via jansuraksha.gov.in or your bank branch; grievances via CPGRAMS (pgportal.gov.in)
 WEBSITE: jeevanjyotibima.gov.in

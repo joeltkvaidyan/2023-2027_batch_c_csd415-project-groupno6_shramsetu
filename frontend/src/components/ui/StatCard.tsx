@@ -10,7 +10,7 @@ export interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
 
 export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(function StatCard(
   { label, value, trend, trendPositive = true, icon, className = "", children, ...rest },
-  ref
+  ref,
 ) {
   return (
     <div
@@ -23,17 +23,29 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(function StatC
           <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</span>
-            {children && <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{children}</span>}
+            {children && (
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {children}
+              </span>
+            )}
           </div>
           {trend && (
-            <p className={`text-xs font-semibold mt-1.5 ${
-              trendPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-            } flex items-center gap-1`}>
+            <p
+              className={`text-xs font-semibold mt-1.5 ${
+                trendPositive
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
+              } flex items-center gap-1`}
+            >
               {trendPositive ? "▲" : "▼"} {trend}
             </p>
           )}
         </div>
-        {icon && <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/40 text-gray-400">{icon}</div>}
+        {icon && (
+          <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/40 text-gray-400">
+            {icon}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -45,6 +57,8 @@ export interface StatGridProps {
 
 export function StatGrid({ children }: StatGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {children}
+    </div>
   );
 }

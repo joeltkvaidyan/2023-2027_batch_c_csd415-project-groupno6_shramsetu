@@ -14,10 +14,6 @@
     "worker": "শ্রমিক",
     "employer": "নিয়োগকর্তা",
     "government": "সরকার",
-    "insurance": "বীমা প্রদানকারী",
-    "comingSoonTitle": "শীঘ্রই আসছে",
-    "comingSoonDesc": "এই পোর্টালটি তৈরি করা হচ্ছে এবং শীঘ্রই উপলব্ধ হবে। পরে আবার দেখুন।",
-    "backToRoles": "ভূমিকা নির্বাচনে ফিরে যান",
     "citizen": "গৃহস্থ"
   },
   "auth": {
@@ -110,15 +106,19 @@
     "settings": "সেটিংস",
     "qrCode": "কিউআর কোড",
     "grievances": "খাতা",
-    "greetingMorning": "Good morning,",
-    "greetingAfternoon": "Good afternoon,",
-    "greetingEvening": "Good evening,",
-    "copyWorkerId": "Copy worker ID",
-    "recentGrievances": "Recent complaints",
+    "greetingMorning": "সুপ্রভাত,",
+    "greetingAfternoon": "শুভ অপরাহ্ন,",
+    "greetingEvening": "শুভ সন্ধ্যা,",
+    "copyWorkerId": "ওয়ার্কার আইডি কপি করুন",
+    "recentGrievances": "সাম্প্রতিক অভিযোগ",
     "jobMatches": "কাজের মিল",
     "employers": "নিয়োগকর্তা",
     "unpaid": "বাকি",
-    "heatSafety": "গরম থেকে সুরক্ষা"
+    "heatSafety": "গরম থেকে সুরক্ষা",
+    "unpaidWages": "বকেয়া মজুরি",
+    "askQuestion": "প্রশ্ন করুন",
+    "myDocuments": "আমার নথি",
+    "viewIdCard": "পরিচয়পত্র খুলুন"
   },
   "documents": {
     "title": "নথি ওয়ালেট",
@@ -134,10 +134,10 @@
     "uploading": "আপলোড হচ্ছে...",
     "uploadSuccess": "নথি সফলভাবে আপলোড হয়েছে",
     "displayName": "নথির নাম",
-    "pinProtected": "PIN-protected",
-    "renameTitle": "Rename document",
-    "deleteTitle": "Delete document",
-    "deleteMessage": "This document will be permanently removed from your wallet."
+    "pinProtected": "পিন-সুরক্ষিত",
+    "renameTitle": "নথির নাম বদলান",
+    "deleteTitle": "নথি মুছুন",
+    "deleteMessage": "এই নথিটি আপনার ওয়ালেট থেকে স্থায়ীভাবে মুছে যাবে।"
   },
   "chat": {
     "title": "এআই কল্যাণ সহায়ক",
@@ -162,7 +162,12 @@
     "historyLoadError": "আপনার চ্যাট ইতিহাস লোড করা যায়নি।",
     "suggestionsTitle": "Try asking",
     "sources": "Sources",
-    "askPlaceholderVoice": "Type or speak your question",
+    "sourceAuthority": "জারিকর্তা কর্তৃপক্ষ",
+    "sourceVerified": "যাচাইয়ের তারিখ",
+    "sourceVersion": "সংস্করণ",
+    "sourceOpen": "সরকারি সূত্র খুলুন",
+    "sourceDetailsLabel": "{title}-এর বিবরণ",
+    "askPlaceholderVoice": "আপনার প্রশ্ন লিখুন বা বলুন",
     "heatPrefillQuestion": "প্রচণ্ড গরমে নিরাপদ থাকতে আমার কী করা উচিত?"
   },
   "settings": {
@@ -172,7 +177,11 @@
     "light": "লাইট",
     "dark": "ডার্ক",
     "account": "অ্যাকাউন্ট",
-    "logout": "লগআউট"
+    "logout": "লগআউট",
+    "textSize": "লেখার আকার",
+    "contrast": "কনট্রাস্ট",
+    "contrastNormal": "সাধারণ",
+    "contrastHigh": "উচ্চ কনট্রাস্ট"
   },
   "grievance": {
     "title": "আমার অভিযোগসমূহ",
@@ -190,6 +199,12 @@
     "incidentDateOptional": "ঘটনার তারিখ (ঐচ্ছিক)",
     "submit": "অভিযোগ জমা দিন",
     "submitting": "জমা হচ্ছে...",
+    "stepOf": "ধাপ {current} / {total}",
+    "stepWhat": "কী হয়েছে?",
+    "stepDetails": "আরও জানান",
+    "stepWhere": "কোথায় এবং কখন",
+    "next": "পরবর্তী",
+    "draftSaved": "খসড়া এই ফোনে সংরক্ষিত হয়েছে",
     "submitSuccess": "অভিযোগ সফলভাবে দায়ের হয়েছে",
     "subjectPlaceholder": "সমস্যাটি সংক্ষেপে বর্ণনা করুন",
     "descriptionPlaceholder": "কী ঘটেছে, কখন এবং কোথায় তা ব্যাখ্যা করুন। যতটা সম্ভব বিস্তারিত দিন।",
@@ -240,7 +255,8 @@
     "allCategories": "সব বিভাগ",
     "due": "নির্ধারিত তারিখ",
     "loadError": "আপনার অভিযোগ লোড করা যায়নি।",
-    "empty": "No complaints yet"
+    "empty": "এখনও কোনো অভিযোগ নেই",
+    "savedOffline": "এই ফোনে সংরক্ষণ করা হয়েছে। ইন্টারনেট ফিরলে পাঠানো হবে।"
   },
   "common": {
     "save": "সংরক্ষণ করুন",
@@ -254,7 +270,8 @@
     "viewAll": "View all",
     "delete": "Delete",
     "rename": "Rename",
-    "download": "Download"
+    "download": "Download",
+    "notProvided": "প্রদান করা হয়নি"
   },
   "notifications": {
     "title": "বিজ্ঞপ্তি",
@@ -285,12 +302,15 @@
     "grievances": "অভিযোগ",
     "alerts": "বিজ্ঞপ্তি",
     "chat": "চ্যাট",
-    "settings": "সেটিংস"
+    "settings": "সেটিংস",
+    "wages": "মজুরি",
+    "primary": "প্রধান"
   },
   "wages": {
     "title": "মজুরি ডায়েরি",
     "subtitle": "আপনার দৈনিক মজুরির রেকর্ড",
-    "month": "মাস",
+    "selectMonth": "মাস নির্বাচন করুন",
+    "dayLog": "দিনের খাতা",
     "addEntry": "মজুরির এন্ট্রি যোগ করুন",
     "workDate": "কাজের তারিখ",
     "employer": "নিয়োগকর্তার নাম (ঐচ্ছিক)",
@@ -313,13 +333,18 @@
       "partial": "আংশিক"
     },
     "empty": "এই মাসের কোনো মজুরির এন্ট্রি নেই।",
-    "fileGrievance": "বকেয়া মজুরির অভিযোগ দাখিল করুন",
     "grievanceSubject": "বকেয়া মজুরি: {amount} বাকি",
     "grievanceDescription": "আমার মজুরি ডায়েরি অনুযায়ী, {period}-এর {days} দিনের কাজের জন্য নির্ধারিত মজুরির মধ্যে {amount} বাকি আছে। বকেয়া কাজের তারিখ: {dates}। এই কাজের পুরো নির্ধারিত মজুরি আমি পাইনি। বকেয়া টাকা উদ্ধারে সাহায্য করুন।",
-    "fileForDate": "{date}-এর জন্য অভিযোগ দাখিল করুন",
     "last90Days": "গত ৯০ দিন",
     "selfReported": "এই এন্ট্রিগুলি আপনি নিজেই লিখেছেন — নিয়োগকর্তার সাথে এগুলি যাচাই করা হয় না।",
-    "exportCSV": "CSV রপ্তানি করুন"
+    "exportCSV": "CSV রপ্তানি করুন",
+    "savedOffline": "এই ফোনে সংরক্ষণ করা হয়েছে। ইন্টারনেট ফিরলে এন্ট্রিটি পাঠানো হবে।",
+    "calendarLabel": "{month}-এর মজুরি ক্যালেন্ডার",
+    "cellLabel": "{date}: {status}, {agreed} নির্ধারিত, {paid} পাওয়া গেছে",
+    "cellEmpty": "{date}: এখনও কোনো এন্ট্রি নেই",
+    "sameAsYesterday": "গতকালের মতোই",
+    "unpaidOn": "{date} তারিখে বকেয়া",
+    "makeComplaint": "অভিযোগ করুন"
   },
   "errors": {
     "network": "আপনি সম্ভবত অফলাইনে আছেন। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
@@ -327,10 +352,10 @@
     "aiUnavailable": "AI সহকারী এই মুহূর্তে উপলব্ধ নয়। আপনার প্রশ্নের উত্তর দেওয়া যায়নি — অনুগ্রহ করে পরে আবার চেষ্টা করুন।"
   },
   "scamChecker": {
-    "title": "Scam Risk Checker"
+    "title": "প্রতারণার ঝুঁকি যাচাই"
   },
   "services": {
-    "title": "Verified Services Directory"
+    "title": "যাচাইকৃত সেবা নির্দেশিকা"
   },
   "jobs": {
     "title": "কাজের মিল",
@@ -374,8 +399,8 @@
     "matchScore": "প্রোফাইল মিল",
     "shortlisted": "শর্টলিস্ট করা হয়েছে",
     "shortlistedNote": "অফিস আপনার আবেদন পড়েছে। এটি কাজের প্রস্তাব নয় — আবেদন চালিয়ে যান।",
-    "shortlistedCount": "অফিস {{count}}টি আবেদন শর্টলিস্ট করেছে",
-    "resultsCount": "{{count}}টি তালিকা আপনার প্রোফাইলের সঙ্গে মেলে",
+    "shortlistedCount": "অফিস {count}টি আবেদন শর্টলিস্ট করেছে",
+    "resultsCount": "{count}টি তালিকা আপনার প্রোফাইলের সঙ্গে মেলে",
     "loadingMatches": "আপনার প্রোফাইলের কাছাকাছি তালিকা খোঁজা হচ্ছে…",
     "clearFilters": "সন্ধান ও পেশা ফিল্টার মুছুন",
     "review": {
@@ -481,7 +506,7 @@
   "citizen": {
     "title": "গৃহস্থ",
     "heading": "শ্রমসেতু গৃহস্থ",
-    "tagline": "কাছের নিবন্ধিত কারিগর খুঁজুন — তারা আপনাকে কল করবে, নম্বর কখনো প্রকাশ্যে নয়",
+    "tagline": "আপনার কাছে যাচাইকৃত কর্মী খুঁজুন — নম্বর দেখে কল করতে সাইন ইন করুন",
     "tabRegister": "অ্যাকাউন্ট খুলুন",
     "tabPassword": "পাসওয়ার্ড",
     "tabOtp": "OTP লগইন",
@@ -506,7 +531,7 @@
     "verifyFailed": "যাচাই ব্যর্থ হয়েছে।",
     "invalidLogin": "ভুল মোবাইল নম্বর বা পাসওয়ার্ড।",
     "otpFailed": "OTP পাঠানো যায়নি।",
-    "privacyNote": "এটি কারিগরের অ্যাকাউন্ট নয়: শ্রম অফিসের অনুমোদন লাগে না। নম্বর দু'দিকে যাবে শুধু তখন, যখন কারিগর আপনার অনুরোধ গ্রহণ করবে।",
+    "privacyNote": "এটি কর্মী অ্যাকাউন্ট নয়: শ্রম অফিসের অনুমোদন লাগে না। সাইন ইন করলে কাছাকাছি কর্মীদের যোগাযোগ নম্বর দেখা যায়; অনুরোধ পোস্ট করলে কর্মী আপনাকে ফিরে কল করবেন।",
     "dashboardTitle": "গৃহস্থ",
     "motto": "নিবন্ধিত কারিগরের কাছে নিরাপদ পথ",
     "signOut": "সাইন আউট",
@@ -537,7 +562,7 @@
     "noWorkers": "এখানে এখনো তালিকাভুক্ত কারিগর নেই",
     "noWorkersHint": "তালিকায় শুধু শ্রম অফিসে অনুমোদিত কারিগর দেখা যায়। আপনি উপরে থেকে অনুরোধ পাঠাতে পারেন।",
     "govAccepted": "শ্রম অফিসে অনুমোদিত",
-    "directoryNote": "এই তালিকা কখনো ফোন নম্বর দেখায় না। কারিগরের কাছে যেতে উপরে থেকে অনুরোধ পাঠান — গ্রহণ করলে দুজনেরই নম্বর মেলে।",
+    "directoryNote": "কাজের বিষয়ে কল করার জন্য আপনার সাইন-ইন করা পরিবার অ্যাকাউন্টে যোগাযোগ নম্বর দেখানো হয়। শুধু সেই কাজেই ব্যবহার করুন।",
     "status": {
       "open": "খোলা",
       "accepted": "গৃহীত",
@@ -546,5 +571,102 @@
     },
     "call": "কল",
     "sms": "SMS"
+  },
+  "offline": {
+    "offline": "আপনি অফলাইনে আছেন। নতুন এন্ট্রি এই ফোনে সংরক্ষিত হবে।",
+    "pendingOne": "1টি এন্ট্রি পাঠানোর অপেক্ষায়",
+    "pendingMany": "{count}টি এন্ট্রি পাঠানোর অপেক্ষায়"
+  },
+  "a11y": {
+    "dismiss": "বন্ধ করুন",
+    "close": "বন্ধ করুন"
+  },
+  "idCard": {
+    "title": "শ্রমিক পরিচয়পত্র",
+    "subtitle": "নিয়োগকর্তা ও শ্রম অফিসের যাচাইয়ের জন্য আপনার পরিচয়পত্র। প্রিন্ট করুন বা PDF হিসেবে সংরক্ষণ করুন।",
+    "loadFailed": "আপনার পরিচয়পত্র লোড করা যায়নি।",
+    "notIssuedTitle": "এই কার্ড এখনও ইস্যু হয়নি",
+    "notIssuedBody": "যাচাইয়ের আগে শ্রম অফিসের কর্মকর্তাকে আপনার নিবন্ধন গ্রহণ করতে হবে। আপনি প্রিন্ট করতে পারেন, তবে ততক্ষণ QR যাচাই হবে না।",
+    "issuer": "শ্রমসেতু · শ্রম বিভাগ",
+    "cardType": "শ্রমিক পরিচয়পত্র",
+    "accepted": "যাচাইকৃত শ্রমিক",
+    "pending": "অনুমোদনের অপেক্ষায়",
+    "qrLabel": "যাচাই QR কোড",
+    "scanToVerify": "যাচাই করতে স্ক্যান করুন",
+    "occupation": "কাজ",
+    "experience": "অভিজ্ঞতা",
+    "years": "{count} বছর",
+    "place": "স্থান",
+    "registeredOn": "নিবন্ধনের তারিখ",
+    "name": "নাম",
+    "footer": "এই কার্ড শ্রম অফিস কর্তৃক গৃহীত নিবন্ধন নিশ্চিত করে। এটি ব্যাকগ্রাউন্ড যাচাই নয়। QR কোড স্ক্যান করে যে কেউ এটি যাচাই করতে পারে।",
+    "print": "প্রিন্ট / PDF হিসেবে সংরক্ষণ",
+    "insurance": "বীমা",
+    "insuranceLine": "{provider} · {amount} কভার · {date} পর্যন্ত",
+    "insuranceVerified": "শ্রম দপ্তর যাচাই করেছে",
+    "insuranceDeclared": "কর্মী জানিয়েছেন · যাচাই হয়নি",
+    "noInsurance": "কোনো কভার নথিভুক্ত নেই"
+  },
+  "verify": {
+    "title": "শ্রমিক কার্ড যাচাই",
+    "checking": "এই কার্ড যাচাই করা হচ্ছে...",
+    "validTitle": "এটি একটি যাচাইকৃত শ্রমিক কার্ড",
+    "validBody": "কার্ডটি শ্রমসেতু ইস্যু করেছে এবং শ্রম অফিস নিবন্ধন গ্রহণ করেছে।",
+    "workerId": "শ্রমিক আইডি",
+    "checkedAt": "যাচাই হয়েছে",
+    "notice": "এটি নিবন্ধন ও তার অনুমোদন নিশ্চিত করে। এটি ব্যাকগ্রাউন্ড যাচাই নয় এবং নির্দিষ্ট নিয়োগকর্তা বা মজুরি সম্পর্কে কিছু বলে না।",
+    "malformedTitle": "এটি শ্রমসেতু কার্ড কোড নয়",
+    "malformedBody": "লিংকটি অসম্পূর্ণ। টাইপ না করে কার্ডের QR কোড আবার স্ক্যান করুন।",
+    "invalidTitle": "এই কার্ড যাচাই করা যায়নি",
+    "invalidBody": "এই কার্ডের সঙ্গে মেলে এমন কোনো গৃহীত, সক্রিয় নিবন্ধন পাওয়া যায়নি। এটি নকল, পুরোনো কার্ড বা বাতিল নিবন্ধন হতে পারে।",
+    "invalidBadge": "যাচাই হয়নি",
+    "errorBody": "সার্ভারে পৌঁছানো যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।",
+    "insuranceVerified": "দুর্ঘটনা কভার, শ্রম দপ্তর যাচাই করেছে",
+    "insuranceDeclared": "কভার কর্মী জানিয়েছেন, দপ্তর এখনও যাচাই করেনি",
+    "insuranceExpired": "নথিভুক্ত বীমার মেয়াদ শেষ হয়েছে",
+    "insuranceNone": "কোনো বীমা নথিভুক্ত নেই",
+    "insuranceDetail": "{provider} · {amount} কভার · {date} পর্যন্ত",
+    "insuranceEnded": "কভার {date} তারিখে শেষ হয়েছে।",
+    "insuranceCaveat": "কভার এখানে নথিভুক্ত তথ্য অনুযায়ী দেখানো হয়েছে। নির্দিষ্ট দাবি পরিশোধ হবে কিনা তা বীমা কোম্পানির সিদ্ধান্ত, শ্রমসেতুর নয়।",
+    "insuranceAsk": "কাজ শুরুর আগে কর্মীকে পলিসি দেখাতে বলুন।"
+  },
+  "insurance": {
+    "title": "বীমা",
+    "subtitle": "দুর্ঘটনা ও স্বাস্থ্য বীমা, শ্রম দপ্তর যাচাই করলে আপনার কার্ডে দেখাবে।",
+    "addCta": "পলিসি যোগ করুন",
+    "none": "এখনও কোনো পলিসি নথিভুক্ত নেই।",
+    "until": "{date} পর্যন্ত",
+    "coverageLabel": "কী কী ঝুঁকি ঢাকা আছে",
+    "coverage": {
+      "accident": "দুর্ঘটনা",
+      "hospitalisation": "হাসপাতালে ভর্তি",
+      "disability": "প্রতিবন্ধকতা",
+      "death": "মৃত্যু"
+    },
+    "provider": "বীমা কোম্পানি",
+    "providerPlaceholder": "পলিসিতে যেমন লেখা আছে",
+    "policyNumber": "পলিসি নম্বর",
+    "policyNumberPlaceholder": "যেমন NIC/KA/2026/0099231",
+    "policyNumberHint": "আপনার কার্ড স্ক্যান করা ব্যক্তি শুধু শেষ চারটি সংখ্যা দেখবেন।",
+    "sumInsured": "বীমার অঙ্ক (₹)",
+    "validFrom": "শুরু",
+    "validTo": "শেষ",
+    "save": "পলিসি সংরক্ষণ করুন",
+    "saving": "সংরক্ষণ হচ্ছে...",
+    "statusActive": "চালু",
+    "statusUpcoming": "পরে শুরু হবে",
+    "statusExpired": "মেয়াদ শেষ",
+    "verified": "দপ্তর যাচাই করেছে",
+    "unverified": "এখনও যাচাই হয়নি",
+    "remove": "সরান",
+    "errProvider": "বীমা কোম্পানির নাম লিখুন।",
+    "errPolicyNumber": "পলিসি নথি থেকে পলিসি নম্বর লিখুন।",
+    "errAmount": "পলিসির অঙ্ক টাকায় লিখুন।",
+    "errDates": "পলিসির শুরুর ও শেষের তারিখ লিখুন।",
+    "saveFailed": "পলিসি সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।",
+    "removeFailed": "পলিসি সরানো যায়নি।",
+    "expiringSoon": "কভার {days} দিনে শেষ হচ্ছে — সুরক্ষিত থাকতে এটি নবায়ন করুন।",
+    "expiringTomorrow": "কভার আগামীকাল শেষ হচ্ছে — সুরক্ষিত থাকতে এটি নবায়ন করুন।",
+    "expiringToday": "কভার আজ শেষ হচ্ছে — সুরক্ষিত থাকতে এটি নবায়ন করুন।"
   }
 }

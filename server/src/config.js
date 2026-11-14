@@ -12,6 +12,33 @@ const int = (v, dflt) => {
   return Number.isFinite(n) && n > 0 ? n : dflt;
 };
 
+// Safe by default: a missing ENV is treated as production, so the demo
+// conveniences (terminal OTP echo, seeded accounts, verbose errors) have to be
+// switched ON explicitly. Every one of these was previously on by default,
+// which meant a deploy that forgot a variable ran in demo mode.
+const envName = process.env.ENV || "production";
+
+/**
+ * Express's `trust proxy` setting decides what req.ip is, and every rate limit
+ * keys off req.ip. Behind one reverse proxy (Render, nginx, Fly) the socket
+ * address is the proxy's, so without this a single noisy client throttles the
+ * whole platform — and with `true` a client can spoof X-Forwarded-For and evade
+ * the limit entirely. Hence a hop COUNT (1), not a boolean, and only when the
+ * deployment says it is behind a proxy. `TRUST_PROXY` accepts a hop count, a
+ * boolean, or any value Express itself understands ("loopback", CIDR list).
+ */
+function parseTrustProxy(env) {
+  const raw = process.env.TRUST_PROXY;
+  if (raw === undefined || raw.trim() === "") return env === "production" ? 1 : false;
+  const value = raw.trim();
+  const lowered = value.toLowerCase();
+  if (["false", "0", "no", "off"].includes(lowered)) return false;
+  if (["true", "1", "yes", "on"].includes(lowered)) return 1;
+  const hops = Number(value);
+  if (Number.isInteger(hops) && hops >= 0) return hops;
+  return value; // e.g. "loopback" or a CIDR list
+}
+
 // MONGODB_URI wins whole (docker-compose sets it). On Render the blueprint
 // only supplies the private host — render.yaml cannot interpolate a full URI
 // (no variable interpolation), so assemble it from parts:
@@ -31,23 +58,44 @@ function resolveMongoUri() {
 }
 
 export const config = {
-  env: process.env.ENV || "development",
-  debug: bool(process.env.DEBUG, true),
+  env: envName,
+  debug: bool(process.env.DEBUG, false),
   port: int(process.env.PORT, 8000),
+  // Hop count (or Express value) for X-Forwarded-For; see parseTrustProxy.
+  trustProxy: parseTrustProxy(envName),
 
   // "memory" = embedded MongoDB for development (no install needed).
   // Production: MONGODB_URI (full) or MONGO_HOST (+ parts) — see
   // resolveMongoUri() above, e.g. mongodb://user:pass@host:27017/shramsetu.
   mongodbUri: resolveMongoUri(),
-  seedDemoData: bool(process.env.SEED_DEMO_DATA, true),
+  seedDemoData: bool(process.env.SEED_DEMO_DATA, false),
 
   jwtSecret: process.env.JWT_SECRET_KEY,
-  // Short-lived tokens: a stolen token expires fast, and the /authenticate
-  // re-check (see middleware/auth.js) catches disabled users sooner.
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
+  // Short-lived access tokens: a stolen one expires fast, and the liveness
+  // re-check (see middleware/auth.js) catches disabled users sooner. The
+  // browser refreshes silently through an httpOnly refresh cookie, so a short
+  // access token costs the worker nothing. JWT_EXPIRES_IN is honoured for
+  // deployments that already tuned it.
+  jwtExpiresIn: process.env.ACCESS_TOKEN_TTL || process.env.JWT_EXPIRES_IN || "15m",
+  // Refresh-session lifetime (rotating; see models/Session.js).
+  refreshTtlDays: int(process.env.REFRESH_TTL_DAYS, 30),
+  // Cookies are httpOnly and Lax by default, which is what a same-origin SPA
+  // (docker-compose nginx proxy) needs. A cross-site deployment (SPA on one
+  // origin, API on another, e.g. Render static site → API) must set
+  // COOKIE_SAMESITE=none, and browsers only accept that with Secure.
+  cookieSameSite: (process.env.COOKIE_SAMESITE || "lax").toLowerCase(),
+  cookieSecure: bool(
+    process.env.COOKIE_SECURE,
+    envName === "production" || (process.env.COOKIE_SAMESITE || "lax").toLowerCase() === "none"
+  ),
+  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
 
   otp: {
-    echoEnabled: bool(process.env.OTP_ECHO_ENABLED, true), // DEV ONLY
+    echoEnabled: bool(process.env.OTP_ECHO_ENABLED, false), // DEV ONLY
+    // HMAC key for stored OTP digests. A 6-digit code has only a million
+    // possible values, so an UNKEYED sha256 in a database dump is reversible in
+    // milliseconds; the pepper lives in the environment, never in the DB.
+    pepper: process.env.OTP_PEPPER || "",
     expireSeconds: int(process.env.OTP_EXPIRE_SECONDS, 300),
     resendCooldownSeconds: int(process.env.OTP_RESEND_COOLDOWN_SECONDS, 60),
     maxAttempts: int(process.env.OTP_MAX_ATTEMPTS, 5),
@@ -76,6 +124,11 @@ export const config = {
 
   // Document-wallet master key (32 bytes, base64). Wraps per-file AES keys.
   docMasterKeyRaw: process.env.DOC_MASTER_KEY,
+
+  // Public origin of the SPA (e.g. https://shramsetu.example.org). Only used to
+  // build the QR/verification URL printed on a worker identity card; when unset
+  // the route falls back to the origin the request came from.
+  publicAppUrl: process.env.PUBLIC_APP_URL || "",
 
   corsOrigins: (process.env.CORS_ORIGINS || "")
     .split(",")
@@ -120,7 +173,10 @@ if (!config.jwtSecret) {
 // Every one of these settings is a dev/demo convenience that would be a
 // real vulnerability in production. Refusing to boot beats failing open.
 export function assertProductionSafe() {
-  if (config.env !== "production") return;
+  // Only an EXPLICIT ENV=development opts out. An unset or mistyped ENV is
+  // checked as production, so a missing variable can never silently downgrade
+  // a deployment to demo mode.
+  if (config.env === "development") return;
   const problems = [];
   if (!process.env.JWT_SECRET_KEY) problems.push("JWT_SECRET_KEY is empty (ephemeral secret would invalidate sessions on restart)");
   if (!process.env.BOOTSTRAP_ADMIN_PASSWORD || config.bootstrapAdmin.password === "Admin@123") {
@@ -130,6 +186,12 @@ export function assertProductionSafe() {
   if (config.seedDemoData) problems.push("SEED_DEMO_DATA=true would create demo workers with known passwords");
   if (config.mongodbUri === "memory") problems.push("MONGODB_URI=memory (in-process MongoDB — data is lost on restart)");
   if (!config.docMasterKey) problems.push("DOC_MASTER_KEY is unset — document-wallet keys would be unwrapped in the DB");
+  if (!config.otp.pepper || config.otp.pepper.length < 32) {
+    problems.push("OTP_PEPPER is unset or shorter than 32 characters — stored OTP digests would be brute-forceable");
+  }
+  if (!config.aiInternalKey) {
+    problems.push("AI_INTERNAL_KEY is unset — the AI service would answer unauthenticated requests");
+  }
   if (problems.length) {
     throw new Error(
       "Refusing to boot in production:\n  - " + problems.join("\n  - ") +

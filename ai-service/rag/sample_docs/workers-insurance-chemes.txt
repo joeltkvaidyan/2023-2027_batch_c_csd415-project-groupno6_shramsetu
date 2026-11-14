@@ -1,8 +1,9 @@
 TITLE: Comprehensive Insurance and Pension Schemes for Workers in India
 DEPARTMENT: Ministry of Labour and Employment / Ministry of Finance, Government of India
 LAST_UPDATED: 2025-03-01
-SOURCE_URL: needs review
-LAST_VERIFIED: needs review
+SOURCE_URL: https://www.pib.gov.in/PressReleasePage.aspx?PRID=1823754
+LAST_VERIFIED: 2026-11-03
+AUTHORITY: Department of Financial Services / Ministry of Labour and Employment, Government of India
 STATUS: current
 ---
 This document provides a comprehensive overview of all insurance and pension schemes available to workers in India, especially unorganised and migrant workers.
@@ -17,13 +18,12 @@ LIFE INSURANCE SCHEMES:
 2. Pradhan Mantri Suraksha Bima Yojana (PM-SBY):
    - Coverage: Rs 2 lakh (death/total disability), Rs 1 lakh (partial disability)
    - Premium: Rs 20/year (auto-debited)
-   - Eligibility: 10-70 years, savings bank account
+   - Eligibility: 18-70 years, savings bank account
    - Claim: Accidental death or disability benefit
 
-3. Aam Aadmi Bima Yojana (AABY):
-   - Coverage: Rs 30,000 (natural death), Rs 75,000 (accidental death/total disability), Rs 37,500 (partial disability)
-   - Premium: Rs 200/year (shared: Rs 100 government, Rs 100 subscriber)
-   - Eligibility: 18-59 years, BPL families
+3. Aam Aadmi Bima Yojana (AABY): administered through the Life Insurance Corporation;
+   benefit amounts and premium sharing have changed over the years — confirm the current
+   terms with the implementing agency/state nodal officer before quoting them.
 
 PENSION SCHEMES:
 1. Pradhan Mantri Shram Yogi Maan-Dhan (PM-SYM):
@@ -33,21 +33,23 @@ PENSION SCHEMES:
    - Eligibility: Unorganised workers, monthly income up to Rs 15,000
 
 2. National Pension System (NPS):
-   - Market-linked pension with government contribution
-   - Minimum contribution: Rs 1,000/year
-   - Government contributes 50% (up to Rs 1,000) for unorganised workers
-   - Eligibility: 18-65 years
+   - Market-linked pension, open to citizens aged 18-70
+   - The old Swavalamban government co-contribution ENDED in 2015; its unorganised-sector
+     successors are PM-SYM and the NPS-Traders (Maandhan) scheme.
 
 3. Atal Pension Yojana (APY):
    - Guaranteed pension: Rs 1,000-5,000/month after age 60
-   - Government co-contribution: 50% for eligible subscribers
+   - The 50% government co-contribution applies only to subscribers who joined before
+     1 April 2016; later enrollees get no government co-contribution.
    - Eligibility: 18-40 years, bank account, not covered under statutory social security
 
 HEALTH INSURANCE:
 1. Ayushman Bharat (PM-JAY):
    - Coverage: Rs 5 lakh per family per year for hospitalisation
-   - Eligibility: BPL families identified through SECC data
-   - 1,949 packages including surgery, medical, day care
+   - Eligibility: SECC-based plus other included groups (70+ seniors under the Ayushman
+     Vay Vandana extension since 29 October 2024)
+   - Claimable procedures follow the official benefit catalogue (updated periodically) —
+     confirm the current package list at pmjay.gov.in
    - Cashless and paperless treatment at empanelled hospitals
 
 2. ESIC (Employees State Insurance Corporation):
@@ -71,5 +73,5 @@ HOW TO ENROLL:
 - Bank branches
 - Post offices
 
-HELPLINE: 14434 (e-Shram) | 1800-180-1551 (PM-SYM) | 1800-11-0001 (PM-JJBY)
+HELPLINE: e-Shram 14434; enrolments via CSC/bank; scheme details on the official portals
 WEBSITE: eshram.gov.in | jansuraksha.gov.in | pmjay.gov.in

@@ -57,3 +57,6 @@ ai-service/models/
 
 # Translation cache (machine-translated questions; regenerate freely)
 ai-service/.translation_cache.json
+
+# Cloned reference projects used for feature analysis (not part of this app)
+references/

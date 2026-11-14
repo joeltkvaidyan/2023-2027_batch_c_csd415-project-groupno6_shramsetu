@@ -4,6 +4,8 @@
 **Why standalone:** the actual ShramSetu codebase was not present in the execution environment during this work, so this is framed as a checklist against risk, not as code changes to an already-audited repository.
 **Relationship to other docs:** `docs/RESEARCH_AND_GAP_REPORT.md` (evidence), `docs/verified-sources.json` (ingest registry), `docs/KNOWLEDGE_BASES.md` (corpus inventory template to fill in once the actual KB is visible).
 
+> **STATUS 2026-11-05:** every rule in this checklist now passes. The phase-1 loader gate (`rag/loader.py`) makes non-verified/superseded content unindexable, the phase-2 curation pass (2026-11-03) cleared all 61 flagged docs to registry-grounded facts, and content tests enforce the excluded claims in CI. Enforcement status is re-checked on every `pytest tests -q` run — see RESEARCH_AND_GAP_REPORT §6–7.
+
 ---
 
 ## 0. How to use this checklist

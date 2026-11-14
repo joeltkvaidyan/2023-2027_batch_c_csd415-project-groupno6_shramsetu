@@ -4,9 +4,7 @@ import { getLanguage } from "../i18n/languages";
 
 /** Detect if the device is a phone/tablet (not desktop) */
 function isMobile(): boolean {
-  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 /**
@@ -32,7 +30,7 @@ export function useVoice(languageCode: string) {
   const [sttMode, setSttMode] = useState<"browser" | "server" | "none">("none");
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -46,9 +44,7 @@ export function useVoice(languageCode: string) {
     setVoiceAvailable(true);
 
     // Check for browser SpeechRecognition (works on most browsers including mobile)
-    const SR =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     // Check for MediaRecorder (needed for server-side STT)
     const hasMediaRecorder = typeof MediaRecorder !== "undefined";
@@ -128,12 +124,12 @@ export function useVoice(languageCode: string) {
             setIsSpeaking(false);
           });
         }
-      } catch (err: any) {
-        console.error("Server TTS failed:", err?.message || err);
+      } catch (err) {
+        console.error("Server TTS failed:", err instanceof Error ? err.message : err);
         setIsSpeaking(false);
       }
     },
-    [languageCode]
+    [languageCode],
   );
 
   // ── Public speak ────────────────────────────────────────────────────
@@ -142,14 +138,14 @@ export function useVoice(languageCode: string) {
       if (!text) return;
       speakServer(text);
     },
-    [speakServer]
+    [speakServer],
   );
 
   const speakFromUrl = useCallback(
     async (text: string) => {
       await speakServer(text);
     },
-    [speakServer]
+    [speakServer],
   );
 
   // ── Stop speaking ────────────────────────────────────────────────────
@@ -162,67 +158,6 @@ export function useVoice(languageCode: string) {
     }
     setIsSpeaking(false);
   }, []);
-
-  // ── Browser-native STT ──────────────────────────────────────────────
-  const startBrowserSTT = useCallback(
-    (onResult: (text: string) => void, onError: (err: string) => void) => {
-      const SR =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
-      if (!SR) {
-        // Fall back to server STT
-        startServerSTT(onResult, onError);
-        return;
-      }
-
-      const recognition = new SR();
-      recognition.lang = speechLocale;
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.continuous = false;
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        onResult(transcript);
-      };
-
-      recognition.onerror = (event: any) => {
-        const map: Record<string, string> = {
-          "no-speech": "No speech detected — please try again.",
-          "audio-capture": "No microphone found.",
-          "not-allowed": "Microphone permission denied. Please allow it in browser settings.",
-          network: "Network error — speech recognition needs internet.",
-          aborted: "Speech recognition was stopped.",
-          "service-not-allowed": "Speech service not allowed. Try again.",
-          "not-supported": "Speech recognition not supported.",
-        };
-        const msg = map[event.error] || `Speech error: ${event.error}`;
-        // If browser STT fails, try server STT as fallback
-        if (event.error === "not-allowed" || event.error === "service-not-allowed" || event.error === "not-supported") {
-          console.warn("Browser STT failed, trying server STT:", event.error);
-          startServerSTT(onResult, onError);
-        } else {
-          onError(msg);
-          setIsListening(false);
-        }
-      };
-
-      recognition.onend = () => setIsListening(false);
-
-      recognitionRef.current = recognition;
-      setIsListening(true);
-      setError(null);
-
-      try {
-        recognition.start();
-      } catch (err) {
-        // If start() fails, fall back to server STT
-        console.warn("Browser STT start failed, trying server STT:", err);
-        startServerSTT(onResult, onError);
-      }
-    },
-    [speechLocale]
-  );
 
   // ── Server-side STT (MediaRecorder + cloud Whisper) ──────────────────
   const startServerSTT = useCallback(
@@ -261,12 +196,7 @@ export function useVoice(languageCode: string) {
               "audio/webm",
               "audio/ogg;codecs=opus",
             ]
-          : [
-              "audio/webm;codecs=opus",
-              "audio/webm",
-              "audio/mp4",
-              "audio/ogg;codecs=opus",
-            ];
+          : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
 
         for (const candidate of candidates) {
           if (MediaRecorder.isTypeSupported(candidate)) {
@@ -304,8 +234,8 @@ export function useVoice(languageCode: string) {
             const ext = mimeType.includes("mp4")
               ? "m4a"
               : mimeType.includes("ogg")
-              ? "ogg"
-              : "webm";
+                ? "ogg"
+                : "webm";
 
             const formData = new FormData();
             formData.append("file", blob, `voice.${ext}`);
@@ -315,7 +245,7 @@ export function useVoice(languageCode: string) {
             // boundary, otherwise the upload is rejected.
             const res = await api.post<{ text: string }>(
               `/chat/transcribe?language=${encodeURIComponent(languageCode)}`,
-              formData
+              formData,
             );
             const transcript = res.data.text?.trim();
             if (!transcript) {
@@ -323,10 +253,8 @@ export function useVoice(languageCode: string) {
               return;
             }
             onResult(transcript);
-          } catch (err: any) {
-            onError(
-              apiErrorMessage(err, "Transcription failed. Please try again.")
-            );
+          } catch (err) {
+            onError(apiErrorMessage(err, "Transcription failed. Please try again."));
           }
         };
 
@@ -340,22 +268,86 @@ export function useVoice(languageCode: string) {
         setIsListening(true);
         setError(null);
         recorder.start(1000);
-      } catch (err: any) {
+      } catch (err) {
         setIsListening(false);
-        if (err?.name === "NotAllowedError") {
-          onError(
-            "Microphone permission denied. Please allow microphone in your phone settings."
-          );
-        } else if (err?.name === "NotFoundError") {
+        const name = err instanceof DOMException ? err.name : "";
+        if (name === "NotAllowedError") {
+          onError("Microphone permission denied. Please allow microphone in your phone settings.");
+        } else if (name === "NotFoundError") {
           onError("No microphone found on this device.");
-        } else if (err?.name === "NotReadableError") {
-          onError("Microphone is being used by another app. Please close other apps and try again.");
+        } else if (name === "NotReadableError") {
+          onError(
+            "Microphone is being used by another app. Please close other apps and try again.",
+          );
         } else {
           onError("Could not access microphone. Please try again.");
         }
       }
     },
-    [languageCode, mobile]
+    [languageCode, mobile],
+  );
+
+  // ── Browser-native STT ──────────────────────────────────────────────
+  const startBrowserSTT = useCallback(
+    (onResult: (text: string) => void, onError: (err: string) => void) => {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        // Fall back to server STT
+        startServerSTT(onResult, onError);
+        return;
+      }
+
+      const recognition = new SR();
+      recognition.lang = speechLocale;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        onResult(transcript);
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        const map: Record<string, string> = {
+          "no-speech": "No speech detected — please try again.",
+          "audio-capture": "No microphone found.",
+          "not-allowed": "Microphone permission denied. Please allow it in browser settings.",
+          network: "Network error — speech recognition needs internet.",
+          aborted: "Speech recognition was stopped.",
+          "service-not-allowed": "Speech service not allowed. Try again.",
+          "not-supported": "Speech recognition not supported.",
+        };
+        const msg = map[event.error] || `Speech error: ${event.error}`;
+        // If browser STT fails, try server STT as fallback
+        if (
+          event.error === "not-allowed" ||
+          event.error === "service-not-allowed" ||
+          event.error === "not-supported"
+        ) {
+          console.warn("Browser STT failed, trying server STT:", event.error);
+          startServerSTT(onResult, onError);
+        } else {
+          onError(msg);
+          setIsListening(false);
+        }
+      };
+
+      recognition.onend = () => setIsListening(false);
+
+      recognitionRef.current = recognition;
+      setIsListening(true);
+      setError(null);
+
+      try {
+        recognition.start();
+      } catch (err) {
+        // If start() fails, fall back to server STT
+        console.warn("Browser STT start failed, trying server STT:", err);
+        startServerSTT(onResult, onError);
+      }
+    },
+    [speechLocale, startServerSTT],
   );
 
   // ── Public startListening ────────────────────────────────────────────
@@ -376,9 +368,7 @@ export function useVoice(languageCode: string) {
         startServerSTT(onResult, handleError);
       } else {
         // Try browser STT anyway — might work
-        const SR =
-          (window as any).SpeechRecognition ||
-          (window as any).webkitSpeechRecognition;
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SR) {
           startBrowserSTT(onResult, handleError);
         } else {
@@ -386,7 +376,7 @@ export function useVoice(languageCode: string) {
         }
       }
     },
-    [sttMode, startBrowserSTT, startServerSTT]
+    [sttMode, startBrowserSTT, startServerSTT],
   );
 
   // ── Stop listening ───────────────────────────────────────────────────

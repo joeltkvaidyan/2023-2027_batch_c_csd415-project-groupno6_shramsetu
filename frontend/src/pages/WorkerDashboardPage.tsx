@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Check,
+  IdCard,
   Clock,
   IndianRupee,
   Briefcase,
@@ -19,9 +20,56 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../store/AuthContext";
 import { BottomNav } from "../components/BottomNav";
-import { Card, Badge, Avatar, SkeletonList } from "../components/ui";
+import { Card, Badge, Avatar, SkeletonList, BigActionCard } from "../components/ui";
 import { api } from "../api/client";
 import type { Employer, Grievance, JobMatch } from "../types";
+
+/** One card of the work snapshot: loaded, still loading, or failed on its own. */
+type SnapshotMetric = { value: number | null; failed: boolean };
+
+const PENDING: SnapshotMetric = { value: null, failed: false };
+
+function metricFrom(result: PromiseSettledResult<number>): SnapshotMetric {
+  return result.status === "fulfilled"
+    ? { value: result.value, failed: false }
+    : { value: null, failed: true };
+}
+
+/** A snapshot card: the figure, a skeleton while loading, or Retry on failure. */
+function SnapshotCell({
+  metric,
+  label,
+  retryLabel,
+  onActivate,
+  prefix = "",
+}: {
+  metric: SnapshotMetric;
+  label: string;
+  retryLabel: string;
+  onActivate: () => void;
+  prefix?: string;
+}) {
+  const loading = metric.value === null && !metric.failed;
+  return (
+    <button type="button" onClick={onActivate} className="active:scale-95 transition">
+      <p className="text-lg font-bold text-brand-700 dark:text-brand-400">
+        {metric.failed ? (
+          <span className="text-base font-semibold text-amber-600 dark:text-amber-400">—</span>
+        ) : loading ? (
+          <span
+            className="inline-block h-5 w-8 align-middle rounded bg-gray-200 dark:bg-gray-700 animate-pulse"
+            aria-hidden="true"
+          />
+        ) : (
+          `${prefix}${metric.value}`
+        )}
+      </p>
+      <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+        {metric.failed ? retryLabel : label}
+      </p>
+    </button>
+  );
+}
 
 export default function WorkerDashboardPage() {
   const { t } = useTranslation();
@@ -31,11 +79,29 @@ export default function WorkerDashboardPage() {
   const [copied, setCopied] = useState(false);
   const [recent, setRecent] = useState<Grievance[] | null>(null);
   // Phase 2 snapshot: job matches, saved recurring employers, unpaid wages.
-  const [snapshot, setSnapshot] = useState<{
-    jobs: number;
-    employers: number;
-    unpaid: number;
-  } | null>(null);
+  // Each figure keeps its own state because they come from three unrelated
+  // services: the wage summary being down must not blank the job count, which
+  // is what a single Promise.all with one catch used to do.
+  const [snapshot, setSnapshot] = useState({
+    jobs: PENDING,
+    employers: PENDING,
+    unpaid: PENDING,
+  });
+
+  const loadMetric = useCallback(async (key: "jobs" | "employers" | "unpaid") => {
+    setSnapshot((s) => ({ ...s, [key]: PENDING }));
+    try {
+      const value =
+        key === "jobs"
+          ? (await api.get<{ jobs: JobMatch[] }>("/jobs")).data.jobs.length
+          : key === "employers"
+            ? (await api.get<{ employers: Employer[] }>("/employers")).data.employers.length
+            : (await api.get<{ total_unpaid: number }>("/wages/summary")).data.total_unpaid;
+      setSnapshot((s) => ({ ...s, [key]: { value, failed: false } }));
+    } catch {
+      setSnapshot((s) => ({ ...s, [key]: { value: null, failed: true } }));
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -44,20 +110,20 @@ export default function WorkerDashboardPage() {
       .then((res) => active && setRecent(res.data))
       .catch(() => active && setRecent([]));
 
-    Promise.all([
-      api.get<{ jobs: JobMatch[] }>("/jobs"),
-      api.get<{ employers: Employer[] }>("/employers"),
-      api.get<{ total_unpaid: number }>("/wages/summary"),
-    ])
-      .then(([jobs, employers, wages]) => {
-        if (!active) return;
-        setSnapshot({
-          jobs: jobs.data.jobs.length,
-          employers: employers.data.employers.length,
-          unpaid: wages.data.total_unpaid,
-        });
-      })
-      .catch(() => active && setSnapshot(null));
+    // allSettled, not all: one dead endpoint leaves the other two figures on
+    // screen instead of collapsing the whole card.
+    Promise.allSettled([
+      api.get<{ jobs: JobMatch[] }>("/jobs").then((res) => res.data.jobs.length),
+      api.get<{ employers: Employer[] }>("/employers").then((res) => res.data.employers.length),
+      api.get<{ total_unpaid: number }>("/wages/summary").then((res) => res.data.total_unpaid),
+    ]).then(([jobs, employers, wages]) => {
+      if (!active) return;
+      setSnapshot({
+        jobs: metricFrom(jobs),
+        employers: metricFrom(employers),
+        unpaid: metricFrom(wages),
+      });
+    });
 
     return () => {
       active = false;
@@ -77,16 +143,17 @@ export default function WorkerDashboardPage() {
   };
 
   const greetingKey =
-    new Date().getHours() < 12 ? "dashboard.greetingMorning" : new Date().getHours() < 17 ? "dashboard.greetingAfternoon" : "dashboard.greetingEvening";
+    new Date().getHours() < 12
+      ? "dashboard.greetingMorning"
+      : new Date().getHours() < 17
+        ? "dashboard.greetingAfternoon"
+        : "dashboard.greetingEvening";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-32">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-36">
       {/* Header — brand gradient with real avatar + greeting */}
-      <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white px-5 pt-8 pb-12 rounded-b-[2rem] relative overflow-hidden animate-fade-in">
-        {/* Subtle decorative glow */}
-        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/5 pointer-events-none animate-aurora-shift" aria-hidden="true" />
-        <div className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-emerald-300/10 blur-2xl pointer-events-none animate-float" aria-hidden="true" />
-        <div className="flex items-center gap-4 relative">
+      <header className="bg-brand-700 text-white px-5 pt-8 pb-12 rounded-b-[2rem] animate-fade-in">
+        <div className="flex items-center gap-4">
           <Avatar name={worker.full_name} size="lg" className="ring-2 ring-white/30" />
           <div className="min-w-0">
             <p className="text-brand-100 text-sm">{t(greetingKey, "Welcome,")}</p>
@@ -106,17 +173,23 @@ export default function WorkerDashboardPage() {
             }`}
             role="status"
           >
-            <span className="text-xl shrink-0" aria-hidden="true">{govStatus === "rejected" ? "❌" : "⏳"}</span>
+            <span className="text-xl shrink-0" aria-hidden="true">
+              {govStatus === "rejected" ? "❌" : "⏳"}
+            </span>
             <div>
-              <p className={`font-semibold text-sm ${govStatus === "rejected" ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-200"}`}>
+              <p
+                className={`font-semibold text-sm ${govStatus === "rejected" ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-200"}`}
+              >
                 {govStatus === "rejected"
                   ? "Registration not accepted"
                   : "Waiting for government approval"}
               </p>
-              <p className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}>
+              <p
+                className={`text-xs mt-0.5 ${govStatus === "rejected" ? "text-red-600 dark:text-red-400" : "text-amber-800 dark:text-amber-300"}`}
+              >
                 {govStatus === "rejected"
                   ? "A labour-office official did not verify this registration. Please visit your nearest labour office."
-                  : "A labour-office official must accept your registration before you can apply to jobs or appear in the public worker directory."}
+                  : "A labour-office official must accept your registration before you can apply to jobs or appear in the directory employers use to call workers."}
               </p>
             </div>
           </div>
@@ -129,7 +202,9 @@ export default function WorkerDashboardPage() {
               <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">
                 {t("dashboard.yourWorkerId")}
               </p>
-              <p className="text-lg font-mono font-bold text-brand-700 dark:text-brand-400">{worker.worker_id}</p>
+              <p className="text-lg font-mono font-bold text-brand-700 dark:text-brand-400">
+                {worker.worker_id}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Digital ID QR — encodes the worker_id only. It is an offline
@@ -146,69 +221,94 @@ export default function WorkerDashboardPage() {
                   role="img"
                 />
               </span>
+              {/* The printable, QR-verifiable card. The QR above is an offline
+                  identity helper; this one is the credential people can check. */}
+              <button
+                onClick={() => navigate("/worker/id-card")}
+                className="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition"
+                aria-label={t("dashboard.viewIdCard", "Open ID card")}
+                title={t("dashboard.viewIdCard", "Open ID card")}
+              >
+                <IdCard className="h-4 w-4" />
+              </button>
               <button
                 onClick={copyWorkerId}
                 className="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition"
                 aria-label={t("dashboard.copyWorkerId", "Copy worker ID")}
               >
-                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
         </Card>
 
         {/* Work snapshot — job matches, recurring employers, unpaid wages */}
-        {snapshot && (
-          <Card className="mt-5 animate-rise">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <button onClick={() => navigate("/worker/jobs")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.jobs}</p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.jobMatches", "Job matches")}
-                </p>
-              </button>
-              <button onClick={() => navigate("/worker/employers")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">{snapshot.employers}</p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.employers", "Employers")}
-                </p>
-              </button>
-              <button onClick={() => navigate("/worker/wages")} className="active:scale-95 transition">
-                <p className="text-lg font-bold text-brand-700 dark:text-brand-400">₹{snapshot.unpaid}</p>
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
-                  {t("dashboard.unpaid", "Unpaid")}
-                </p>
-              </button>
-            </div>
-          </Card>
-        )}
+        <Card className="mt-5 animate-rise">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <SnapshotCell
+              metric={snapshot.jobs}
+              label={t("dashboard.jobMatches", "Job matches")}
+              retryLabel={t("common.retry", "Retry")}
+              onActivate={() =>
+                snapshot.jobs.failed ? loadMetric("jobs") : navigate("/worker/jobs")
+              }
+            />
+            <SnapshotCell
+              metric={snapshot.employers}
+              label={t("dashboard.employers", "Employers")}
+              retryLabel={t("common.retry", "Retry")}
+              onActivate={() =>
+                snapshot.employers.failed ? loadMetric("employers") : navigate("/worker/employers")
+              }
+            />
+            <SnapshotCell
+              metric={snapshot.unpaid}
+              label={t("dashboard.unpaid", "Unpaid")}
+              retryLabel={t("common.retry", "Retry")}
+              prefix="₹"
+              onActivate={() =>
+                snapshot.unpaid.failed ? loadMetric("unpaid") : navigate("/worker/wages")
+              }
+            />
+          </div>
+        </Card>
 
-        {/* Primary actions */}
-        <div className="grid grid-cols-2 gap-3.5 mt-5">
-          <ActionTile
-            Icon={FileText}
-            label={t("dashboard.documentWallet")}
-            onClick={() => navigate("/worker/documents")}
-            delay={60}
+        {/* The three things this app exists for, at full width: a half-tile
+            labelled "Wage Diary" assumed the worker already knew that is where
+            unpaid wages live. Each one is a whole row, a 48px minimum, and one
+            clear verb. The rest of the tools stay below as secondary tiles. */}
+        <div className="mt-5 space-y-3">
+          <BigActionCard
+            icon={IndianRupee}
+            tone="amber"
+            label={t("dashboard.unpaidWages")}
+            onClick={() => navigate("/worker/wages")}
           />
-          <ActionTile
-            Icon={Sparkles}
-            label={t("dashboard.aiChatbot")}
+          <BigActionCard
+            icon={Sparkles}
+            tone="brand"
+            label={t("dashboard.askQuestion")}
             onClick={() => navigate("/worker/chat")}
-            featured
-            delay={120}
           />
+          <BigActionCard
+            icon={FileText}
+            tone="blue"
+            label={t("dashboard.myDocuments")}
+            onClick={() => navigate("/worker/documents")}
+          />
+        </div>
+
+        {/* Secondary tools */}
+        <div className="grid grid-cols-2 gap-3.5 mt-4">
           <ActionTile
             Icon={Megaphone}
             label={t("grievance.title")}
             onClick={() => navigate("/worker/grievances")}
             delay={180}
-          />
-          <ActionTile
-            Icon={IndianRupee}
-            label={t("wages.title", "Wage Diary")}
-            onClick={() => navigate("/worker/wages")}
-            delay={240}
           />
           <ActionTile
             Icon={Briefcase}
@@ -289,7 +389,9 @@ export default function WorkerDashboardPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{g.subject}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {g.subject}
+                      </p>
                       <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {g.created_at ? new Date(g.created_at).toLocaleDateString() : ""}

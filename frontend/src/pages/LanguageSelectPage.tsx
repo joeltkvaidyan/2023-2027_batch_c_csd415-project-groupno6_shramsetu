@@ -22,20 +22,13 @@ export default function LanguageSelectPage() {
 
   // Language selection screen always displays in English
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-700 via-brand-800 to-brand-950 flex flex-col justify-center px-6 py-10 relative overflow-hidden">
-      {/* Animated aurora orbs */}
-      <div className="orb w-[26rem] h-[26rem] -top-32 -right-24 bg-emerald-400/20 blur-3xl animate-aurora-shift" aria-hidden="true" />
-      <div className="orb w-80 h-80 bottom-[-6rem] -left-20 bg-teal-300/15 blur-3xl animate-aurora-shift [animation-delay:-7s]" aria-hidden="true" />
-      <div className="orb w-40 h-40 top-1/3 left-1/4 bg-emerald-300/10 blur-2xl animate-float" aria-hidden="true" />
-
-      <div className="text-center mb-10 relative animate-fade-up">
-        <div className="mx-auto mb-5 w-20 h-20 rounded-3xl bg-white/10 backdrop-blur flex items-center justify-center text-4xl ring-1 ring-white/20 shadow-glow-brand animate-float">
+    <div className="min-h-screen bg-brand-800 flex flex-col justify-center px-6 py-10">
+      <div className="text-center mb-10 animate-fade-up">
+        <div className="mx-auto mb-5 w-20 h-20 rounded-3xl bg-white/10 flex items-center justify-center text-4xl ring-1 ring-white/20">
           🤝
         </div>
         <h1 className="text-4xl font-bold text-white tracking-tight">ShramSetu</h1>
-        <p className="text-emerald-100/80 mt-2 text-base">
-          Your welfare journey, in your language
-        </p>
+        <p className="text-brand-100/80 mt-2 text-base">Your welfare journey, in your language</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-8 relative">
@@ -60,11 +53,11 @@ export default function LanguageSelectPage() {
 
       <button
         onClick={handleContinue}
-        className="btn-primary bg-white !text-brand-800 hover:!bg-emerald-50 shadow-glow-brand-lg relative animate-fade-up [animation-delay:400ms]"
+        className="btn-primary !bg-white !text-brand-800 hover:!bg-brand-50 shadow-glow-brand-lg relative animate-fade-up [animation-delay:400ms]"
       >
         Continue →
       </button>
-      <p className="text-center text-emerald-100/60 text-sm mt-4 relative animate-fade-in [animation-delay:600ms]">
+      <p className="text-center text-brand-100/60 text-sm mt-4 relative animate-fade-in [animation-delay:600ms]">
         You can change this anytime in Settings
       </p>
     </div>

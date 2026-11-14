@@ -6,6 +6,10 @@ import { Grievance, GRIEVANCE_STATUSES } from "../models/Grievance.js";
 import { PushNotification, WorkerNotification } from "../models/Notification.js";
 import { AuditLog } from "../models/Document.js";
 import { authenticate, requireGovernment, audit } from "../middleware/auth.js";
+import { toCsv, sendCsv, datedFilename } from "../utils/csv.js";
+import { InsurancePolicy } from "../models/InsurancePolicy.js";
+import { policyStatus, maskPolicyNumber } from "../utils/insurance.js";
+import { daysOverdue, OPEN_GRIEVANCE_STATUSES } from "../utils/slaEscalation.js";
 import {
   grievanceScopeFilter,
   officialCanSeeGrievance,
@@ -308,6 +312,125 @@ router.get("/workers", authenticate, requireGovernment, async (req, res) => {
   }
 });
 
+// ── CSV exports (scoped) ─────────────────────────────────────────────
+// The Flask reference app let a labour-office admin download the worker and
+// grievance lists as CSV. Both exports below reuse the same scope filters as
+// the on-screen lists, so an official can never download a row they cannot
+// already see, and every export is written to the audit log — a bulk copy of
+// worker data is exactly the kind of read that should leave a trace.
+const EXPORT_ROW_CAP = 5000;
+
+router.get("/export/workers.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const filter = workerScopeFilter(official);
+    const search = String(req.query.search || "").trim();
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ full_name: rx }, { worker_id: rx }, { occupation: rx }];
+    }
+
+    const rows = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(EXPORT_ROW_CAP)
+      .lean();
+
+    // Dates are normalised to ISO before serialising: a raw Date reaches the
+    // CSV as "Thu Oct 22 2026 11:55:19 GMT+0530 (India Standard Time)", which
+    // is both unreadable in Excel and full of commas.
+    const csv = toCsv(
+      rows.map((w) => ({
+        ...w,
+        createdAt: w.createdAt ? new Date(w.createdAt).toISOString() : "",
+      })),
+      [
+        { key: "worker_id", header: "Worker ID" },
+        { key: "full_name", header: "Name" },
+        { key: "mobile_number", header: "Mobile" },
+        { key: "occupation", header: "Occupation" },
+        { key: "years_of_experience", header: "Experience (years)" },
+        { key: "current_village_or_city", header: "Village / city" },
+        { key: "current_district", header: "District" },
+        { key: "current_state", header: "State" },
+        { key: "gov_approve_status", header: "Approval" },
+        { key: "is_active", header: "Active" },
+        { key: "createdAt", header: "Registered" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.workers_csv",
+      resourceType: "user",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("workers"), csv);
+  } catch (err) {
+    console.error("[gov/export/workers]", err);
+    res.status(500).json({ detail: "Could not build the worker export." });
+  }
+});
+
+router.get("/export/grievances.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    const { grievanceFilter } = await grievanceScopeFilter(official);
+    const filter = { ...grievanceFilter };
+    if (req.query.status_filter) filter.status = String(req.query.status_filter);
+    if (req.query.category) filter.category = String(req.query.category);
+
+    const rows = await Grievance.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(EXPORT_ROW_CAP)
+      .populate("owner_id")
+      .lean();
+
+    const csv = toCsv(
+      rows.map((g) => ({
+        ...g,
+        worker_id: g.owner_id?.worker_id ?? "",
+        worker_name: g.owner_id?.full_name ?? "",
+        createdAt: g.createdAt ? new Date(g.createdAt).toISOString() : "",
+        incident_date: g.incident_date ? new Date(g.incident_date).toISOString() : "",
+        resolved_at: g.resolved_at ? new Date(g.resolved_at).toISOString() : "",
+      })),
+      [
+        { key: "complaint_number", header: "Complaint no." },
+        { key: "createdAt", header: "Filed" },
+        { key: "category", header: "Category" },
+        { key: "subject", header: "Subject" },
+        { key: "status", header: "Status" },
+        { key: "priority", header: "Priority" },
+        { key: "worker_id", header: "Worker ID" },
+        { key: "worker_name", header: "Worker" },
+        { key: "employer_name", header: "Employer" },
+        { key: "incident_location", header: "Incident location" },
+        { key: "incident_date", header: "Incident date" },
+        { key: "resolved_at", header: "Resolved" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.grievances_csv",
+      resourceType: "grievance",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("grievances"), csv);
+  } catch (err) {
+    console.error("[gov/export/grievances]", err);
+    res.status(500).json({ detail: "Could not build the grievance export." });
+  }
+});
+
 // ── Grievances management (scoped) ───────────────────────────────────
 router.get("/grievances", authenticate, requireGovernment, async (req, res) => {
   try {
@@ -347,6 +470,62 @@ router.get("/grievances", authenticate, requireGovernment, async (req, res) => {
   } catch (err) {
     console.error("[gov/grievances]", err);
     res.status(500).json({ detail: "Could not load grievances." });
+  }
+});
+
+// ── Overdue escalations (scoped) ─────────────────────────────────────
+// What the labour office owes an answer on, oldest breach first. Scoped by the
+// same filter as the grievance list, so an official never sees a complaint
+// outside their jurisdiction — and the escalation level says how far up the
+// ladder it has already gone (1 = district told, 2 = state told).
+router.get("/escalations", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const { grievanceFilter } = await grievanceScopeFilter(official);
+    const now = new Date();
+    const filter = {
+      ...grievanceFilter,
+      status: { $in: OPEN_GRIEVANCE_STATUSES },
+      sla_deadline: { $ne: null, $lt: now },
+    };
+
+    const total = await Grievance.countDocuments(filter);
+    const rows = await Grievance.find(filter)
+      .sort({ sla_deadline: 1 })
+      .limit(200)
+      .populate("owner_id")
+      .lean();
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      total,
+      escalations: rows.map((g) => ({
+        id: String(g._id),
+        complaint_number: g.complaint_number,
+        category: g.category,
+        subject: g.subject,
+        status: g.status,
+        priority: g.priority,
+        sla_deadline: g.sla_deadline,
+        days_overdue: daysOverdue(g.sla_deadline, now),
+        escalation_level: g.escalation_level ?? 0,
+        escalated_at: g.escalated_at ?? null,
+        state_escalated_at: g.state_escalated_at ?? null,
+        district: g.owner_district ?? g.owner_id?.current_district ?? null,
+        state: g.owner_state ?? g.owner_id?.current_state ?? null,
+        worker: g.owner_id
+          ? {
+              worker_id: g.owner_id.worker_id ?? null,
+              full_name: g.owner_id.full_name ?? null,
+            }
+          : null,
+      })),
+    });
+  } catch (err) {
+    console.error("[gov/escalations]", err);
+    res.status(500).json({ detail: "Could not load overdue complaints." });
   }
 });
 
@@ -594,6 +773,195 @@ router.get("/audit-logs", authenticate, requireGovernment, async (req, res) => {
   } catch (err) {
     console.error("[gov/audit-logs]", err);
     res.status(500).json({ detail: "Could not load audit logs." });
+  }
+});
+
+// ── Insurance verification queue ─────────────────────────────────────
+// A worker's self-declared policy is only worth showing to a household once an
+// official has checked it against the insurer or the scheme enrolment list.
+// This is that queue, scoped exactly like the worker lists: an official can
+// only verify workers inside their own jurisdiction.
+const MAX_INSURANCE_ROWS = 200;
+
+function insuranceRow(policy, worker, now) {
+  return {
+    id: String(policy._id),
+    worker: worker
+      ? {
+          id: String(worker._id),
+          worker_id: worker.worker_id ?? null,
+          full_name: worker.full_name ?? null,
+          district: worker.current_district ?? null,
+          state: worker.current_state ?? null,
+        }
+      : null,
+    provider: policy.provider,
+    // Officials need the real number to check it with the insurer; the public
+    // verify page only ever shows the last four digits.
+    policy_number: policy.policy_number,
+    coverage: policy.coverage ?? "accident",
+    sum_insured: policy.sum_insured ?? null,
+    valid_from: policy.valid_from ? new Date(policy.valid_from).toISOString() : null,
+    valid_to: policy.valid_to ? new Date(policy.valid_to).toISOString() : null,
+    verification: policy.verification,
+    verified_at: policy.verified_at ? new Date(policy.verified_at).toISOString() : null,
+    status: policyStatus(policy, now),
+    masked_number: maskPolicyNumber(policy.policy_number),
+  };
+}
+
+/**
+ * Policies for the officials' own jurisdiction, shaped for the console and the
+ * CSV. Shared by both so a downloaded row can never describe something the
+ * on-screen list would hide.
+ */
+async function collectInsuranceRows(official, { verification, status, limit } = {}) {
+  const scopedWorkers = await User.find(workerScopeFilter(official))
+    .select("_id full_name worker_id current_district current_state")
+    .lean();
+  const byId = new Map(scopedWorkers.map((w) => [String(w._id), w]));
+
+  const filter = { worker_id: { $in: [...byId.keys()] } };
+  if (verification === "self_declared" || verification === "office_verified") {
+    filter.verification = verification;
+  }
+
+  const policies = await InsurancePolicy.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(limit ?? MAX_INSURANCE_ROWS)
+    .lean();
+
+  const now = new Date();
+  return policies
+    .map((p) => insuranceRow(p, byId.get(String(p.worker_id)), now))
+    .filter((row) => (status ? row.status === status : true));
+}
+
+router.get("/insurance", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const rows = await collectInsuranceRows(official, {
+      verification: String(req.query.verification || "").trim(),
+      status: String(req.query.status || "").trim(),
+      limit: MAX_INSURANCE_ROWS,
+    });
+
+    res.set("Cache-Control", "no-store");
+    res.json({ policies: rows, count: rows.length });
+  } catch (err) {
+    console.error("[gov/insurance]", err);
+    res.status(500).json({ detail: "Could not load insurance records." });
+  }
+});
+
+// The register a district office actually needs on paper: which workers are
+// covered, by whom, until when, and whether anyone checked. Scoped and audited
+// like the worker and grievance exports — a bulk copy of insurance records is
+// a bulk copy of worker data.
+router.get("/export/insurance.csv", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    const rows = await collectInsuranceRows(official, {
+      verification: String(req.query.verification || "").trim(),
+      status: String(req.query.status || "").trim(),
+      limit: EXPORT_ROW_CAP,
+    });
+
+    const csv = toCsv(
+      rows.map((row) => ({
+        worker_id: row.worker?.worker_id ?? "",
+        worker_name: row.worker?.full_name ?? "",
+        district: row.worker?.district ?? "",
+        state: row.worker?.state ?? "",
+        provider: row.provider,
+        policy_number: row.policy_number,
+        coverage: row.coverage,
+        sum_insured: row.sum_insured ?? "",
+        // Date-only: an ISO timestamp sorts as text anyway and is unreadable
+        // in a printed register.
+        valid_from: row.valid_from ? row.valid_from.slice(0, 10) : "",
+        valid_to: row.valid_to ? row.valid_to.slice(0, 10) : "",
+        status: row.status,
+        verification: row.verification,
+        verified_at: row.verified_at ? row.verified_at.slice(0, 10) : "",
+      })),
+      [
+        { key: "worker_id", header: "Worker ID" },
+        { key: "worker_name", header: "Worker" },
+        { key: "district", header: "District" },
+        { key: "state", header: "State" },
+        { key: "provider", header: "Insurer" },
+        { key: "policy_number", header: "Policy number" },
+        { key: "coverage", header: "Coverage" },
+        { key: "sum_insured", header: "Sum insured (INR)" },
+        { key: "valid_from", header: "Valid from" },
+        { key: "valid_to", header: "Valid to" },
+        { key: "status", header: "Status" },
+        { key: "verification", header: "Verification" },
+        { key: "verified_at", header: "Verified on" },
+      ],
+    );
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: official?.employee_id ?? req.userId,
+      action: "export.insurance_csv",
+      resourceType: "insurance_policy",
+      resourceId: null,
+      ip: req.ip,
+      success: true,
+    });
+
+    sendCsv(res, datedFilename("insurance"), csv);
+  } catch (err) {
+    console.error("[gov/export/insurance]", err);
+    res.status(500).json({ detail: "Could not build the insurance export." });
+  }
+});
+
+router.post("/insurance/:id/verify", authenticate, requireGovernment, async (req, res) => {
+  try {
+    const official = await User.findById(req.userId);
+    if (!official) return res.status(401).json({ detail: "Sign in again." });
+
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ detail: "No such insurance record." });
+    }
+
+    const policy = await InsurancePolicy.findById(req.params.id);
+    if (!policy) return res.status(404).json({ detail: "No such insurance record." });
+
+    // Scope check by re-reading the worker through the jurisdiction filter: a
+    // policy in another district must behave as though it does not exist.
+    const worker = await User.findOne({
+      _id: policy.worker_id,
+      ...workerScopeFilter(official),
+    });
+    if (!worker) return res.status(403).json({ detail: "This worker is outside your jurisdiction." });
+
+    policy.verification = "office_verified";
+    policy.verified_by = official._id;
+    policy.verified_at = new Date();
+    await policy.save();
+
+    await audit({
+      actorRole: "government",
+      actorIdentifier: req.userId,
+      action: "insurance.verify",
+      resourceType: "insurance_policy",
+      resourceId: String(policy._id),
+      ip: req.ip,
+      success: true,
+    });
+
+    res.json({ policy: insuranceRow(policy, worker, new Date()) });
+  } catch (err) {
+    console.error("[gov/insurance/verify]", err);
+    res.status(500).json({ detail: "Could not verify this policy." });
   }
 });
 

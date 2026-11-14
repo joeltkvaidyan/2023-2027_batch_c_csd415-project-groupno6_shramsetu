@@ -26,6 +26,14 @@ const GrievanceSchema = new Schema(
     complaint_number: { type: String, index: true }, // GR-XXXXXXXX
     owner_id: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
 
+    // Idempotency key of the submission that created this row (see
+    // utils/idempotency.js). Left absent — not null — when a client sends none:
+    // a sparse index treats a stored null as a value, so one null per worker
+    // would collide and every keyless filing after the first would 500. Absent
+    // documents are outside the index entirely, so legacy data needs no
+    // migration.
+    client_request_id: { type: String },
+
     // Denormalised jurisdiction snapshot (where the grievance was FILED).
     // Lets government officials query their scope without joining users, and
     // preserves the filing district even if the worker later moves. Set at
@@ -46,6 +54,17 @@ const GrievanceSchema = new Schema(
 
     sla_deadline: { type: Date, default: null },
     escalated: { type: Boolean, default: false },
+
+    // How far up the ladder this complaint has climbed after its deadline:
+    //   0  nothing yet (or it was resolved in time)
+    //   1  the deadline passed and the district office was told
+    //   2  it stayed open through the grace window and the state office was told
+    // Each step is taken by an atomic claim filtered on the current level, so a
+    // restart or a second API instance cannot escalate the same complaint twice.
+    escalation_level: { type: Number, default: 0, min: 0, max: 2, index: true },
+    escalated_at: { type: Date, default: null },
+    state_escalated_at: { type: Date, default: null },
+
     resolved_at: { type: Date, default: null },
 
     worker_rating: { type: Number, min: 1, max: 5, default: null },
@@ -95,6 +114,15 @@ const GrievanceSchema = new Schema(
   { timestamps: true, collection: "grievances" }
 );
 
+// One grievance per (worker, submission key). A partial index — not `sparse`,
+// which counts a stored null as a value — so every row without a string key
+// (legacy data, API clients that send none) stays out of the constraint
+// entirely instead of colliding with the next keyless filing.
+GrievanceSchema.index(
+  { owner_id: 1, client_request_id: 1 },
+  { unique: true, partialFilterExpression: { client_request_id: { $type: "string" } } }
+);
+
 GrievanceSchema.methods.toJSON = function () {
   const base = {
     id: String(this._id),
@@ -105,6 +133,9 @@ GrievanceSchema.methods.toJSON = function () {
     status: this.status,
     priority: this.priority,
     escalated: this.escalated,
+    escalation_level: this.escalation_level ?? 0,
+    escalated_at: this.escalated_at ?? null,
+    state_escalated_at: this.state_escalated_at ?? null,
     sla_deadline: this.sla_deadline,
     employer_name: this.populateRef?.worker ?? null, // filled by toListJSON when joined
     incident_location: this.incident_location,

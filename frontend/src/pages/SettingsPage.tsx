@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Screen } from "../components/Screen";
@@ -7,12 +8,31 @@ import { setStoredLanguage } from "../i18n/index";
 import { useTheme } from "../store/ThemeContext";
 import { useAuth } from "../store/AuthContext";
 import { Avatar } from "../components/ui";
-import { Sun, Moon, LogOut } from "lucide-react";
+import { TextSizeControl } from "../components/ui/TextSizeControl";
+import { TextScale, readTextScale } from "../design/textScale";
+import { Sun, Moon, Contrast, LogOut } from "lucide-react";
 import { api } from "../api/client";
+
+/** One setting row: heading plus a two-or-three way choice. */
+function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
+  const id = label.replace(/\s+/g, "-");
+  return (
+    <section className="mb-8">
+      <h2
+        id={`settings-${id}`}
+        className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide"
+      >
+        {label}
+      </h2>
+      <div aria-labelledby={`settings-${id}`}>{children}</div>
+    </section>
+  );
+}
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, contrast, setContrast } = useTheme();
+  const [textScale, setTextScale] = useState<TextScale>(readTextScale);
   const { worker, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -41,53 +61,84 @@ export default function SettingsPage() {
           <div className="card flex items-center gap-4 mb-6 animate-fade-up">
             <Avatar name={worker.full_name} size="lg" />
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{worker.full_name}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {worker.full_name}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{worker.mobile_number}</p>
-              <p className="text-xs font-mono text-brand-600 dark:text-brand-400 mt-0.5">{worker.worker_id}</p>
+              <p className="text-xs font-mono text-brand-600 dark:text-brand-400 mt-0.5">
+                {worker.worker_id}
+              </p>
             </div>
           </div>
         )}
 
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
-          {t("settings.language")}
-        </h2>
-        <div className="grid grid-cols-2 gap-2 mb-6">
-          {SUPPORTED_LANGUAGES.map((lang) => (
+        <SettingsRow label={t("settings.language")}>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                className={`rounded-xl px-3 py-3 text-sm text-left transition-all duration-150 ${
+                  i18n.language === lang.code
+                    ? "bg-brand-600 text-white font-semibold shadow-glow-brand"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+                }`}
+              >
+                {lang.nativeName}
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
+
+        <SettingsRow label={t("settings.theme")}>
+          <div className="grid grid-cols-2 gap-2">
             <button
-              key={lang.code}
-              onClick={() => handleLanguageChange(lang.code)}
-              className={`rounded-xl px-3 py-3 text-sm text-left transition-all duration-150 ${
-                i18n.language === lang.code
-                  ? "bg-brand-600 text-white font-semibold shadow-glow-brand"
+              onClick={() => setTheme("light")}
+              className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                theme === "light"
+                  ? "bg-brand-600 text-white shadow-glow-brand"
                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
               }`}
             >
-              {lang.nativeName}
+              <Sun className="h-4 w-4" aria-hidden="true" /> {t("settings.light")}
             </button>
-          ))}
-        </div>
+            <button
+              onClick={() => setTheme("dark")}
+              className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                theme === "dark"
+                  ? "bg-brand-600 text-white shadow-glow-brand"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+              }`}
+            >
+              <Moon className="h-4 w-4" aria-hidden="true" /> {t("settings.dark")}
+            </button>
+          </div>
+        </SettingsRow>
 
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
-          {t("settings.theme")}
-        </h2>
-        <div className="grid grid-cols-2 gap-2 mb-8">
-          <button
-            onClick={() => setTheme("light")}
-            className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
-              theme === "light" ? "bg-brand-600 text-white shadow-glow-brand" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
-            }`}
-          >
-            <Sun className="h-4 w-4" aria-hidden="true" /> {t("settings.light")}
-          </button>
-          <button
-            onClick={() => setTheme("dark")}
-            className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
-              theme === "dark" ? "bg-brand-600 text-white shadow-glow-brand" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
-            }`}
-          >
-            <Moon className="h-4 w-4" aria-hidden="true" /> {t("settings.dark")}
-          </button>
-        </div>
+        <SettingsRow label={t("settings.textSize")}>
+          <TextSizeControl value={textScale} onChange={setTextScale} />
+        </SettingsRow>
+
+        <SettingsRow label={t("settings.contrast")}>
+          <div className="grid grid-cols-2 gap-2">
+            {(["normal", "high"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={contrast === option}
+                onClick={() => setContrast(option)}
+                className={`rounded-xl px-3 py-3 text-sm font-medium flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                  contrast === option
+                    ? "bg-brand-600 text-white shadow-glow-brand"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+                }`}
+              >
+                <Contrast className="h-4 w-4" aria-hidden="true" />
+                {option === "normal" ? t("settings.contrastNormal") : t("settings.contrastHigh")}
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
 
         <button
           onClick={handleLogout}

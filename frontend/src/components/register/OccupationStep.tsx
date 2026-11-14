@@ -15,7 +15,10 @@ export default function OccupationStep({ formData, fieldErrors, onChange }: Regi
       <h3 className="font-semibold text-gray-900 dark:text-white">{t("auth.stepOccupation")}</h3>
 
       <div>
-        <label htmlFor="register-nativeState" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-nativeState"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.nativeState")}
         </label>
         <select
@@ -38,7 +41,10 @@ export default function OccupationStep({ formData, fieldErrors, onChange }: Regi
       </div>
 
       <div>
-        <label htmlFor="register-nativeDistrict" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-nativeDistrict"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.nativeDistrict")}
         </label>
         <input
@@ -51,7 +57,10 @@ export default function OccupationStep({ formData, fieldErrors, onChange }: Regi
       </div>
 
       <div>
-        <label htmlFor="register-occupation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-occupation"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.occupation")} *
         </label>
         <select
@@ -78,7 +87,10 @@ export default function OccupationStep({ formData, fieldErrors, onChange }: Regi
       </div>
 
       <div>
-        <label htmlFor="register-yearsOfExperience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="register-yearsOfExperience"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("auth.yearsOfExperience")} *
         </label>
         <input

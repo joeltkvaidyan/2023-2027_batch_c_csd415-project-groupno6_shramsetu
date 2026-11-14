@@ -12,6 +12,7 @@ import { authenticate, requireWorker, audit } from "../middleware/auth.js";
 import { config } from "../config.js";
 import { validateDocumentFile, ALLOWED_DOC_EXTENSIONS } from "../utils/fileValidation.js";
 import { encryptBuffer } from "../utils/crypto.js";
+import { isDuplicateKeyError, readIdempotencyKey, replayResponse } from "../utils/idempotency.js";
 import { wrapKey, unwrapKey } from "../utils/docKeys.js";
 
 const router = Router();
@@ -162,6 +163,15 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
       return res.status(422).json({ detail: [{ loc: ["body", "description"], msg: "Description is required" }] });
     }
 
+    // A retried submission (lost reply, flaky connection) carries the same key
+    // as the first attempt: answer with the grievance that already exists
+    // instead of filing a second complaint for one incident.
+    const requestKey = readIdempotencyKey(req);
+    if (requestKey) {
+      const previous = await Grievance.findOne({ owner_id: req.userId, client_request_id: requestKey });
+      if (previous) return replayResponse(res, detailJSON(previous));
+    }
+
     const priority = PRIORITIES_BY_CATEGORY[category] || "medium";
     const slaDays = SLA_DAYS[priority] ?? 30;
 
@@ -176,6 +186,7 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
       owner_state: filer?.current_state || null,
       owner_district: filer?.current_district || null,
       complaint_number: nextComplaintNumber(),
+      client_request_id: requestKey ?? undefined,
       category,
       subject: String(subject).trim(),
       description: String(description).trim(),
@@ -192,6 +203,13 @@ router.post("/", authenticate, requireWorker, async (req, res) => {
     await audit({ actorRole: "worker", actorIdentifier: req.userId, action: "grievance.create", resourceType: "grievance", resourceId: String(g._id), ip: req.ip, success: true });
     res.status(201).json(detailJSON(g));
   } catch (err) {
+    // Two requests with one key can pass the check above together; the unique
+    // index is what actually decides. The loser replays the winner's record.
+    if (isDuplicateKeyError(err)) {
+      const key = readIdempotencyKey(req);
+      const previous = key && (await Grievance.findOne({ owner_id: req.userId, client_request_id: key }));
+      if (previous) return replayResponse(res, detailJSON(previous));
+    }
     fail(res, err, "Could not file grievance. Please try again.");
   }
 });

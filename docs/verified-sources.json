@@ -1,7 +1,7 @@
 {
-  "$comment": "Verified source registry for ShramSetu knowledge-base ingestion. Every entry was fetched and read during research on 2026-10-15 unless status says otherwise. Ingest only entries with status 'verified'. Entries with status 'unverified' or 'superseded' MUST NOT be served as trusted production answers.",
+  "$comment": "Verified source registry for ShramSetu knowledge-base ingestion. Entries were fetched and read during the 2026-10-15 research pass, the 2026-10-30 curation pass and the 2026-11-03 phase-2 verification pass unless status says otherwise. Ingest only entries with status 'verified'. Entries with status 'unverified'/'superseded'/'uncertain' MUST NOT be served as trusted production answers.",
   "schema_version": "1.0.0",
-  "generated_at": "2026-10-15",
+  "generated_at": "2026-11-03",
   "generated_by": "ShramSetu research phase",
   "status_values": {
     "verified": "Fetched and read; content confirmed on the date given.",
@@ -509,6 +509,306 @@
       "verified_at": "2026-10-20",
       "notes": "Same 403 caveat as pib-codes-commencement: automated fetch blocked, content corroborated through the repo's Code on Wages documents and secondary legal reporting. Gate entry so code-on-wages-2019.txt and unpaid-wage-remedies-code-on-wages-2019.txt load.",
       "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2193095"
+    },
+    {
+      "id": "dfpd-portal",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Department of Food and Public Distribution — portal (Toll Free 1967)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Fetched 2026-10-30; header confirms 'Toll Free Number: 1967'. Search-result render of the same portal also lists Anna Sahayata IVRS 14457 and WhatsApp 9868200445. A national ONORC helpline 14445 is listed by SOME state food departments (e.g. Maharashtra) — confirm per state before quoting.",
+      "url": "https://dfpd.gov.in"
+    },
+    {
+      "id": "dfpd-pmgkay",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PMGKAY — free foodgrains for NFSA beneficiaries, 5 years from 1 Jan 2024",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "The DFPM PMGKAY page is a JS shell to automated fetch. Content verified through PIB releases PRID 1980686 and PRID 2086345: free foodgrains to 81.35 crore NFSA beneficiaries (AAY 35 kg/family, priority households 5 kg/person) for five years effective 1 Jan 2024 (to 31 Dec 2028). The earlier separate COVID-era PMGKY add-ons (e.g. 1 kg pulses per person for migrants) are NOT part of the current regime. DFPD page facts re-checked 2026-10-30.",
+      "url": "https://dfpd.gov.in/pradhan-mantri-garib-kalyan-anna-yojana/en"
+    },
+    {
+      "id": "pib-osh-code-2020-cloud",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "PIB release PRID 2192802 — Occupational Safety, Health and Working Conditions Code, 2020 highlights",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Release (22 Nov 2025) on the OSH Code: no employee to work more than 8 hours a day / 48 hours a week; inter-state migrant provisions highlighted. pib.gov.in returned 403 to automated fetch on 2026-10-30; 8h/48h corroborated by the labour.gov.in OSH FAQ PDF and overtime-at-twice-rates by the DG FASLI Code PDF (both registered). The coverage text is a summary — consult the Code text for exact s. references.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2192802"
+    },
+    {
+      "id": "dgfasli-osh-code",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "DG FASLI official OSH Code PDF — overtime at twice the rate",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Government DG FASLI publication of the OSH Code text: wages at twice the rate for overtime work. Also relevant for hours/rest-interval structure.",
+      "url": "https://dgfasli.gov.in/public/Admin/Cms/AllPdf/650059fbb8f1a9.98699174.pdf"
+    },
+    {
+      "id": "molesh-osh-faq",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Ministry of Labour & Employment FAQ PDF on the OSH Code (uploaded Jan 2026)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official FAQ: 8 hours/day and 48 hours/week standard, with consent-based extension of daily hours on premium payment. Use for the hours standard rather than quoting section numbers.",
+      "url": "https://www.labour.gov.in/static/uploads/2026/01/fb8c6466d0d6a7ed581bcb2bee34694c.pdf"
+    },
+    {
+      "id": "epfo-contribution-rates",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "EPFO official PDF — present rates of contribution (12% each side; EPS/EPF split)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official EPFO PDF: employer contribution 12% split as EPS 8.33% and the remainder to EPF; contributions payable up to a wage ceiling of Rs 15,000 in this PDF's text. The statutory ceiling was later raised to Rs 25,000 by w.e.f. 17 Sep 2026 (see epfo-wage-ceiling-2026) — do not quote Rs 15,000 as the current ceiling.",
+      "url": "https://www.epfo.gov.in/wp-content/themes/epfo-child/assets/pdfs/ContributionRate.pdf"
+    },
+    {
+      "id": "epfo-wage-ceiling-2026",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "EPFO statutory wage ceiling raised to Rs 25,000/month effective 17 Sep 2026",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Multiple consistent reports (KPMG flash alert 2026-253 FAQ; analyst/bank explainers) date the mandatory-coverage ceiling increase from Rs 15,000 to Rs 25,000 at 17 Sep 2026. Gazette text not read directly; do not derive EPS-cap arithmetic without checking the gazette.",
+      "url": "https://kpmg.com/xx/en/our-insights/gms-flash-alert/2026/flash-alert-2026-253.html"
+    },
+    {
+      "id": "epf-interest-fy25",
+      "category": "statistic",
+      "jurisdiction": "IN",
+      "title": "EPF interest 8.25% for FY 2024-25 (ratified); retained at 8.25% for FY 2025-26 per reports",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "News Service/DD News: 8.25% ratified for FY 2024-25 (mid-2025). FY 2025-26 retention of 8.25% was announced around March 2026 and ratified June 2026 (news reports). Rates change annually — quote a rate only with its financial year.",
+      "url": "https://newsonair.gov.in/centre-approves-8-25-interest-rate-on-epf-deposits-for-fy-2024-25/"
+    },
+    {
+      "id": "pm-jjby-pmsby-terms",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PMJJBY/PMSBY terms — premiums Rs 436 / Rs 20 w.e.f. 1 Jun 2022, still current for 2025-26",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PIB release PRID 1823754 (May 2022) describes both schemes (covers Rs 2 lakh); premiums were Rs 330/Rs 12 at that date and were revised to Rs 436/Rs 20 effective 1 Jun 2022 (Finance-ministry-adjacent press; consistent across sources). Policy-year 2025-26 premiums remain Rs 436/Rs 20 (participating-bank communications). PMJJBY: any-cause death, ages 18-50, savings account + auto-debit. PMSBY: accidental death/total disability Rs 2 lakh, partial disability Rs 1 lakh, ages 18-70 (NOT 10-70 — fix any older text). PMSBY is accident-only; PMJJBY covers natural death; they are separate policies.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=1823754"
+    },
+    {
+      "id": "pmkisan-portal",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PM-KISAN portal — Rs 6,000/yr in three Rs 2,000 DBT instalments; helpline 155261",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "pmkisan.gov.in did not load on automated fetch 2026-10-30. Core terms corroborated via multiple secondary write-ups (2021–22 era and later): income support Rs 6,000/year in three 4-monthly Rs 2,000 instalments via DBT; open to all landholding farmer families after the 2019 expansion (the earlier 'small and marginal only' cap is outdated); exclusions include institutional landholders, constitutional post-holders, serving/retired employees above notified pension levels, income-tax payers, professionals; helpline 155261. Benefit tied to landholding + separate bank accounts; not an entitlement for a landless migrant worker.",
+      "url": "https://pmkisan.gov.in"
+    },
+    {
+      "id": "pm-sym-chart",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Maandhan PM-SYM page — contribution chart, eligibility, family pension",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Fetched 2026-10-30: entry age 18–40; monthly income up to Rs 15,000; member contribution Rs 55 (age 18) rising to Rs 200 (age 40) matched equally by GoI; assured pension Rs 3,000/month from 60; family pension = 50% (Rs 1,500) to the spouse only; must NOT be an EPFO/NPS/ESIC member or an income-tax payer; Aadhaar + savings/Jan-Dhan account with IFSC; enrolment via CSC. Content pages themselves carry last-updated dates around Feb 2023 — treat figures as 'as published on the portal'.",
+      "url": "https://maandhan.in/show_content.php?lang=1&level=1&ls_id=28&lid=28&page=6"
+    },
+    {
+      "id": "maandhan-nps-traders",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "NPS for Traders (Laghu Vyapari) on the Maandhan portal",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Maandhan portal homepage (fetched 2026-10-30): National Pension Scheme for Traders — old-age protection for self-employed shop owners/retail traders; entry age 18–40; annual turnover up to Rs 1.5 crore; assured pension Rs 3,000/month from 60; GoI matching contribution.",
+      "url": "https://maandhan.in"
+    },
+    {
+      "id": "ayushman-vay-vandana",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Ayushman Vay Vandana — all citizens 70+ covered with Rs 5 lakh/year PM-JAY",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PM-JAY is Rs 5 lakh per family per year for eligible families; since the 29 Oct 2024 announcement, ALL citizens aged 70 and above are eligible regardless of income (Ayushman Vay Vandana). The Oct 2026 PIB piece (PRID 2330009) marks two years of the programme. General PM-JAY eligibility for younger families still depends on scheme criteria (SECC/NFSA-linked lists; check mera.pmjay.gov.in). Products/hospital counts change — avoid hard counts.",
+      "url": "https://www.pib.gov.in/PressReleaseDetail.aspx?PRID=2330009"
+    },
+    {
+      "id": "pmjay-support",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PM-JAY support — helpline 14555 / 1800-111-565 (official support portal)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "support.pmjay.gov.in lists 'Helpline No. 14555' and tech helpline 14555 / 1800111565 (also confirmed in an AIIMS patient booklet and the PM-JAY quality-certification site). Use both numbers; mera.pmjay.gov.in is the citizen eligibility portal.",
+      "url": "http://support.pmjay.gov.in/"
+    },
+    {
+      "id": "nsap-2025",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "NSAP pension amounts (Nov 2025 PIB explainer + myScheme)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PIB (PRID 2187327, 7 Nov 2025) and myScheme: IGNOAPS central assistance Rs 200/month (60–79) and Rs 500 (80+); IGNWPS (widows 40+) and IGNDPS (severe disability) Rs 300/month with Rs 500 at 80+; NFBS one-time Rs 20,000 on breadwinner death; Annapurna = 10 kg foodgrains/month for uncovered eligible seniors. States add top-ups — naming state amounts requires local verification. BPL-based; application via panchayat/municipality; helpline numbers vary — use ministry portals.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2187327"
+    },
+    {
+      "id": "nrega-faq",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "MGNREGA official FAQ PDF (NREGA Plus archive) — guarantee structure",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official NIC-archived MGNREGA FAQ: at least 100 days of guaranteed wage employment per financial year to every rural household whose adult members volunteer; job card/demand-for-work/unemployment-allowance framework. Wage rates are notified by MoRD per state (do NOT equate with the state's agricultural minimum wage). Helpline number policy: verify per state — the 1800-180-5678 number seen in old material is NOT confirmed.",
+      "url": "https://nregaplus.nic.in/Circular_Archive/archive/nrega_doc_FAQs.pdf"
+    },
+    {
+      "id": "mgnrega-timely-payment",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "MGNREGA guidelines for timely payment of wages (MoRD-hosted PDF, uploaded Jan 2025)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official MoRD-hosted guidelines: wage payment within 15 days of closure of the muster roll; delay compensation at 0.05% of unpaid wages per day of delay beyond the sixteenth day. Wages go to bank/post-office accounts.",
+      "url": "https://cdnbbsr.s3waas.gov.in/s3e9412ee564384b987d086df32d4ce6b7/uploads/2025/01/20250125523778025.pdf"
+    },
+    {
+      "id": "msde-pmkvy-guidelines",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PMKVY 4.0 guidelines (MSDE official PDF)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official MSDE PMKVY 4.0 guidelines: short-term training/upskilling with training centres onboarded on Skill India Digital; RPL (Recognition of Prior Learning) for experienced workers. Skill India Digital PMKVY landing lists the 15–45 age band. Do NOT promise a fixed stipend or a fixed helpline number; enrolment windows are phased — check Skill India Digital for the current phase.",
+      "url": "https://www.msde.gov.in/static/uploads/2024/02/PMKVY-4.0-Guidelines_final-copy.pdf"
+    },
+    {
+      "id": "pib-pmkvy-redesign",
+      "category": "analysis",
+      "jurisdiction": "IN",
+      "title": "PIB PRID 2297203 — PMKVY 4.0 course redesign (implemented since FY 2022-23)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PIB explainer: PMKVY 4.0 under implementation since FY 2022-23 with focus on emerging/new-age courses (AI etc.). Use as corroboration for the programme's current form; pib.gov.in 403 caveat as elsewhere.",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2297203"
+    },
+    {
+      "id": "pfrda-apy",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "Atal Pension Yojana — government co-contribution ended (joined before 31 Mar 2016, FY 2015-16..2019-20)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official FAQs (PFRDA; DFS pages; jansuraksha APY FAQ): GoI co-contribution applies ONLY to subscribers who joined before 31 Mar 2016 and only for FY 2015-16 through 2019-20. Never present APY as carrying a current government co-contribution. Guaranteed pension Rs 1,000–5,000/month from 60 for eligible subscribers aged 18–40.",
+      "url": "https://www.pfrda.org.in"
+    },
+    {
+      "id": "budget-2025-gig-workers",
+      "category": "analysis",
+      "jurisdiction": "IN",
+      "title": "Budget 2025-26 (1 Feb 2025) — ID cards, e-Shram registration and PM-JAY healthcare for gig/platform workers",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Consistent multi-outlet reporting of the Budget speech: identity cards, registration on e-Shram and healthcare under PM-JAY for gig/platform workers, plus a social-security scheme. Speech PDF itself returned 403; treat as budget-speech announcement with implementation details still rolling out — check labour.gov.in/NHA before promising delivery.",
+      "url": "https://www.hindustantimes.com/india-news/budget-2025-id-cards-health-care-for-gig-workers-announces-nirmala-sitharaman-101738398697412.html"
+    },
+    {
+      "id": "svanidhi-2.0",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PM SVANidhi 2.0 — Cabinet 27 Aug 2025: extended to 31 Mar 2030; tranches Rs 15k/Rs 25k/Rs 50k",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Multiple outlets concur on the Cabinet decision: outlay Rs 7,332 crore; run-up to 31 Mar 2030; 1.15 crore beneficiaries including ~50 lakh new; first tranche up to Rs 15,000 (from Rs 10,000), second up to Rs 25,000 (from Rs 20,000), third up to Rs 50,000; UPI-linked RuPay credit cards; 7% interest-subsidy design continues per scheme history. Secondary reporting — the Gazette text was not read; verify final terms at pmsvanidhi.mohua.gov.in.",
+      "url": "https://www.businesstoday.in/latest/economy/story/cabinet-extends-pm-svanidhi-scheme-till-2030-approves-rs-7332-crore-outlay-491294-2025-08-27"
+    },
+    {
+      "id": "street-vendors-act",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Street Vendors (Protection of Livelihood and Regulation of Street Vending) Act, 2014 — full text",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PRS-hosted full Act text: Town Vending Committees; survey + certificate of vending; s.3 — no eviction or relocation until the survey is completed and the certificate issued. Not superseded by the Labour Codes (separate livelihood law). Penalty amounts (e.g. for vending without a certificate) are in the Act text and state rules — read the text before quoting a figure; do not quote 'Rs 2,000' from summaries.",
+      "url": "https://prsindia.org/files/bills_acts/acts_parliament/2014/the-street-vendors-act,-2014.pdf"
+    },
+    {
+      "id": "nhrc-bonded-labour-act",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Bonded Labour System (Abolition) Act, 1976 — NHRC-compiled text",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "NHRC's official compilation includes the Act text: system abolished; advances/compulsion punishable with imprisonment up to 3 years and fine; vigilance committees at state and district level for identification, release and rehabilitation. Rehabilitation assistance is delivered through central/state schemes with changing names and amounts — do not restate old amounts without a current source.",
+      "url": "https://nhrc.nic.in/assets/uploads/publication/Bonded%20Labour.pdf"
+    },
+    {
+      "id": "child-labour-amendment-2016",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "Child Labour (Prohibition and Regulation) Amendment Act, 2016 — PENCIL portal PDF",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Official PENCIL portal hosts the amended Act text: no child below 14 in any occupation; adolescents (14–18) barred from hazardous occupations/processes; offence cognizable; penalties per the Act (read the text; commonly cited first-offence range imprisonment 6 months–2 years or fine Rs 20,000–50,000 — reconcile with the PDF before quoting outside structured outputs). Family-enterprise exception for children in non-hazardous, after-school work is narrow and regulated; state rules add conditions.",
+      "url": "https://pencil.gov.in/THE%20CHILD%20LABOUR%20(PROHIBITION%20AND%20REGULATION)%20AMENDMENT%20ACT,%202016(1).pdf"
+    },
+    {
+      "id": "karnataka-childlabour",
+      "category": "law",
+      "jurisdiction": "IN-KA",
+      "title": "Karnataka Labour Dept — child labour penalties summary (first offence Rs 20,000–50,000 etc.)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "State government page: employing a child may attract imprisonment/fine, first offence Rs 20,000–50,000; repeat offence imprisonment 1–3 years. Useful as a real-world admin summary of the national Act; confirm current state norms before quoting.",
+      "url": "https://childlabour.karnataka.gov.in/5/about-us/en"
+    },
+    {
+      "id": "posh-act",
+      "category": "law",
+      "jurisdiction": "IN",
+      "title": "POSH Act, 2013 — full Act PDF hosted by the Department of Expenditure (Act 14 of 2013)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "Government-hosted full text: ICC required for workplaces with 10+ employees; Local Committee via the District Officer for <10 employees / complaints against the employer itself; definition of sexual harassment; s.26 penalties start at up to Rs 50,000 and escalate (double penalty / licence cancellation on repeat); complaint window 3 months (with reasons-plus-3-months extension). Removes 'Employers with 50+ women workers must provide...' style elaborations unless they exist in the text.",
+      "url": "https://doe.gov.in/files/inline-documents/DoE_Prevention_sexual_harassment.pdf"
+    },
+    {
+      "id": "ncw-helpline",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "National Commission for Women — 24/7 helpline 7827-170-170 (+ Women Helpline 181)",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "NCW's own communications publish 7827170170 as the 24/7 helpline for women facing violence; the WCD 'Women Helpline' 181 continues. Complaints can also be filed digitally via NCW's system.",
+      "url": "https://www.ncw.gov.in"
+    },
+    {
+      "id": "pmay-g-assistance",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "PMAY-G unit assistance: Rs 1.20 lakh plain / Rs 1.30 lakh NER & hilly (incl. J&K, Ladakh) — PIB",
+      "status": "verified",
+      "verified_at": "2026-10-30",
+      "notes": "PIB release 'Expansion of Pradhan Mantri Awas Yojana-Gramin' (PRID 2113748): unit assistance Rs 1.20 lakh (plain areas) and Rs 1.30 lakh (NE states and hilly states incl. J&K and Ladakh). States have publicly sought an increase (reported Jan 2025) — confirm the current notified figure before pinning a number. Toilet-construction support (~Rs 12,000) flows via SBM-IHHL; verify locally.",
+      "url": "https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2113748&reg=3&lang=2"
+    },
+    {
+      "id": "esic-contribution-rates",
+      "category": "service",
+      "jurisdiction": "IN",
+      "title": "ESIC contribution rates (official portal page)",
+      "status": "verified",
+      "verified_at": "2026-11-03",
+      "notes": "Fetched 2026-11-03. Since 1 July 2019: employer contributes 3.25% and employee 0.75% of wages. Employees with wages up to Rs 21,000/month are covered (Rs 25,000 for persons with disability). A wage up to Rs 176 per day exempts only the EMPLOYEE share — the employer contribution stays payable. Contribution periods: 1 April-30 September and 1 October-31 March; contributions payable within 15 days of the end of the month.",
+      "url": "https://esic.gov.in/contribution"
     }
   ],
   "excluded_claims": [
